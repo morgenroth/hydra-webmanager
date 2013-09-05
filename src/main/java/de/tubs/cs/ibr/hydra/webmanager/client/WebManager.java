@@ -7,7 +7,7 @@ import org.atmosphere.gwt20.client.Atmosphere;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.user.client.ui.RootLayoutPanel;
+import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
@@ -31,6 +31,6 @@ public class WebManager implements EntryPoint {
       Atmosphere atmosphere = Atmosphere.create();
       
       Widget w = new SessionView(atmosphere);
-      RootLayoutPanel.get().add(w);
+      RootPanel.get("content").add(w);
   }
 }
