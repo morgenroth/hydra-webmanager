@@ -1,0 +1,15 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui"
+	xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
+ 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
+	<ui:style>
+		.important {
+			font-weight: bold;
+		}
+	</ui:style>
+	<g:HTMLPanel>
+		Hello,
+		<b:Button type="PRIMARY" ui:field="button">World</b:Button>
+	</g:HTMLPanel>
+</ui:UiBinder> 
