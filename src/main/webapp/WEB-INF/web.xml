@@ -19,7 +19,7 @@
 
 	<servlet-mapping>
 		<servlet-name>AtmosphereServlet</servlet-name>
-		<url-pattern>/hydra/atmosphere/*</url-pattern>
+		<url-pattern>/WebManager/atmosphere/*</url-pattern>
 	</servlet-mapping>
 
 	<!-- Default page to serve -->
