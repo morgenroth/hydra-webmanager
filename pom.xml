@@ -12,13 +12,6 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>Hydra WebManager</name>
   
-	<repositories>
-		<repository>
-			<id>custom gwt-comet repos</id>
-			<url>https://atmosphere-gwt-comet.googlecode.com/svn/mvnrepos</url>
-		</repository>
-	</repositories>
-
   <properties>
     <!-- Convenience property to set the GWT version -->
     <gwtVersion>2.5.1</gwtVersion>
