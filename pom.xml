@@ -22,6 +22,8 @@
   <properties>
     <!-- Convenience property to set the GWT version -->
     <gwtVersion>2.5.1</gwtVersion>
+    <!-- Convenience property to set the Atmosphere version -->
+    <atmosphere-version>1.1.0.RC5</atmosphere-version>
     <!-- GWT needs at least java 1.5 -->
     <webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -66,32 +68,40 @@
       <classifier>sources</classifier>
       <scope>test</scope>
     </dependency>
-		<dependency>
-			<groupId>org.atmosphere.extensions</groupId>
-			<artifactId>atmosphere-gwt20-server</artifactId>
-			<version>1.1.0.RC5</version>
-		</dependency>
-		<dependency>
-			<groupId>org.atmosphere.extensions</groupId>
-			<artifactId>atmosphere-gwt20-jackson</artifactId>
-			<version>1.1.0.RC5</version>
-		</dependency>
-		<dependency>
-			<groupId>org.atmosphere.extensions</groupId>
-			<artifactId>atmosphere-gwt20-client</artifactId>
-			<version>1.1.0.RC5</version>
-		</dependency>
-		<dependency>
-			<groupId>org.atmosphere.client</groupId>
-			<artifactId>javascript</artifactId>
-			<version>2.0.0.RC4</version>
-			<type>war</type>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-jdk14</artifactId>
-			<version>1.6.1</version>
-		</dependency>
+    <!-- Atmosphere dependencies -->
+	<dependency>
+		<groupId>org.atmosphere.extensions</groupId>
+		<artifactId>atmosphere-gwt20</artifactId>
+		<version>${atmosphere-version}</version>
+		<type>pom</type>
+	</dependency>
+	<dependency>
+		<groupId>org.atmosphere.extensions</groupId>
+		<artifactId>atmosphere-gwt20-jackson</artifactId>
+		<version>${atmosphere-version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.atmosphere.extensions</groupId>
+		<artifactId>atmosphere-gwt20-server</artifactId>
+		<version>${atmosphere-version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.atmosphere.extensions</groupId>
+		<artifactId>atmosphere-gwt20-client</artifactId>
+		<version>${atmosphere-version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.slf4j</groupId>
+		<artifactId>slf4j-jdk14</artifactId>
+		<version>1.6.1</version>
+	</dependency>
+	<dependency>
+		<groupId>org.atmosphere.client</groupId>
+		<artifactId>javascript</artifactId>
+		<version>2.0.0.RC4</version>
+		<type>war</type>
+		<scope>compile</scope>
+	</dependency>
   </dependencies>
 
   <build>
