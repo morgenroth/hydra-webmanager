@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="windows-1252"?>
-
+<?xml version="1.0" encoding="UTF-8"?>
 <atmosphere-handlers>
     <atmosphere-handler context-root="/hydra/atmosphere/json"
-                        class-name="de.tubs.ibr.hydra.frontend.server.JsonAtmosphereHandler">
+                        class-name="de.tubs.cs.ibr.hydra.webmanager.server.JsonAtmosphereHandler">
         <property name="heartbeat" value="20000"/>
     </atmosphere-handler>
 </atmosphere-handlers>
