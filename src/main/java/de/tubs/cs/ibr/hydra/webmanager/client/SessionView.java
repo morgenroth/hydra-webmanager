@@ -65,6 +65,7 @@ public class SessionView extends Composite implements HasText {
                 List<Event> events = response.getMessages();
                 for (Event event : events) {
                     WebManager.logger.info("received message through JSON: " + event.getData());
+                    Window.alert(event.getData());
                 }
             }
         });
@@ -83,15 +84,13 @@ public class SessionView extends Composite implements HasText {
     @UiHandler("button")
     void onClick(ClickEvent e) {
         Event myevent = beanFactory.create(Event.class).as();
-        myevent.setData("Hello World!");
+        myevent.setData("Hello JSON!");
         
         try {
             jsonRequest.push(myevent);
         } catch (SerializationException ex) {
             WebManager.logger.log(Level.SEVERE, "Failed to serialize message", ex);
         }
-        
-        Window.alert("Hello!");
     }
 
     public void setText(String text) {
