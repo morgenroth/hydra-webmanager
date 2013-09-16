@@ -4,14 +4,9 @@
 	xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
  	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
 	<g:HTMLPanel>
-		<b:Hero>
-		    <b:Heading size="1">Hydra</b:Heading>
-		    <b:Paragraph>The emulation framework for large-scale software testing in disrupted networks.</b:Paragraph>
-		</b:Hero>
-            
  		<b:Row>
 	    	<b:Column size="12">
-				<b:CellTable ui:field="sessionTable" />
+				<b:CellTable ui:field="nodeTable" />
 	    	</b:Column>
 	    	<b:Column size="12">
 	    	    <b:Button type="INVERSE" ui:field="buttonRefresh">Refresh</b:Button>

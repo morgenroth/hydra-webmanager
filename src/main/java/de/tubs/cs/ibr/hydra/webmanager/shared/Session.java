@@ -11,17 +11,54 @@ public class Session implements Serializable {
     private static final long serialVersionUID = -3798279065466924743L;
 
     public enum State {
-        IDLE,
-        RUNNING,
-        ABORTED
+        DRAFT("draft"),
+        PENDING("pending"),
+        RUNNING("running"),
+        FINISHED("finished"),
+        ABORTED("aborted");
+        
+        private String mTag;
+        
+        private State(String tag) {
+            mTag = tag;
+        }
+        
+        public String getTag() {
+            return mTag;
+        }
+        
+        @Override
+        public String toString() {
+            return mTag;
+        }
+        
+        public static State fromString(String tag) {
+            if (tag.equals("pending")) {
+                return State.PENDING;
+            }
+            else if (tag.equals("running")) {
+                return State.RUNNING;
+            }
+            else if (tag.equals("finished")) {
+                return State.FINISHED;
+            }
+            else if (tag.equals("aborted")) {
+                return State.ABORTED;
+            }
+            return State.DRAFT;
+        }
     };
     
     public Long id = null;
-    public Long userid;
-    public String username;
-    public String name;
-    public State state;
-    public Date created;
+    public Long userid = null;
+    public String username = null;
+    public String name = null;
+    public State state = null;
+    
+    public Date created = null;
+    public Date started = null;
+    public Date aborted = null;
+    public Date finished = null;
 
     public Session() {
     }

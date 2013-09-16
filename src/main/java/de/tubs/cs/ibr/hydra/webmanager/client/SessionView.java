@@ -1,17 +1,8 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
-
-import org.atmosphere.gwt20.client.Atmosphere;
-import org.atmosphere.gwt20.client.AtmosphereCloseHandler;
-import org.atmosphere.gwt20.client.AtmosphereMessageHandler;
-import org.atmosphere.gwt20.client.AtmosphereOpenHandler;
-import org.atmosphere.gwt20.client.AtmosphereRequest;
-import org.atmosphere.gwt20.client.AtmosphereRequestConfig;
-import org.atmosphere.gwt20.client.AtmosphereResponse;
-import org.atmosphere.gwt20.client.AutoBeanClientSerializer;
 
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CellTable;
@@ -19,84 +10,72 @@ import com.google.gwt.cell.client.ClickableTextCell;
 import com.google.gwt.cell.client.DateCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.cellview.client.Column;
-import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
 import com.google.gwt.user.cellview.client.TextColumn;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
-import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
-import com.google.gwt.view.client.SelectionChangeEvent;
-import com.google.gwt.view.client.SingleSelectionModel;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
-public class SessionView extends Composite implements HasText {
+public class SessionView extends Composite {
 
     private static SessionViewUiBinder uiBinder = GWT.create(SessionViewUiBinder.class);
     
-    private MyBeanFactory beanFactory = GWT.create(MyBeanFactory.class);
-    
-    private AtmosphereRequest jsonRequest;
+    // data provider for the session table
+    ListDataProvider<Session> mDataProvider = new ListDataProvider<Session>();
     
     @UiField CellTable<Session> sessionTable;
+    @UiField Button buttonRefresh;
 
     interface SessionViewUiBinder extends UiBinder<Widget, SessionView> {
     }
 
-    public SessionView(Atmosphere atmosphere) {
+    public SessionView() {
         initWidget(uiBinder.createAndBindUi(this));
         
-        AutoBeanClientSerializer json_serializer = new AutoBeanClientSerializer();
-        json_serializer.registerBeanFactory(beanFactory, Event.class);
-                       
-        // setup JSON Atmosphere connection
-        AtmosphereRequestConfig jsonRequestConfig = AtmosphereRequestConfig.create(json_serializer);
-        jsonRequestConfig.setUrl(GWT.getModuleBaseURL() + "atmosphere/json");
-        jsonRequestConfig.setContentType("application/json; charset=UTF-8");
-        jsonRequestConfig.setTransport(AtmosphereRequestConfig.Transport.STREAMING);
-        jsonRequestConfig.setFallbackTransport(AtmosphereRequestConfig.Transport.LONG_POLLING);
-        jsonRequestConfig.setOpenHandler(new AtmosphereOpenHandler() {
+        // create session table + columns
+        createTable();
+        
+        mDataProvider = new ListDataProvider<Session>();
+        mDataProvider.addDataDisplay(sessionTable);
+        
+        refreshTable();
+    }
+    
+    private void refreshTable() {
+        DatabaseServiceAsync dsa = (DatabaseServiceAsync)GWT.create(DatabaseService.class);
+        dsa.getSessions(new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Session>>() {
+
             @Override
-            public void onOpen(AtmosphereResponse response) {
-                WebManager.logger.info("JSON Connection opened");
+            public void onFailure(Throwable caught) {
             }
-        });
-        jsonRequestConfig.setCloseHandler(new AtmosphereCloseHandler() {
+
             @Override
-            public void onClose(AtmosphereResponse response) {
-                WebManager.logger.info("JSON Connection closed");
-            }
-        });
-        jsonRequestConfig.setMessageHandler(new AtmosphereMessageHandler() {
-            @Override
-            public void onMessage(AtmosphereResponse response) {
-                List<Event> events = response.getMessages();
-                for (Event event : events) {
-                    WebManager.logger.info("received message through JSON: " + event.getData());
-                    Window.alert(event.getData());
+            public void onSuccess(ArrayList<Session> result) {
+                List<Session> list = mDataProvider.getList();
+                list.clear();
+                for (Session s : result) {
+                    list.add(s);
                 }
             }
+            
         });
-        
-        jsonRequest = atmosphere.subscribe(jsonRequestConfig);
+    }
+    
+    private void createTable() {
+        // set table name
         sessionTable.setTitle("Sessions");
         
-        // Make the name column sortable.
-        //sessionTable.setSortable(true);
-
-        createTableColumns();
-        
-        
-        final SingleSelectionModel<Session> selectionModel = new SingleSelectionModel<Session>();
+        /*
+        final MultiSelectionModel<Session> selectionModel = new MultiSelectionModel<Session>();
         sessionTable.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.ENABLED);
         sessionTable.setSelectionModel(selectionModel);
         
@@ -105,29 +84,20 @@ public class SessionView extends Composite implements HasText {
             @Override
             public void onSelectionChange(SelectionChangeEvent event) {
                 // TODO Auto-generated method stub
-                
             }
         });
         
-        final ListDataProvider<Session> dataProvider = new ListDataProvider<Session>();
-        dataProvider.addDataDisplay(sessionTable);
+        Column<Session, Boolean> checkColumn = new Column<Session, Boolean>(new CheckboxCell(true, false)) {
+            @Override
+            public Boolean getValue(Session object) {
+                // Get the value from the selection model.
+                return selectionModel.isSelected(object);
+            }
+        };
+        sessionTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
+        sessionTable.setColumnWidth(checkColumn, 40, Unit.PX);
+        */
         
-        DatabaseServiceAsync dsa = (DatabaseServiceAsync)GWT.create(DatabaseService.class);
-        dsa.getSession(42L, new AsyncCallback<de.tubs.cs.ibr.hydra.webmanager.shared.Session>() {
-
-            @Override
-            public void onFailure(Throwable caught) {
-            }
-
-            @Override
-            public void onSuccess(Session result) {
-                dataProvider.getList().add(result);
-            }
-            
-        });
-    }
-    
-    private void createTableColumns() {
         TextColumn<Session> idColumn = new TextColumn<Session>() {
             @Override
             public String getValue(Session s) {
@@ -135,7 +105,18 @@ public class SessionView extends Composite implements HasText {
             }
         };
         
-        sessionTable.addColumn(idColumn, "ID");
+        sessionTable.addColumn(idColumn, "Session Key");
+        sessionTable.setColumnWidth(idColumn, 12, Unit.EM);
+        
+        TextColumn<Session> userColumn = new TextColumn<Session>() {
+            @Override
+            public String getValue(Session s) {
+                return s.username;
+            }
+        };
+        
+        sessionTable.addColumn(userColumn, "User");
+        sessionTable.setColumnWidth(userColumn, 12, Unit.EM);
         
         Column<Session, String> nameColumn = new Column<Session, String>(new ClickableTextCell()) {
             @Override
@@ -149,18 +130,30 @@ public class SessionView extends Composite implements HasText {
                 
             }
         });
-        nameColumn.setSortable(true);
-        nameColumn.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_LEFT);
-        sessionTable.addColumn(nameColumn, "Name");
+
+        sessionTable.addColumn(nameColumn, "Description");
         
-        TextColumn<Session> userColumn = new TextColumn<Session>() {
-            @Override
-            public String getValue(Session s) {
-                return s.name;
-            }
+        Column<Session, Date> dateColumn = new Column<Session, Date>(new DateCell()) {
+          @Override
+          public Date getValue(Session s) {
+              switch (s.state) {
+                  case DRAFT:
+                      return s.created;
+                  case FINISHED:
+                      return s.finished;
+                  case PENDING:
+                      return s.created;
+                  case RUNNING:
+                      return s.started;
+                  case ABORTED:
+                      return s.aborted;
+                  default:
+                      return s.created;
+              }
+          }
         };
-        
-        sessionTable.addColumn(userColumn, "User");
+        sessionTable.addColumn(dateColumn, "Last Update");
+        sessionTable.setColumnWidth(dateColumn, 16, Unit.EM);
         
         TextColumn<Session> stateColumn = new TextColumn<Session>() {
             @Override
@@ -170,46 +163,14 @@ public class SessionView extends Composite implements HasText {
             }
         };
         
-        DateCell dateCell = new DateCell();
-        Column<Session, Date> dateColumn = new Column<Session, Date>(dateCell) {
-          @Override
-          public Date getValue(Session object) {
-            return object.created;
-          }
-        };
-        sessionTable.addColumn(dateColumn, "Created");
-        
         stateColumn.setSortable(true);
         stateColumn.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
         sessionTable.addColumn(stateColumn, "State");
+        sessionTable.setColumnWidth(stateColumn, 8, Unit.EM);
     }
 
-    @UiField
-    Button button;
-
-    public SessionView(String firstName) {
-        initWidget(uiBinder.createAndBindUi(this));
-        button.setText(firstName);
-    }
-
-    @UiHandler("button")
+    @UiHandler("buttonRefresh")
     void onClick(ClickEvent e) {
-        Event myevent = beanFactory.create(Event.class).as();
-        myevent.setData("Hello JSON!");
-        
-        try {
-            jsonRequest.push(myevent);
-        } catch (SerializationException ex) {
-            WebManager.logger.log(Level.SEVERE, "Failed to serialize message", ex);
-        }
+        refreshTable();
     }
-
-    public void setText(String text) {
-        button.setText(text);
-    }
-
-    public String getText() {
-        return button.getText();
-    }
-
 }
