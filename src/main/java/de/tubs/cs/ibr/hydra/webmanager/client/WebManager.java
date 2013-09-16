@@ -31,6 +31,6 @@ public class WebManager implements EntryPoint {
       Atmosphere atmosphere = Atmosphere.create();
       
       Widget w = new SessionView(atmosphere);
-      RootPanel.get("content").add(w);
+      RootPanel.get().add(w);
   }
 }
