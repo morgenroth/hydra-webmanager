@@ -14,10 +14,21 @@
 		<!--Uncomment if you want to use Servlet 3.0 Async Support -->
 		<!-- <async-supported>true</async-supported> -->
 	</servlet>
+	
+	<servlet>
+		<servlet-name>DatabaseService</servlet-name>
+		<description>Access to the database.</description>
+		<servlet-class>de.tubs.cs.ibr.hydra.webmanager.server.DatabaseServiceImpl</servlet-class>
+	</servlet>
 
 	<servlet-mapping>
 		<servlet-name>AtmosphereServlet</servlet-name>
 		<url-pattern>/WebManager/atmosphere/*</url-pattern>
+	</servlet-mapping>
+	
+	<servlet-mapping>
+		<servlet-name>DatabaseService</servlet-name>
+		<url-pattern>/WebManager/database</url-pattern>
 	</servlet-mapping>
 
 	<!-- Default page to serve -->
