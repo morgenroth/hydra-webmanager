@@ -9,7 +9,36 @@
 		}
 	</ui:style>
 	<g:HTMLPanel>
-		Hello,
-		<b:Button type="PRIMARY" ui:field="button">World</b:Button>
+	    <b:Container>
+			<b:Navbar>
+			    <b:Brand>Hydra</b:Brand>
+		        <b:Nav>
+		        	<b:NavLink>Sessions</b:NavLink>
+		        	<b:NavLink href="http://www.google.com">Setup</b:NavLink>
+		        </b:Nav>
+		        <b:Nav alignment="RIGHT">
+		            <b:NavLink>Not logged in</b:NavLink>
+				</b:Nav>
+			</b:Navbar>
+			
+<!-- 
+            <b:Hero>
+                <b:Heading size="1">Sessions</b:Heading>
+                <b:Paragraph>Some Text for the Hero Unit.</b:Paragraph>
+            </b:Hero>
+ -->
+			
+		    <b:Row>
+		    	<b:Column size="12">
+		    	    <b:PageHeader>Sessions</b:PageHeader>
+		    	</b:Column>
+		    	<b:Column size="12">
+					<b:CellTable ui:field="sessionTable" />
+		    	</b:Column>
+		    	<b:Column size="12">
+		    	    <b:Button type="PRIMARY" ui:field="button">World</b:Button>
+		    	</b:Column>
+		    </b:Row>
+		</b:Container>
 	</g:HTMLPanel>
 </ui:UiBinder> 
