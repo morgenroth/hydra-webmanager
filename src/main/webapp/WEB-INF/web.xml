@@ -20,6 +20,13 @@
 		<description>Access to the database.</description>
 		<servlet-class>de.tubs.cs.ibr.hydra.webmanager.server.DatabaseServiceImpl</servlet-class>
 	</servlet>
+	
+	<servlet>
+		<servlet-name>MasterServer</servlet-name>
+		<description>Handles the communication channels to the slaves.</description>
+		<servlet-class>de.tubs.cs.ibr.hydra.webmanager.server.MasterServer</servlet-class>
+		<load-on-startup>2</load-on-startup>
+	</servlet>
 
 	<servlet-mapping>
 		<servlet-name>AtmosphereServlet</servlet-name>

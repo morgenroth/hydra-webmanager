@@ -5,15 +5,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import org.atmosphere.cpr.Serializer;
-import org.atmosphere.gwt20.jackson.JacksonSerializerProvider;
-import org.atmosphere.gwt20.server.SerializationException;
-import org.atmosphere.gwt20.server.ServerSerializer;
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
 
 public class JsonAtmosphereHandler extends AbstractReflectorAtmosphereHandler {
@@ -28,28 +24,28 @@ public class JsonAtmosphereHandler extends AbstractReflectorAtmosphereHandler {
         }
     }
 
-    private ServerSerializer serializer = new JacksonSerializerProvider().getServerSerializer();
-
     public void doGet(final AtmosphereResource ar) {
 
         ar.getResponse().setCharacterEncoding(ar.getRequest().getCharacterEncoding());
         ar.getResponse().setContentType("application/json");
 
         // lookup the broadcaster, if not found create it. Name is arbitrary
-        ar.setBroadcaster(DefaultBroadcasterFactory.getDefault().lookup("MyBroadcaster", true));
+        ar.setBroadcaster(DefaultBroadcasterFactory.getDefault().lookup("slaves", true));
 
         ar.setSerializer(new Serializer() {
             Charset charset = Charset.forName(ar.getResponse().getCharacterEncoding());
 
             public void write(OutputStream os, Object o) throws IOException {
-                try {
-                    logger.info("Writing object to JSON outputstream with charset: "
-                            + charset.displayName());
-                    String payload = serializer.serialize(o);
+                logger.info("Writing object to JSON outputstream with charset: "
+                        + charset.displayName());
+                if (o instanceof String) {
+                    String payload = (String)o;
                     os.write(payload.getBytes(charset));
                     os.flush();
-                } catch (SerializationException ex) {
-                    throw new IOException("Failed to serialize object to JSON", ex);
+                } else {
+                    String payload = o.toString();
+                    os.write(payload.getBytes(charset));
+                    os.flush();
                 }
             }
         });
@@ -60,22 +56,17 @@ public class JsonAtmosphereHandler extends AbstractReflectorAtmosphereHandler {
     public void doPost(AtmosphereResource ar) throws IOException {
         StringBuilder data = new StringBuilder();
         BufferedReader requestReader;
-        try {
-            requestReader = ar.getRequest().getReader();
-            char[] buf = new char[5120];
-            int read = -1;
-            while ((read = requestReader.read(buf)) > 0) {
-                data.append(buf, 0, read);
-            }
-            logger.info("Received json message from client: " + data.toString());
 
-            Object message = serializer.deserialize(data.toString());
-            DefaultBroadcasterFactory.getDefault().lookup("MyBroadcaster").broadcast(message);
-
-        } catch (SerializationException ex) {
-            logger.log(Level.SEVERE, "Failed to read request data", ex);
+        requestReader = ar.getRequest().getReader();
+        char[] buf = new char[5120];
+        int read = -1;
+        while ((read = requestReader.read(buf)) > 0) {
+            data.append(buf, 0, read);
         }
+        logger.info("Received json message from client: " + data.toString());
 
+        String message = data.toString();
+        DefaultBroadcasterFactory.getDefault().lookup("notify").broadcast(message);
     }
 
     @Override
