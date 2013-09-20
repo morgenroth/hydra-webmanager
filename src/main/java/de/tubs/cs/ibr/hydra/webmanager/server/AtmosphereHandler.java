@@ -12,7 +12,7 @@ import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import org.atmosphere.cpr.Serializer;
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
 
-public class JsonAtmosphereHandler extends AbstractReflectorAtmosphereHandler {
+public class AtmosphereHandler extends AbstractReflectorAtmosphereHandler {
     static final Logger logger = Logger.getLogger("AtmosphereHandler");
 
     @Override

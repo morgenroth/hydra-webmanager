@@ -59,7 +59,7 @@ public class HydraView extends Composite {
             
         });
         
-        jsonRequestConfig.setUrl(GWT.getModuleBaseURL() + "atmosphere/json");
+        jsonRequestConfig.setUrl(GWT.getModuleBaseURL() + "atmosphere/view");
         jsonRequestConfig.setContentType("application/json; charset=UTF-8");
         jsonRequestConfig.setTransport(AtmosphereRequestConfig.Transport.STREAMING);
         jsonRequestConfig.setFallbackTransport(AtmosphereRequestConfig.Transport.LONG_POLLING);
