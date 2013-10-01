@@ -10,6 +10,9 @@
 		</b:Hero>
             
  		<b:Row>
+	    	<b:Column size="6">
+				<b:CellTable ui:field="slaveTable" />
+	    	</b:Column>
 	    	<b:Column size="12">
 				<b:CellTable ui:field="sessionTable" />
 	    	</b:Column>

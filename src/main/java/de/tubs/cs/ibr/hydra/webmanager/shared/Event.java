@@ -5,7 +5,8 @@ public class Event {
         NONE("none"),
         SESSION_STATE_CHANGED("session_state_changed"),
         SLAVE_CONNECTED("slave_connected"),
-        SLAVE_DISCONNECTED("slave_disconnected");
+        SLAVE_DISCONNECTED("slave_disconnected"),
+        NODE_STATE_CHANGED("node_state_changed");
         
         private String mCode = null; 
         
@@ -22,6 +23,10 @@ public class Event {
             return mCode;
         }
         
+        public boolean equals(Event evt) {
+            return this.equals(evt.getType());
+        }
+        
         public static EventType fromString(String data) {
             if (SESSION_STATE_CHANGED.getCode().equals(data)) {
                 return SESSION_STATE_CHANGED;
@@ -31,6 +36,9 @@ public class Event {
             }
             else if (SLAVE_DISCONNECTED.getCode().equals(data)) {
                 return SLAVE_DISCONNECTED;
+            }
+            else if (NODE_STATE_CHANGED.getCode().equals(data)) {
+                return NODE_STATE_CHANGED;
             }
             
             return NONE;

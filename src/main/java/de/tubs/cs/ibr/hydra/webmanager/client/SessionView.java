@@ -8,7 +8,6 @@ import com.github.gwtbootstrap.client.ui.ButtonCell;
 import com.github.gwtbootstrap.client.ui.CellTable;
 import com.github.gwtbootstrap.client.ui.constants.ButtonType;
 import com.github.gwtbootstrap.client.ui.constants.IconType;
-import com.google.gwt.cell.client.ClickableTextCell;
 import com.google.gwt.cell.client.DateCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.GWT;
@@ -20,12 +19,13 @@ import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Event.EventType;
 
 public class SessionView extends Composite implements EventListener {
 
@@ -34,7 +34,11 @@ public class SessionView extends Composite implements EventListener {
     // data provider for the session table
     ListDataProvider<Session> mDataProvider = new ListDataProvider<Session>();
     
+    // data provider for the slave table
+    ListDataProvider<Slave> mSlaveProvider = new ListDataProvider<Slave>();
+    
     @UiField CellTable<Session> sessionTable;
+    @UiField CellTable<Slave> slaveTable;
 
     interface SessionViewUiBinder extends UiBinder<Widget, SessionView> {
     }
@@ -42,16 +46,21 @@ public class SessionView extends Composite implements EventListener {
     public SessionView() {
         initWidget(uiBinder.createAndBindUi(this));
         
-        // create session table + columns
-        createTable();
+        // create tables + columns
+        createSessionTable();
+        createSlaveTable();
         
         mDataProvider = new ListDataProvider<Session>();
         mDataProvider.addDataDisplay(sessionTable);
         
-        refreshTable();
+        mSlaveProvider = new ListDataProvider<Slave>();
+        mSlaveProvider.addDataDisplay(slaveTable);
+        
+        refreshSessionTable();
+        refreshNodeTable();
     }
     
-    private void refreshTable() {
+    private void refreshSessionTable() {
         DatabaseServiceAsync dsa = (DatabaseServiceAsync)GWT.create(DatabaseService.class);
         dsa.getSessions(new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Session>>() {
 
@@ -71,7 +80,74 @@ public class SessionView extends Composite implements EventListener {
         });
     }
     
-    private void createTable() {
+    private void refreshNodeTable() {
+        DatabaseServiceAsync dsa = (DatabaseServiceAsync)GWT.create(DatabaseService.class);
+        dsa.getSlaves(new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Slave>>() {
+
+            @Override
+            public void onFailure(Throwable caught) {
+            }
+
+            @Override
+            public void onSuccess(ArrayList<Slave> result) {
+                List<Slave> list = mSlaveProvider.getList();
+                list.clear();
+                for (Slave s : result) {
+                    list.add(s);
+                }
+            }
+            
+        });
+    }
+    
+    private void createSlaveTable() {
+        // set table name
+        slaveTable.setTitle("Slaves");
+        
+        /*
+         * Name column
+         */
+        TextColumn<Slave> nameColumn = new TextColumn<Slave>() {
+            @Override
+            public String getValue(Slave s) {
+                if (s.name == null) return "unknown";
+                return s.name;
+            }
+        };
+        
+        slaveTable.addColumn(nameColumn, "Name");
+        slaveTable.setColumnWidth(nameColumn, 8, Unit.EM);
+        
+        /*
+         * Address column
+         */
+        TextColumn<Slave> addressColumn = new TextColumn<Slave>() {
+            @Override
+            public String getValue(Slave s) {
+                if (s.address == null) return "unknown";
+                return s.address.toString();
+            }
+        };
+        
+        slaveTable.addColumn(addressColumn, "Address");
+        slaveTable.setColumnWidth(addressColumn, 8, Unit.EM);
+        
+        /*
+         * State column
+         */
+        TextColumn<Slave> stateColumn = new TextColumn<Slave>() {
+            @Override
+            public String getValue(Slave s) {
+                if (s.state == null) return "unknown";
+                return s.state.toString();
+            }
+        };
+        
+        slaveTable.addColumn(stateColumn, "State");
+        slaveTable.setColumnWidth(stateColumn, 8, Unit.EM);
+    }
+    
+    private void createSessionTable() {
         // set table name
         sessionTable.setTitle("Sessions");
         
@@ -95,18 +171,12 @@ public class SessionView extends Composite implements EventListener {
         sessionTable.addColumn(userColumn, "User");
         sessionTable.setColumnWidth(userColumn, 12, Unit.EM);
         
-        Column<Session, String> nameColumn = new Column<Session, String>(new ClickableTextCell()) {
+        TextColumn<Session> nameColumn = new TextColumn<Session>() {
             @Override
             public String getValue(Session object) {
                 return object.name;
             }
         };
-        nameColumn.setFieldUpdater(new FieldUpdater<Session, String>() {
-            @Override
-            public void update(int index, Session object, String value) {
-                
-            }
-        });
 
         sessionTable.addColumn(nameColumn, "Description");
         
@@ -140,8 +210,6 @@ public class SessionView extends Composite implements EventListener {
             }
         };
         
-        stateColumn.setSortable(true);
-        stateColumn.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
         sessionTable.addColumn(stateColumn, "State");
         sessionTable.setColumnWidth(stateColumn, 8, Unit.EM);
 
@@ -262,8 +330,14 @@ public class SessionView extends Composite implements EventListener {
     @Override
     public void eventRaised(Event evt) {
         // refresh table on refresh event
-        if (Event.EventType.SESSION_STATE_CHANGED.equals(evt.getType())) {
-            refreshTable();
+        if (EventType.SESSION_STATE_CHANGED.equals(evt)) {
+            refreshSessionTable();
+        }
+        else if (EventType.SLAVE_CONNECTED.equals(evt)) {
+            refreshNodeTable();
+        }
+        else if (EventType.SLAVE_DISCONNECTED.equals(evt)) {
+            refreshNodeTable();
         }
     }
 }

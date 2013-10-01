@@ -26,11 +26,15 @@ public class Session implements Serializable {
             return mValue;
         }
         
+        public boolean equals(String value) {
+            return mValue.equals(value);
+        }
+        
         public static Action fromString(String value) {
-            if (value.equals("Queue")) {
+            if (QUEUE.equals(value)) {
                 return Action.QUEUE;
             }
-            else if (value.equals("Reset")) {
+            else if (RESET.equals(value)) {
                 return Action.RESET;
             }
             return Action.ABORT;
@@ -59,17 +63,21 @@ public class Session implements Serializable {
             return mTag;
         }
         
+        public boolean equals(String value) {
+            return mTag.equals(value);
+        }
+        
         public static State fromString(String tag) {
-            if (tag.equals("pending")) {
+            if (PENDING.equals(tag)) {
                 return State.PENDING;
             }
-            else if (tag.equals("running")) {
+            else if (RUNNING.equals(tag)) {
                 return State.RUNNING;
             }
-            else if (tag.equals("finished")) {
+            else if (FINISHED.equals(tag)) {
                 return State.FINISHED;
             }
-            else if (tag.equals("aborted")) {
+            else if (ABORTED.equals(tag)) {
                 return State.ABORTED;
             }
             return State.DRAFT;

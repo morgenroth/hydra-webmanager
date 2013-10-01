@@ -8,6 +8,7 @@ import de.tubs.cs.ibr.hydra.webmanager.client.DatabaseService;
 import de.tubs.cs.ibr.hydra.webmanager.server.db.Database;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
 public class DatabaseServiceImpl extends RemoteServiceServlet implements DatabaseService {
 
@@ -29,6 +30,17 @@ public class DatabaseServiceImpl extends RemoteServiceServlet implements Databas
     @Override
     public ArrayList<Node> getNodes(String sessionKey) {
         return Database.getInstance().getNodes(sessionKey);
+    }
+
+    @Override
+    public ArrayList<Slave> getSlaves() {
+        ArrayList<Slave> ret = new ArrayList<Slave>();
+        
+        for (Slave s : SlaveConnection.__slaves__.values()) {
+            ret.add(s);
+        }
+        
+        return ret;
     }
 
 }

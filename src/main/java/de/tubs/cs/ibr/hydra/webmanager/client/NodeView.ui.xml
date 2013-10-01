@@ -6,10 +6,8 @@
 	<g:HTMLPanel>
  		<b:Row>
 	    	<b:Column size="12">
+	    	    <b:PageHeader>Nodes</b:PageHeader>
 				<b:CellTable ui:field="nodeTable" />
-	    	</b:Column>
-	    	<b:Column size="12">
-	    	    <b:Button type="INVERSE" ui:field="buttonRefresh">Refresh</b:Button>
 	    	</b:Column>
     	</b:Row>
 	</g:HTMLPanel>

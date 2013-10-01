@@ -1,5 +1,71 @@
 package de.tubs.cs.ibr.hydra.webmanager.shared;
 
-public class Slave {
+import java.io.Serializable;
 
+public class Slave implements Serializable {
+
+    /**
+     * Serial ID
+     */
+    private static final long serialVersionUID = 1090658748223324674L;
+    
+    public enum State {
+        IDLE("idle"),
+        ASSIGNED("assigned"),
+        PREPARE("prepare"),
+        RUNNING("running"),
+        CLEANUP("clean-up");
+        
+        private String mTag;
+        
+        private State(String tag) {
+            mTag = tag;
+        }
+        
+        public String getTag() {
+            return mTag;
+        }
+        
+        @Override
+        public String toString() {
+            return mTag;
+        }
+        
+        public boolean equals(String value) {
+            return mTag.equals(value);
+        }
+        
+        public static State fromString(String tag) {
+            if (CLEANUP.equals(tag)) {
+                return State.CLEANUP;
+            }
+            else if (ASSIGNED.equals(tag)) {
+                return State.ASSIGNED;
+            }
+            else if (PREPARE.equals(tag)) {
+                return State.PREPARE;
+            }
+            else if (RUNNING.equals(tag)) {
+                return State.RUNNING;
+            }
+            return State.IDLE;
+        }
+    };
+
+    public String name = null;
+    public String address = null;
+    public State state = State.IDLE;
+    
+    public Slave() {
+    }
+    
+    public Slave(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        if (this.name != null) return this.name;
+        return super.toString();
+    }
 }
