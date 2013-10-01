@@ -1,16 +1,17 @@
 package de.tubs.cs.ibr.hydra.webmanager.server;
 
-import org.atmosphere.cpr.Broadcaster;
-import org.atmosphere.cpr.BroadcasterFactory;
-import org.atmosphere.cpr.DefaultBroadcasterFactory;
+import java.util.ArrayList;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import de.tubs.cs.ibr.hydra.webmanager.client.MasterControlService;
+import de.tubs.cs.ibr.hydra.webmanager.server.db.Database;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event.EventType;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session.Action;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
 public class MasterControlServiceImpl extends RemoteServiceServlet implements MasterControlService {
 
@@ -25,10 +26,28 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         
         // TODO: send atmosphere broadcast
         
-        // get/create atmosphere broadcast channel
-        BroadcasterFactory bf = DefaultBroadcasterFactory.getDefault();
-        Broadcaster channel = bf.lookup("events", true);
-        channel.broadcast(new Event(EventType.SESSION_STATE_CHANGED));
+        // broadcast session change
+        MasterServer.broadcast(new Event(EventType.SESSION_STATE_CHANGED));
+    }
+
+    @Override
+    public Session getSession(Long id) {
+        return Database.getInstance().getSession(id);
+    }
+
+    @Override
+    public ArrayList<Session> getSessions() {
+        return Database.getInstance().getSessions();
+    }
+
+    @Override
+    public ArrayList<Node> getNodes(String sessionKey) {
+        return Database.getInstance().getNodes(sessionKey);
+    }
+
+    @Override
+    public ArrayList<Slave> getSlaves() {
+        return MasterServer.getSlaves();
     }
 
 }

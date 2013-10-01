@@ -51,8 +51,8 @@ public class NodeView extends Composite implements EventListener {
     }
 
     private void refreshNodeTable(String sessionKey) {
-        DatabaseServiceAsync dsa = (DatabaseServiceAsync)GWT.create(DatabaseService.class);
-        dsa.getNodes(sessionKey, new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Node>>() {
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.getNodes(sessionKey, new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Node>>() {
 
             @Override
             public void onFailure(Throwable caught) {

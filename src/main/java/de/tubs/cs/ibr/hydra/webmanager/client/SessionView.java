@@ -61,8 +61,8 @@ public class SessionView extends Composite implements EventListener {
     }
     
     private void refreshSessionTable() {
-        DatabaseServiceAsync dsa = (DatabaseServiceAsync)GWT.create(DatabaseService.class);
-        dsa.getSessions(new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Session>>() {
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.getSessions(new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Session>>() {
 
             @Override
             public void onFailure(Throwable caught) {
@@ -81,8 +81,8 @@ public class SessionView extends Composite implements EventListener {
     }
     
     private void refreshNodeTable() {
-        DatabaseServiceAsync dsa = (DatabaseServiceAsync)GWT.create(DatabaseService.class);
-        dsa.getSlaves(new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Slave>>() {
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.getSlaves(new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Slave>>() {
 
             @Override
             public void onFailure(Throwable caught) {
