@@ -1,6 +1,8 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.atmosphere.gwt20.client.Atmosphere;
 import org.atmosphere.gwt20.client.AtmosphereCloseHandler;
@@ -18,10 +20,11 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
+
+import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 
 public class HydraView extends Composite {
 
@@ -38,10 +41,11 @@ public class HydraView extends Composite {
     @UiField NavLink navSetup;
     
     Widget currentView = null;
+    Set<EventListener> mEventListener = new HashSet<EventListener>();
 
     public HydraView() {
         initWidget(uiBinder.createAndBindUi(this));
-        
+
         Atmosphere atmosphere = Atmosphere.create();
 
         // setup JSON Atmosphere connection
@@ -49,11 +53,14 @@ public class HydraView extends Composite {
 
             @Override
             public Object deserialize(String message) throws SerializationException {
-                return message;
+                return Event.decode(message);
             }
 
             @Override
             public String serialize(Object message) throws SerializationException {
+                if (message instanceof Event) {
+                    return Event.encode((Event)message);
+                }
                 return message.toString();
             }
             
@@ -78,10 +85,13 @@ public class HydraView extends Composite {
         jsonRequestConfig.setMessageHandler(new AtmosphereMessageHandler() {
             @Override
             public void onMessage(AtmosphereResponse response) {
-                List<String> events = response.getMessages();
-                for (String event : events) {
-                    WebManager.logger.info("received message: " + event);
-                    Window.alert(event);
+                List<Event> events = response.getMessages();
+                for (Event event : events) {
+                    WebManager.logger.info("received message: " + event.toString());
+
+                    for (EventListener l : mEventListener) {
+                        l.eventRaised(event);
+                    }
                 }
             }
         });
@@ -94,11 +104,14 @@ public class HydraView extends Composite {
 
             @Override
             public void onClick(ClickEvent event) {
-                if (currentView != null)
+                if (currentView != null) {
                     containerContent.remove(currentView);
+                    mEventListener.remove(currentView);
+                }
                 
                 currentView = new SessionView();
                 containerContent.add(currentView);
+                mEventListener.add((EventListener)currentView);
             }
             
         });
@@ -107,8 +120,10 @@ public class HydraView extends Composite {
 
             @Override
             public void onClick(ClickEvent event) {
-                if (currentView != null)
+                if (currentView != null) {
                     containerContent.remove(currentView);
+                    mEventListener.remove(currentView);
+                }
                 
                 currentView = new NodeView(null);
                 containerContent.add(currentView);
@@ -118,5 +133,6 @@ public class HydraView extends Composite {
         
         currentView = new SessionView();
         containerContent.add(currentView);
+        mEventListener.add((EventListener)currentView);
     }
 }

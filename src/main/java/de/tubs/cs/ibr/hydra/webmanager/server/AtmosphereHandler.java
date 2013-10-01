@@ -12,6 +12,8 @@ import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import org.atmosphere.cpr.Serializer;
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
+
 public class AtmosphereHandler extends AbstractReflectorAtmosphereHandler {
     static final Logger logger = Logger.getLogger("AtmosphereHandler");
 
@@ -30,19 +32,23 @@ public class AtmosphereHandler extends AbstractReflectorAtmosphereHandler {
         ar.getResponse().setContentType("application/json");
 
         // lookup the broadcaster, if not found create it. Name is arbitrary
-        ar.setBroadcaster(DefaultBroadcasterFactory.getDefault().lookup("slaves", true));
+        ar.setBroadcaster(DefaultBroadcasterFactory.getDefault().lookup("events", true));
 
         ar.setSerializer(new Serializer() {
             Charset charset = Charset.forName(ar.getResponse().getCharacterEncoding());
 
             public void write(OutputStream os, Object o) throws IOException {
-                logger.info("Writing object to JSON outputstream with charset: "
-                        + charset.displayName());
-                if (o instanceof String) {
+                if (o instanceof Event) {
+                    String payload = Event.encode((Event)o);
+                    os.write(payload.getBytes(charset));
+                    os.flush();
+                }
+                else if (o instanceof String) {
                     String payload = (String)o;
                     os.write(payload.getBytes(charset));
                     os.flush();
-                } else {
+                }
+                else {
                     String payload = o.toString();
                     os.write(payload.getBytes(charset));
                     os.flush();

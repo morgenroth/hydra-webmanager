@@ -9,6 +9,33 @@ public class Session implements Serializable {
      * Serial ID
      */
     private static final long serialVersionUID = -3798279065466924743L;
+    
+    public enum Action {
+        ABORT("Abort"),
+        RESET("Reset"),
+        QUEUE("Queue");
+        
+        private String mValue;
+        
+        private Action(String value) {
+            mValue = value;
+        }
+        
+        @Override
+        public String toString() {
+            return mValue;
+        }
+        
+        public static Action fromString(String value) {
+            if (value.equals("Queue")) {
+                return Action.QUEUE;
+            }
+            else if (value.equals("Reset")) {
+                return Action.RESET;
+            }
+            return Action.ABORT;
+        }
+    };
 
     public enum State {
         DRAFT("draft"),

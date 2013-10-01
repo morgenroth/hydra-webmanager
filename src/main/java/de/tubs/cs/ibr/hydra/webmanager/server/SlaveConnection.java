@@ -9,6 +9,9 @@ import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.DefaultBroadcasterFactory;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Event.EventType;
+
 public class SlaveConnection extends Thread {
     
     private Socket mSocket = null;
@@ -22,7 +25,7 @@ public class SlaveConnection extends Thread {
     public void run() {
         // create atmosphere broadcast channel
         BroadcasterFactory bf = DefaultBroadcasterFactory.getDefault();
-        Broadcaster channel = bf.lookup("slaves", true);
+        Broadcaster channel = bf.lookup("events", true);
         
         try {
             // receive slave banner
@@ -37,7 +40,10 @@ public class SlaveConnection extends Thread {
             
             // announce the new slave
             System.out.println("Slave connection: " + mIdentifier);
-            channel.broadcast("slave " + mIdentifier + " connected");
+            
+            channel.broadcast(new Event(EventType.SLAVE_CONNECTED));
+            
+            //channel.broadcast("slave " + mIdentifier + " connected");
             
             String data = null;
             while (mSocket.isConnected()) {
@@ -51,7 +57,9 @@ public class SlaveConnection extends Thread {
                 System.out.println(data);
             }
             
-            channel.broadcast("slave " + mIdentifier + " disconnected");
+            //channel.broadcast("slave " + mIdentifier + " disconnected");
+            
+            channel.broadcast(new Event(EventType.SLAVE_DISCONNECTED));
         } catch (IOException e) {
             // error while processing slave connection
             e.printStackTrace();

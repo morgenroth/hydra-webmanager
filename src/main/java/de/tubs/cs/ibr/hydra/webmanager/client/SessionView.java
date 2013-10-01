@@ -4,28 +4,30 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.github.gwtbootstrap.client.ui.Button;
+import com.github.gwtbootstrap.client.ui.ButtonCell;
 import com.github.gwtbootstrap.client.ui.CellTable;
+import com.github.gwtbootstrap.client.ui.constants.ButtonType;
+import com.github.gwtbootstrap.client.ui.constants.IconType;
 import com.google.gwt.cell.client.ClickableTextCell;
 import com.google.gwt.cell.client.DateCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
-public class SessionView extends Composite {
+public class SessionView extends Composite implements EventListener {
 
     private static SessionViewUiBinder uiBinder = GWT.create(SessionViewUiBinder.class);
     
@@ -33,7 +35,6 @@ public class SessionView extends Composite {
     ListDataProvider<Session> mDataProvider = new ListDataProvider<Session>();
     
     @UiField CellTable<Session> sessionTable;
-    @UiField Button buttonRefresh;
 
     interface SessionViewUiBinder extends UiBinder<Widget, SessionView> {
     }
@@ -73,30 +74,6 @@ public class SessionView extends Composite {
     private void createTable() {
         // set table name
         sessionTable.setTitle("Sessions");
-        
-        /*
-        final MultiSelectionModel<Session> selectionModel = new MultiSelectionModel<Session>();
-        sessionTable.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.ENABLED);
-        sessionTable.setSelectionModel(selectionModel);
-        
-        selectionModel.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
-            
-            @Override
-            public void onSelectionChange(SelectionChangeEvent event) {
-                // TODO Auto-generated method stub
-            }
-        });
-        
-        Column<Session, Boolean> checkColumn = new Column<Session, Boolean>(new CheckboxCell(true, false)) {
-            @Override
-            public Boolean getValue(Session object) {
-                // Get the value from the selection model.
-                return selectionModel.isSelected(object);
-            }
-        };
-        sessionTable.addColumn(checkColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
-        sessionTable.setColumnWidth(checkColumn, 40, Unit.PX);
-        */
         
         TextColumn<Session> idColumn = new TextColumn<Session>() {
             @Override
@@ -167,10 +144,126 @@ public class SessionView extends Composite {
         stateColumn.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
         sessionTable.addColumn(stateColumn, "State");
         sessionTable.setColumnWidth(stateColumn, 8, Unit.EM);
+
+        ButtonCell actionCell = new ButtonCell();
+        Column<Session, String> actionColumn = new Column<Session, String>(actionCell) {
+            @Override
+            public String getValue(Session s) {
+                ButtonCell button = (ButtonCell)this.getCell();
+                
+                switch (s.state) {
+                    case ABORTED:
+                        button.setType(ButtonType.WARNING);
+                        button.setIcon(IconType.BACKWARD);
+                        return "Reset";
+                    case DRAFT:
+                        button.setType(ButtonType.SUCCESS);
+                        button.setIcon(IconType.PLAY);
+                        return "Queue";
+                    case FINISHED:
+                        button.setType(ButtonType.WARNING);
+                        button.setIcon(IconType.BACKWARD);
+                        return "Reset";
+                    case PENDING:
+                        button.setType(ButtonType.WARNING);
+                        button.setIcon(IconType.BACKWARD);
+                        return "Reset";
+                    case RUNNING:
+                        button.setType(ButtonType.DANGER);
+                        button.setIcon(IconType.STOP);
+                        return "Abort";
+                    default:
+                        button.setType(ButtonType.WARNING);
+                        button.setIcon(IconType.BACKWARD);
+                        return "Reset";
+                }
+            }
+        };
+        
+        actionColumn.setFieldUpdater(new FieldUpdater<Session, String>() {
+            @Override
+            public void update(int index, final Session s, String value) {
+                // trigger action on session
+                final Session.Action action = Session.Action.fromString(value);
+                MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+                mcs.triggerAction(s, action, new AsyncCallback<Void>() {
+
+                    @Override
+                    public void onFailure(Throwable caught) {
+                        Window.alert("Action '" + action.toString() + "' on session '" + s.name + "' failed!");
+                    }
+
+                    @Override
+                    public void onSuccess(Void result) {
+                        switch (action) {
+                            case ABORT:
+                                //Window.alert("Session '" + s.name + "' aborted.");
+                                break;
+                            case QUEUE:
+                                //Window.alert("Session '" + s.name + "' queued.");
+                                break;
+                            case RESET:
+                                //Window.alert("Session '" + s.name + "' resetted.");
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    
+                });
+            }
+        });
+
+        sessionTable.addColumn(actionColumn);
+        sessionTable.setColumnWidth(actionColumn, 8, Unit.EM);
+        
+        ButtonCell editCell = new ButtonCell();
+        editCell.setType(ButtonType.LINK);
+        Column<Session, String> editColumn = new Column<Session, String>(editCell) {
+            @Override
+            public String getValue(Session s) {
+                ButtonCell button = (ButtonCell)this.getCell();
+                
+                switch (s.state) {
+                    case PENDING:
+                        button.setIcon(IconType.EYE_OPEN);
+                        return "Watch";
+                    case RUNNING:
+                        button.setIcon(IconType.EYE_OPEN);
+                        return "Watch";
+                    default:
+                        button.setIcon(IconType.EDIT);
+                        return "Edit";
+                }
+            }
+        };
+
+        editColumn.setFieldUpdater(new FieldUpdater<Session, String>() {
+            @Override
+            public void update(int index, Session s, String value) {
+                // watch running sessions
+                if (Session.State.PENDING.equals(s.state) || Session.State.RUNNING.equals(s.state))
+                {
+                    // TODO: open watch view
+                    Window.alert("open watch view");
+                }
+                else
+                {
+                    // TODO: open edit view
+                    Window.alert("open edit");
+                }
+            }
+        });
+
+        sessionTable.addColumn(editColumn);
+        sessionTable.setColumnWidth(editColumn, 8, Unit.EM);
     }
 
-    @UiHandler("buttonRefresh")
-    void onClick(ClickEvent e) {
-        refreshTable();
+    @Override
+    public void eventRaised(Event evt) {
+        // refresh table on refresh event
+        if (Event.EventType.SESSION_STATE_CHANGED.equals(evt.getType())) {
+            refreshTable();
+        }
     }
 }

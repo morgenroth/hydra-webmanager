@@ -22,6 +22,12 @@
 	</servlet>
 	
 	<servlet>
+		<servlet-name>MasterControlService</servlet-name>
+		<description>Access to the master controls</description>
+		<servlet-class>de.tubs.cs.ibr.hydra.webmanager.server.MasterControlServiceImpl</servlet-class>
+	</servlet>
+	
+	<servlet>
 		<servlet-name>MasterServer</servlet-name>
 		<description>Handles the communication channels to the slaves.</description>
 		<servlet-class>de.tubs.cs.ibr.hydra.webmanager.server.MasterServer</servlet-class>
@@ -31,6 +37,11 @@
 	<servlet-mapping>
 		<servlet-name>AtmosphereServlet</servlet-name>
 		<url-pattern>/WebManager/atmosphere/*</url-pattern>
+	</servlet-mapping>
+	
+	<servlet-mapping>
+		<servlet-name>MasterControlService</servlet-name>
+		<url-pattern>/WebManager/master</url-pattern>
 	</servlet-mapping>
 	
 	<servlet-mapping>

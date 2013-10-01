@@ -13,9 +13,6 @@
 	    	<b:Column size="12">
 				<b:CellTable ui:field="sessionTable" />
 	    	</b:Column>
-	    	<b:Column size="12">
-	    	    <b:Button type="INVERSE" ui:field="buttonRefresh">Refresh</b:Button>
-	    	</b:Column>
     	</b:Row>
 	</g:HTMLPanel>
 </ui:UiBinder> 
