@@ -12,7 +12,8 @@ public class Slave implements Serializable {
     public enum State {
         IDLE("idle"),
         ASSIGNED("assigned"),
-        PREPARE("prepare"),
+        PREPARING("preparing"),
+        PREPARED("prepared"),
         RUNNING("running"),
         CLEANUP("clean-up");
         
@@ -42,8 +43,11 @@ public class Slave implements Serializable {
             else if (ASSIGNED.equals(tag)) {
                 return State.ASSIGNED;
             }
-            else if (PREPARE.equals(tag)) {
-                return State.PREPARE;
+            else if (PREPARING.equals(tag)) {
+                return State.PREPARING;
+            }
+            else if (PREPARED.equals(tag)) {
+                return State.PREPARED;
             }
             else if (RUNNING.equals(tag)) {
                 return State.RUNNING;
@@ -55,6 +59,7 @@ public class Slave implements Serializable {
     public String name = null;
     public String address = null;
     public State state = State.IDLE;
+    public String session = null;
     
     public Slave() {
     }

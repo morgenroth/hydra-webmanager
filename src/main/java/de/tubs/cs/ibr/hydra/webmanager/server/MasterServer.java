@@ -5,6 +5,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.servlet.GenericServlet;
 import javax.servlet.ServletException;
@@ -16,8 +18,8 @@ import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.DefaultBroadcasterFactory;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
-import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event.EventType;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
 public class MasterServer extends GenericServlet {
     
@@ -26,6 +28,8 @@ public class MasterServer extends GenericServlet {
     
     private ServerSocket mSockServer = null;
     private Boolean mRunning = true;
+    
+    private static ExecutorService mTaskLoop = null;
     
     public static ArrayList<Slave> getSlaves() {
         ArrayList<Slave> ret = new ArrayList<Slave>();
@@ -55,7 +59,7 @@ public class MasterServer extends GenericServlet {
         broadcast(new Event(EventType.SLAVE_DISCONNECTED));
     }
     
-    private Thread mMasterLoop = new Thread() {
+    private Thread mSocketLoop = new Thread() {
 
         @Override
         public void run() {
@@ -82,6 +86,9 @@ public class MasterServer extends GenericServlet {
                     // error while closing server socket
                 }
             }
+            
+            // shutdown task loop
+            mTaskLoop.shutdown();
         }
     };
 
@@ -96,8 +103,13 @@ public class MasterServer extends GenericServlet {
 
     @Override
     public void init() throws ServletException {
-        mMasterLoop.start();
+        mSocketLoop.start();
+        mTaskLoop = Executors.newSingleThreadExecutor();
         System.out.println("Master service initialized.");
+    }
+    
+    public static void invoke(Task t) {
+        mTaskLoop.execute(t);
     }
     
     public static void broadcast(Event evt) {

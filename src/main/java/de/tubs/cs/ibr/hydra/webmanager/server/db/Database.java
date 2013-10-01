@@ -7,8 +7,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 
+import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Event.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
@@ -126,14 +128,37 @@ public class Database {
     }
     
     public Session getSession(Long id) {
-        Session ret = new Session();
-        ret.id = id;
-        ret.userid = 0L;
-        ret.name = "Job";
-        ret.username = getUsername(ret.userid);
-        ret.state = Session.State.DRAFT;
-        ret.created = new Date();
-        return ret;
+        try {
+            PreparedStatement st = mConn.prepareStatement("SELECT sessions.id, sessions.user, users.name, sessions.name, sessions.created, sessions.started, sessions.aborted, sessions.finished, sessions.state FROM sessions LEFT JOIN users ON (users.id = sessions.user) WHERE sessions.id = ?;");
+            st.setLong(1, id);
+            ResultSet rs = st.executeQuery();
+            
+            Session s = null;
+            
+            if (rs.next()) {
+                s = new Session();
+
+                s.id = rs.getLong(1);
+                s.userid = rs.getLong(2);
+                s.username = rs.getString(3);
+                s.name = rs.getString(4);
+                
+                s.created = rs.getDate(5);
+                s.started = rs.getDate(6);
+                s.aborted = rs.getDate(7);
+                s.finished = rs.getDate(8);
+                
+                s.state = Session.State.fromString(rs.getString(9));
+            }
+            
+            rs.close();
+            
+            return s;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return null;
     }
     
     public String getUsername(Long userid) {
@@ -155,5 +180,35 @@ public class Database {
         }
         
         return ret;
+    }
+    
+    public void setState(Session s, Session.State state) {
+        try {
+            PreparedStatement st = null;
+            
+            if (Session.State.ABORTED.equals(state)) {
+                st = mConn.prepareStatement("UPDATE sessions SET `state` = ?, aborted = NOW() WHERE id = ?;");
+            }
+            else if (Session.State.PENDING.equals(state)) {
+                st = mConn.prepareStatement("UPDATE sessions SET `state` = ?, started = NOW() WHERE id = ?;");
+            }
+            else if (Session.State.FINISHED.equals(state)) {
+                st = mConn.prepareStatement("UPDATE sessions SET `state` = ?, finished = NOW() WHERE id = ?;");
+            }
+            else {
+                st = mConn.prepareStatement("UPDATE sessions SET `state` = ? WHERE id = ?;");
+            }
+            
+            st.setString(1, state.toString());
+            st.setLong(2, s.id);
+            
+            // execute the query
+            st.execute();
+            
+            // broadcast session change
+            MasterServer.broadcast(new Event(EventType.SESSION_STATE_CHANGED));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
