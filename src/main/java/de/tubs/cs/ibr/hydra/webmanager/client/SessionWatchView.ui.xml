@@ -13,7 +13,14 @@
     	    <b:Column size="12">
 	    	    <b:TabPanel>
 	    	        <b:Tab heading="Stats" active="true"></b:Tab>
-	    	        <b:Tab heading="Nodes"></b:Tab>
+	    	        <b:Tab heading="Nodes">
+						<b:Row>
+							<!-- table of nodes -->
+							<b:Column size="12">
+								<b:CellTable ui:field="tableNodes" />
+							</b:Column>
+						</b:Row>
+	    	        </b:Tab>
 	    	        <b:Tab heading="Map"></b:Tab>
 				</b:TabPanel>
 			</b:Column>

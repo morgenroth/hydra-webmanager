@@ -7,23 +7,16 @@ import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CellTable;
 import com.github.gwtbootstrap.client.ui.ListBox;
 import com.github.gwtbootstrap.client.ui.NavLink;
-import com.github.gwtbootstrap.client.ui.Tab;
 import com.github.gwtbootstrap.client.ui.TextBox;
-import com.google.gwt.cell.client.ClickableTextCell;
-import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.cellview.client.Column;
-import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DeckPanel;
-import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
@@ -165,56 +158,8 @@ public class SessionEditView extends View {
         // set table name
         tableNodes.setTitle("Nodes");
         
-        TextColumn<Node> idColumn = new TextColumn<Node>() {
-            @Override
-            public String getValue(Node s) {
-                return s.id.toString();
-            }
-        };
-        
-        tableNodes.addColumn(idColumn, "ID");
-        tableNodes.setColumnWidth(idColumn, 6, Unit.EM);
-        
-        TextColumn<Node> slaveColumn = new TextColumn<Node>() {
-            @Override
-            public String getValue(Node s) {
-                if (s.slaveName == null) {
-                    return "not assigned";
-                }
-                return s.slaveName;
-            }
-        };
-        
-        tableNodes.addColumn(slaveColumn, "Slave");
-        tableNodes.setColumnWidth(slaveColumn, 12, Unit.EM);
-        
-        Column<Node, String> nameColumn = new Column<Node, String>(new ClickableTextCell()) {
-            @Override
-            public String getValue(Node object) {
-                return object.name;
-            }
-        };
-        nameColumn.setFieldUpdater(new FieldUpdater<Node, String>() {
-            @Override
-            public void update(int index, Node object, String value) {
-                
-            }
-        });
-
-        tableNodes.addColumn(nameColumn, "Name");
-               
-        TextColumn<Node> stateColumn = new TextColumn<Node>() {
-            @Override
-            public String getValue(Node s) {
-                if (s.state == null) return "unknown";
-                return s.state.toString();
-            }
-        };
-        
-        stateColumn.setSortable(true);
-        stateColumn.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_RIGHT);
-        tableNodes.addColumn(stateColumn, "State");
-        tableNodes.setColumnWidth(stateColumn, 8, Unit.EM);
+        // add common headers
+        TableUtils.addNodeHeaders(tableNodes);
     }
 
     @Override
