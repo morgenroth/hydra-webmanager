@@ -2,11 +2,14 @@ package de.tubs.cs.ibr.hydra.webmanager.client;
 
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.NavLink;
+import com.github.gwtbootstrap.client.ui.TextBox;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DeckPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -27,17 +30,45 @@ public class SessionEditView extends View {
     
     @UiField DeckPanel panelMain;
     
+    @UiField TextBox textPropDesc;
+    @UiField TextBox textPropOwner;
+    
     NavLink activeNavLink = null;
+    Session session = null;
     
     interface SessionEditViewUiBinder extends UiBinder<Widget, SessionEditView> {
     }
 
     public SessionEditView(HydraApp app, Session s) {
         super(app);
+        session = s;
         initWidget(uiBinder.createAndBindUi(this));
+        
+        // load session properties
+        refreshSessionProperties();
         
         // show properties as default
         navigateTo(navProperties, 0);
+    }
+    
+    private void refreshSessionProperties() {
+        if (session == null) return;
+        
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.getSession(session.id, new AsyncCallback<Session>() {
+            @Override
+            public void onFailure(Throwable caught) {
+                Window.alert("Can not get session properties.");
+                resetView();
+            }
+
+            @Override
+            public void onSuccess(Session result) {
+                textPropDesc.setText(result.name);
+                textPropOwner.setText(result.username);
+                textPropOwner.setEnabled(false);
+            }
+        });
     }
 
     @Override

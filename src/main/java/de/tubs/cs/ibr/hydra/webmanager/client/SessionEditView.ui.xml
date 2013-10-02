@@ -30,8 +30,15 @@
 			    	            <b:ControlGroup>
 			    	                <b:ControlLabel for="textDescription">Description</b:ControlLabel>
 			    	                <b:Controls>
-			    	                    <b:TextBox alternateSize="XLARGE" b:id="textDescription"></b:TextBox>
+			    	                    <b:TextBox alternateSize="XLARGE" b:id="textDescription" ui:field="textPropDesc"></b:TextBox>
 			    	                    <b:HelpBlock>This is the description shown in the list of sessions.</b:HelpBlock>
+			    	                </b:Controls>
+			    	            </b:ControlGroup>
+			    	            <b:ControlGroup>
+			    	                <b:ControlLabel for="textOwner">Owner</b:ControlLabel>
+			    	                <b:Controls>
+			    	                    <b:TextBox alternateSize="XLARGE" b:id="textOwner" ui:field="textPropOwner"></b:TextBox>
+			    	                    <b:HelpBlock>The creator and owner of this session.</b:HelpBlock>
 			    	                </b:Controls>
 			    	            </b:ControlGroup>
 			    	        </b:Fieldset>
