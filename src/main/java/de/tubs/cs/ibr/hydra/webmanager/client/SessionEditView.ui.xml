@@ -52,7 +52,7 @@
 		</g:DeckPanel>
    		<b:Row>
 	    	<b:Column size="12">
-				<b:Button type="INVERSE" ui:field="buttonBack">Back to sessions</b:Button>
+				<b:Button icon="REPLY" type="LINK" ui:field="buttonBack">Back to sessions</b:Button>
 	    	</b:Column>
     	</b:Row>
 	</g:HTMLPanel>
