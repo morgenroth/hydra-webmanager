@@ -45,7 +45,7 @@ public class Database {
             Class.forName(driver).newInstance();
             
             // open db connection
-            mConn = DriverManager.getConnection(__url__ + __dbname__, __username__, __password__);
+            mConn = DriverManager.getConnection(__url__ + __dbname__ + "?autoReconnect=true", __username__, __password__);
         } catch (SQLException e) {
             mConn = null;
             System.err.println("Mysql Connection Error: ");
