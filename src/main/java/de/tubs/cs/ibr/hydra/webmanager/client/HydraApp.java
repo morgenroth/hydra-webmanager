@@ -26,13 +26,13 @@ import com.google.gwt.user.client.ui.Widget;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 
-public class HydraView extends Composite {
+public class HydraApp extends Composite {
 
-    private static HydraViewUiBinder uiBinder = GWT.create(HydraViewUiBinder.class);
+    private static HydraAppUiBinder uiBinder = GWT.create(HydraAppUiBinder.class);
 
     private AtmosphereRequest jsonRequest;
 
-    interface HydraViewUiBinder extends UiBinder<Widget, HydraView> {
+    interface HydraAppUiBinder extends UiBinder<Widget, HydraApp> {
     }
     
     @UiField Container containerContent;
@@ -43,7 +43,7 @@ public class HydraView extends Composite {
     Widget currentView = null;
     Set<EventListener> mEventListener = new HashSet<EventListener>();
 
-    public HydraView() {
+    public HydraApp() {
         initWidget(uiBinder.createAndBindUi(this));
 
         Atmosphere atmosphere = Atmosphere.create();

@@ -26,7 +26,7 @@ public class WebManager implements EntryPoint {
             }
         });
 
-        Widget w = new HydraView();
+        Widget w = new HydraApp();
         RootPanel.get().add(w);
     }
 }
