@@ -264,6 +264,7 @@ public class SessionView extends View {
     
     @UiHandler("buttonAdd")
     void onClick(ClickEvent e) {
-        // TODO: switch to add/edit session view
+        // edit session edit view without a existing session
+        changeView(new SessionEditView(getApplication(), null));
     }
 }

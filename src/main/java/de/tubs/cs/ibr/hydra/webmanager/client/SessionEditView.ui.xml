@@ -3,11 +3,54 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui"
 	xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
  	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
+	<ui:style>
+		.gwt-Row-hidden	{ visibility:hidden }
+	</ui:style>
 	<g:HTMLPanel>
  		<b:Row>
 	    	<b:Column size="12">
 	    	    <b:PageHeader>Session Editor</b:PageHeader>
+	    	    <b:NavTabs>
+	    	        <b:NavLink ui:field="navProperties">Properties</b:NavLink>
+	    	        <b:NavLink ui:field="navImages">Images</b:NavLink>
+	    	        <b:NavLink ui:field="navBase">Base</b:NavLink>
+	    	        <b:NavLink ui:field="navSetup">Setup</b:NavLink>
+	    	        <b:NavLink ui:field="navMovement">Movement</b:NavLink>
+	    	        <b:NavLink ui:field="navNodes">Nodes</b:NavLink>
+				</b:NavTabs>
 	    	</b:Column>
+    	</b:Row>
+	    <g:DeckPanel ui:field="panelMain">
+	        <!-- Properties -->
+	        <g:FlowPanel>
+			    <b:Row>
+			    	<b:Column size="12">
+			    	    <b:Form type="HORIZONTAL">
+			    	        <b:Fieldset>
+			    	            <b:ControlGroup>
+			    	                <b:ControlLabel for="textDescription">Description</b:ControlLabel>
+			    	                <b:Controls>
+			    	                    <b:TextBox alternateSize="XLARGE" b:id="textDescription"></b:TextBox>
+			    	                    <b:HelpBlock>This is the description shown in the list of sessions.</b:HelpBlock>
+			    	                </b:Controls>
+			    	            </b:ControlGroup>
+			    	        </b:Fieldset>
+			    	    </b:Form>
+					</b:Column>
+				</b:Row>
+			</g:FlowPanel>
+			<!-- Images -->
+			<g:FlowPanel></g:FlowPanel>
+			<!-- Base -->
+			<g:FlowPanel></g:FlowPanel>
+			<!-- Setup -->
+			<g:FlowPanel></g:FlowPanel>
+			<!-- Movement -->
+			<g:FlowPanel></g:FlowPanel>
+			<!-- Nodes -->
+			<g:FlowPanel></g:FlowPanel>
+		</g:DeckPanel>
+   		<b:Row>
 	    	<b:Column size="12">
 				<b:Button type="INVERSE" ui:field="buttonBack">Back to sessions</b:Button>
 	    	</b:Column>
