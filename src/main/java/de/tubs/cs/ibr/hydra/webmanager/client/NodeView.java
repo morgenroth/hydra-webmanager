@@ -49,7 +49,13 @@ public class NodeView extends View {
 
     private void refreshNodeTable(Session s) {
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.getNodes(s.id.toString(), new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Node>>() {
+        String session_key = null;
+        
+        if (s != null) {
+            session_key = s.id.toString();
+        }
+        
+        mcs.getNodes(session_key, new AsyncCallback<ArrayList<Node>>() {
 
             @Override
             public void onFailure(Throwable caught) {
