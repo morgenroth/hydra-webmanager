@@ -25,6 +25,7 @@ public enum EventType {
     }
     
     public boolean equals(Event evt) {
+        if (evt == null) return false;
         return this.equals(evt.getType());
     }
 
