@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.ButtonCell;
 import com.github.gwtbootstrap.client.ui.CellTable;
 import com.github.gwtbootstrap.client.ui.constants.ButtonType;
@@ -12,52 +13,45 @@ import com.google.gwt.cell.client.DateCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
-import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
-import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event.EventType;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
-public class SessionView extends Composite implements EventListener {
+public class SessionView extends View {
 
     private static SessionViewUiBinder uiBinder = GWT.create(SessionViewUiBinder.class);
     
     // data provider for the session table
     ListDataProvider<Session> mDataProvider = new ListDataProvider<Session>();
     
-    // data provider for the slave table
-    ListDataProvider<Slave> mSlaveProvider = new ListDataProvider<Slave>();
-    
     @UiField CellTable<Session> sessionTable;
-    @UiField CellTable<Slave> slaveTable;
+    @UiField Button buttonAdd;
 
     interface SessionViewUiBinder extends UiBinder<Widget, SessionView> {
     }
 
-    public SessionView() {
+    public SessionView(HydraApp app) {
+        super(app);
         initWidget(uiBinder.createAndBindUi(this));
         
         // create tables + columns
         createSessionTable();
-        createSlaveTable();
         
         mDataProvider = new ListDataProvider<Session>();
         mDataProvider.addDataDisplay(sessionTable);
         
-        mSlaveProvider = new ListDataProvider<Slave>();
-        mSlaveProvider.addDataDisplay(slaveTable);
-        
         refreshSessionTable();
-        refreshNodeTable();
     }
     
     private void refreshSessionTable() {
@@ -78,73 +72,6 @@ public class SessionView extends Composite implements EventListener {
             }
             
         });
-    }
-    
-    private void refreshNodeTable() {
-        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.getSlaves(new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Slave>>() {
-
-            @Override
-            public void onFailure(Throwable caught) {
-            }
-
-            @Override
-            public void onSuccess(ArrayList<Slave> result) {
-                List<Slave> list = mSlaveProvider.getList();
-                list.clear();
-                for (Slave s : result) {
-                    list.add(s);
-                }
-            }
-            
-        });
-    }
-    
-    private void createSlaveTable() {
-        // set table name
-        slaveTable.setTitle("Slaves");
-        
-        /*
-         * Name column
-         */
-        TextColumn<Slave> nameColumn = new TextColumn<Slave>() {
-            @Override
-            public String getValue(Slave s) {
-                if (s.name == null) return "unknown";
-                return s.name;
-            }
-        };
-        
-        slaveTable.addColumn(nameColumn, "Name");
-        slaveTable.setColumnWidth(nameColumn, 8, Unit.EM);
-        
-        /*
-         * Address column
-         */
-        TextColumn<Slave> addressColumn = new TextColumn<Slave>() {
-            @Override
-            public String getValue(Slave s) {
-                if (s.address == null) return "unknown";
-                return s.address.toString();
-            }
-        };
-        
-        slaveTable.addColumn(addressColumn, "Address");
-        slaveTable.setColumnWidth(addressColumn, 8, Unit.EM);
-        
-        /*
-         * State column
-         */
-        TextColumn<Slave> stateColumn = new TextColumn<Slave>() {
-            @Override
-            public String getValue(Slave s) {
-                if (s.state == null) return "unknown";
-                return s.state.toString();
-            }
-        };
-        
-        slaveTable.addColumn(stateColumn, "State");
-        slaveTable.setColumnWidth(stateColumn, 8, Unit.EM);
     }
     
     private void createSessionTable() {
@@ -312,13 +239,13 @@ public class SessionView extends Composite implements EventListener {
                 // watch running sessions
                 if (Session.State.PENDING.equals(s.state) || Session.State.RUNNING.equals(s.state))
                 {
-                    // TODO: open watch view
-                    Window.alert("open watch view");
+                    // open watch view
+                    changeView(new SessionWatchView(getApplication(), s));
                 }
                 else
                 {
-                    // TODO: open edit view
-                    Window.alert("open edit");
+                    // open edit view
+                    changeView(new SessionEditView(getApplication(), s));
                 }
             }
         });
@@ -333,11 +260,10 @@ public class SessionView extends Composite implements EventListener {
         if (EventType.SESSION_STATE_CHANGED.equals(evt)) {
             refreshSessionTable();
         }
-        else if (EventType.SLAVE_CONNECTED.equals(evt)) {
-            refreshNodeTable();
-        }
-        else if (EventType.SLAVE_DISCONNECTED.equals(evt)) {
-            refreshNodeTable();
-        }
+    }
+    
+    @UiHandler("buttonAdd")
+    void onClick(ClickEvent e) {
+        // TODO: switch to add/edit session view
     }
 }

@@ -3,17 +3,19 @@ package de.tubs.cs.ibr.hydra.webmanager.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CellTable;
 import com.google.gwt.cell.client.ClickableTextCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
@@ -22,7 +24,7 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 
-public class NodeView extends Composite implements EventListener {
+public class NodeView extends View {
 
     private static NodeViewUiBinder uiBinder = GWT.create(NodeViewUiBinder.class);
 
@@ -35,8 +37,10 @@ public class NodeView extends Composite implements EventListener {
     String mSessionKey = "1234";
     
     @UiField CellTable<Node> nodeTable;
+    @UiField Button buttonBack;
 
-    public NodeView(String sessionKey) {
+    public NodeView(HydraApp app, String sessionKey) {
+        super(app);
         initWidget(uiBinder.createAndBindUi(this));
         
         mSessionKey = sessionKey;
@@ -132,5 +136,11 @@ public class NodeView extends Composite implements EventListener {
         if (EventType.NODE_STATE_CHANGED.equals(evt)) {
             refreshNodeTable(mSessionKey);
         }
+    }
+    
+    @UiHandler("buttonBack")
+    void onClick(ClickEvent e) {
+        // switch back to session view
+        resetView();
     }
 }

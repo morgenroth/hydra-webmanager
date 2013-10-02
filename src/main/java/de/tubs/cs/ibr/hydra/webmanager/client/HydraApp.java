@@ -1,8 +1,6 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.atmosphere.gwt20.client.Atmosphere;
 import org.atmosphere.gwt20.client.AtmosphereCloseHandler;
@@ -37,11 +35,10 @@ public class HydraApp extends Composite {
     
     @UiField Container containerContent;
     @UiField NavLink navSession;
+    @UiField NavLink navSlaves;
     @UiField NavLink navNodes;
-    @UiField NavLink navSetup;
     
-    Widget currentView = null;
-    Set<EventListener> mEventListener = new HashSet<EventListener>();
+    View currentView = null;
 
     public HydraApp() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -89,8 +86,9 @@ public class HydraApp extends Composite {
                 for (Event event : events) {
                     WebManager.logger.info("received message: " + event.toString());
 
-                    for (EventListener l : mEventListener) {
-                        l.eventRaised(event);
+                    // forward the event to the current view
+                    if (currentView != null) {
+                        ((EventListener)currentView).eventRaised(event);
                     }
                 }
             }
@@ -104,14 +102,16 @@ public class HydraApp extends Composite {
 
             @Override
             public void onClick(ClickEvent event) {
-                if (currentView != null) {
-                    containerContent.remove(currentView);
-                    mEventListener.remove(currentView);
-                }
-                
-                currentView = new SessionView();
-                containerContent.add(currentView);
-                mEventListener.add((EventListener)currentView);
+                changeView(null);
+            }
+            
+        });
+        
+        navSlaves.addClickHandler(new ClickHandler() {
+
+            @Override
+            public void onClick(ClickEvent event) {
+                changeView(new SlaveView(HydraApp.this));
             }
             
         });
@@ -120,19 +120,24 @@ public class HydraApp extends Composite {
 
             @Override
             public void onClick(ClickEvent event) {
-                if (currentView != null) {
-                    containerContent.remove(currentView);
-                    mEventListener.remove(currentView);
-                }
-                
-                currentView = new NodeView(null);
-                containerContent.add(currentView);
+                changeView(new NodeView(HydraApp.this, null));
             }
             
         });
         
-        currentView = new SessionView();
-        containerContent.add(currentView);
-        mEventListener.add((EventListener)currentView);
+        changeView(null);
+    }
+    
+    public void changeView(View newView) {
+        if (newView == null) {
+            newView = new SessionView(HydraApp.this);
+        }
+        
+        if (currentView != null) {
+            containerContent.remove(currentView);
+        }
+        
+        currentView = newView;
+        containerContent.add((Widget)currentView);
     }
 }

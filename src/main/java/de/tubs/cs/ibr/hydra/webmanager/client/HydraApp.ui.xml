@@ -9,8 +9,8 @@
 			    <b:Brand>Hydra</b:Brand>
 		        <b:Nav>
 		        	<b:NavLink ui:field="navSession">Sessions</b:NavLink>
+		        	<b:NavLink ui:field="navSlaves">Slaves</b:NavLink>
 		        	<b:NavLink ui:field="navNodes">Nodes</b:NavLink>
-		        	<b:NavLink ui:field="navSetup">Setup</b:NavLink>
 		        </b:Nav>
 		        <b:Nav alignment="RIGHT">
 		            <b:NavLink>Not logged in</b:NavLink>
