@@ -6,6 +6,6 @@ import java.util.List;
 public interface Event {
     public EventType getType();
     public void setType(EventType type);
-    public List<EventEntry> getEntries();
-    public void setEntries(List<EventEntry> entries);
+    public List<EventExtra> getExtras();
+    public void setExtras(List<EventExtra> entries);
 }

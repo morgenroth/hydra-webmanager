@@ -23,7 +23,7 @@ import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import com.google.web.bindery.autobean.vm.AutoBeanFactorySource;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
-import de.tubs.cs.ibr.hydra.webmanager.shared.EventEntry;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventFactory;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
@@ -77,9 +77,9 @@ public class MasterServer extends GenericServlet {
         mSlaves.put(s.toString(), s);
         mConnections.put(s.toString(), sc);
         
-        List<EventEntry> entries = new ArrayList<EventEntry>();
-        entries.add(createEventEntry(EventType.EXTRA_SLAVE_NAME, s.name));
-        entries.add(createEventEntry(EventType.EXTRA_SLAVE_ADDRESS, s.address));
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(createEventExtra(EventType.EXTRA_SLAVE_NAME, s.name));
+        entries.add(createEventExtra(EventType.EXTRA_SLAVE_ADDRESS, s.address));
         
         broadcast(EventType.SLAVE_CONNECTED, entries);
     }
@@ -88,9 +88,9 @@ public class MasterServer extends GenericServlet {
         mSlaves.remove(s.toString());
         mConnections.remove(s.toString());
         
-        List<EventEntry> entries = new ArrayList<EventEntry>();
-        entries.add(createEventEntry(EventType.EXTRA_SLAVE_NAME, s.name));
-        entries.add(createEventEntry(EventType.EXTRA_SLAVE_ADDRESS, s.address));
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(createEventExtra(EventType.EXTRA_SLAVE_NAME, s.name));
+        entries.add(createEventExtra(EventType.EXTRA_SLAVE_ADDRESS, s.address));
         
         broadcast(EventType.SLAVE_DISCONNECTED, entries);
     }
@@ -148,22 +148,22 @@ public class MasterServer extends GenericServlet {
         mTaskLoop.execute(t);
     }
     
-    public static EventEntry createEventEntry(String key, String data) {
+    public static EventExtra createEventExtra(String key, String data) {
         EventFactory factory = AutoBeanFactorySource.create(EventFactory.class);
-        EventEntry e = factory.evententry().as();
+        EventExtra e = factory.eventextra().as();
         e.setKey(key);
         e.setData(data);
         return e;
     }
     
-    public static void broadcast(EventType t, List<EventEntry> entries) {
+    public static void broadcast(EventType t, List<EventExtra> extras) {
         EventFactory factory = AutoBeanFactorySource.create(EventFactory.class);
         Event event = factory.event().as();
         
         event.setType(t);
         
-        if (entries != null) {
-            event.setEntries(entries);
+        if (extras != null) {
+            event.setExtras(extras);
         }
         
         broadcast(event);

@@ -21,7 +21,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
-import de.tubs.cs.ibr.hydra.webmanager.shared.EventEntry;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
@@ -170,7 +170,7 @@ public class SessionEditView extends View {
             // do not update, if we don't have a session
             if (mSession == null) return;
             
-            for (EventEntry e : evt.getEntries()) {
+            for (EventExtra e : evt.getExtras()) {
                 if (EventType.EXTRA_SESSION_ID.equals(e.getKey())) {
                     if (mSession.id.toString().equals(e.getData())) {
                         // refresh nodes

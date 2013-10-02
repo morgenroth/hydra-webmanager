@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
-import de.tubs.cs.ibr.hydra.webmanager.shared.EventEntry;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
@@ -207,9 +207,9 @@ public class Database {
             // execute the query
             st.execute();
             
-            List<EventEntry> entries = new ArrayList<EventEntry>();
-            entries.add(MasterServer.createEventEntry(EventType.EXTRA_SESSION_ID, s.id.toString()));
-            entries.add(MasterServer.createEventEntry(EventType.EXTRA_NEW_STATE, state.toString()));
+            List<EventExtra> entries = new ArrayList<EventExtra>();
+            entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+            entries.add(MasterServer.createEventExtra(EventType.EXTRA_NEW_STATE, state.toString()));
             
             // broadcast session change
             MasterServer.broadcast(EventType.SESSION_STATE_CHANGED, entries);

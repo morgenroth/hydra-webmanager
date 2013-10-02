@@ -15,7 +15,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
-import de.tubs.cs.ibr.hydra.webmanager.shared.EventEntry;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
@@ -90,7 +90,7 @@ public class NodeView extends View {
         if (EventType.NODE_STATE_CHANGED.equals(evt)) {
             // check if this node is of interest
             if (mSession != null) {
-                for (EventEntry e : evt.getEntries()) {
+                for (EventExtra e : evt.getExtras()) {
                     if (EventType.EXTRA_SESSION_ID.equals(e.getKey())) {
                         if (!mSession.id.toString().equals(e.getData())) {
                             // abort - session id is set but not of interest
