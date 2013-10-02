@@ -23,6 +23,7 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Event.EventType;
 
 public class HydraApp extends Composite {
 
@@ -70,13 +71,13 @@ public class HydraApp extends Composite {
         jsonRequestConfig.setOpenHandler(new AtmosphereOpenHandler() {
             @Override
             public void onOpen(AtmosphereResponse response) {
-                WebManager.logger.info("JSON Connection opened");
+                //WebManager.logger.info("JSON Connection opened");
             }
         });
         jsonRequestConfig.setCloseHandler(new AtmosphereCloseHandler() {
             @Override
             public void onClose(AtmosphereResponse response) {
-                WebManager.logger.info("JSON Connection closed");
+                //WebManager.logger.info("JSON Connection closed");
             }
         });
         jsonRequestConfig.setMessageHandler(new AtmosphereMessageHandler() {
@@ -84,6 +85,9 @@ public class HydraApp extends Composite {
             public void onMessage(AtmosphereResponse response) {
                 List<Event> events = response.getMessages();
                 for (Event event : events) {
+                    // ignore none events
+                    if (EventType.NONE.equals(event)) continue;
+                    
                     WebManager.logger.info("received message: " + event.toString());
 
                     // forward the event to the current view

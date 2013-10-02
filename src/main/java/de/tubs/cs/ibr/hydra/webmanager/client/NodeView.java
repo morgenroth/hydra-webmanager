@@ -5,22 +5,19 @@ import java.util.List;
 
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CellTable;
-import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
 public class NodeView extends View {
 
@@ -32,26 +29,26 @@ public class NodeView extends View {
     // data provider for the node table
     ListDataProvider<Node> mDataProvider = new ListDataProvider<Node>();
     
-    String mSessionKey = "1234";
+    Session mSession = null;
     
     @UiField CellTable<Node> nodeTable;
     @UiField Button buttonBack;
 
-    public NodeView(HydraApp app, String sessionKey) {
+    public NodeView(HydraApp app, Session s) {
         super(app);
-        initWidget(uiBinder.createAndBindUi(this));
+        mSession = s;
         
-        mSessionKey = sessionKey;
+        initWidget(uiBinder.createAndBindUi(this));
         
         // create session table + columns
         createTable();
         
-        refreshNodeTable(mSessionKey);
+        refreshNodeTable(s);
     }
 
-    private void refreshNodeTable(String sessionKey) {
+    private void refreshNodeTable(Session s) {
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.getNodes(sessionKey, new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Node>>() {
+        mcs.getNodes(s.id.toString(), new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Node>>() {
 
             @Override
             public void onFailure(Throwable caught) {
@@ -84,7 +81,7 @@ public class NodeView extends View {
     public void eventRaised(Event evt) {
         // refresh table on refresh event
         if (EventType.NODE_STATE_CHANGED.equals(evt)) {
-            refreshNodeTable(mSessionKey);
+            refreshNodeTable(mSession);
         }
     }
     
