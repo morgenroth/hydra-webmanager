@@ -34,7 +34,7 @@ public class MasterServer extends GenericServlet {
     private static ConcurrentHashMap<String, SlaveConnection> mConnections = new ConcurrentHashMap<String, SlaveConnection>();
     
     // TODO: make this configurable
-    private static File mImagesPath = new File("/home/morgenro/sources/hydrasim.git/master/htdocs/dl");
+    private static File mImagesPath = new File("/opt/hydrasim.git/master/htdocs/dl");
     
     private ServerSocket mSockServer = null;
     private Boolean mRunning = true;
@@ -61,6 +61,11 @@ public class MasterServer extends GenericServlet {
                 return false;
             }
         });
+        
+        if (images == null) {
+            // can not read directory
+            return ret;
+        }
         
         for (String f : images) {
             ret.add(f);
