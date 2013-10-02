@@ -12,6 +12,8 @@
 	    	<b:Column size="12">
 				<b:CellTable ui:field="sessionTable" />
 	    	</b:Column>
+    	</b:Row>
+    	<b:Row>
 	    	<b:Column size="12">
 				<b:Button type="PRIMARY" ui:field="buttonAdd">Add session</b:Button>
 	    	</b:Column>

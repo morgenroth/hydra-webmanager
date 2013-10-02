@@ -7,7 +7,14 @@
  		<b:Row>
 	    	<b:Column size="12">
 	    	    <b:PageHeader>Session</b:PageHeader>
+	    	    <b:NavTabs>
+	    	        <b:NavLink active="true">Stats</b:NavLink>
+	    	        <b:NavLink>Nodes</b:NavLink>
+	    	        <b:NavLink>Map</b:NavLink>
+				</b:NavTabs>
 	    	</b:Column>
+    	</b:Row>
+    	<b:Row>
 	    	<b:Column size="12">
 				<b:Button type="INVERSE" ui:field="buttonBack">Back to sessions</b:Button>
 	    	</b:Column>

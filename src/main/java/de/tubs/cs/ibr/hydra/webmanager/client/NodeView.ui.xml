@@ -9,6 +9,8 @@
 	    	    <b:PageHeader>Nodes</b:PageHeader>
 				<b:CellTable ui:field="nodeTable" />
 	    	</b:Column>
+    	</b:Row>
+    	<b:Row>
 	    	<b:Column size="12">
 				<b:Button type="INVERSE" ui:field="buttonBack">Back to sessions</b:Button>
 	    	</b:Column>
