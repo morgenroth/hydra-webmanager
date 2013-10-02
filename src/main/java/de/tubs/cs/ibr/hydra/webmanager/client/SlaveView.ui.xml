@@ -6,7 +6,7 @@
 	<g:HTMLPanel>
  		<b:Row>
 	    	<b:Column size="12">
-	    	    <b:PageHeader>Slaves</b:PageHeader>
+	    	    <b:Heading size="2">Slaves</b:Heading>
 				<b:CellTable ui:field="slaveTable" />
 	    	</b:Column>
     	</b:Row>

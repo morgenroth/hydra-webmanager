@@ -6,7 +6,7 @@
 	<g:HTMLPanel>
  		<b:Row>
 	    	<b:Column size="12">
-	    	    <b:PageHeader>Nodes</b:PageHeader>
+	    	    <b:Heading size="2">Nodes</b:Heading>
 				<b:CellTable ui:field="nodeTable" />
 	    	</b:Column>
     	</b:Row>

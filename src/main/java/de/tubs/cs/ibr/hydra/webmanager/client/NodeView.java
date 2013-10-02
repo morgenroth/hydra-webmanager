@@ -48,9 +48,6 @@ public class NodeView extends View {
         // create session table + columns
         createTable();
         
-        mDataProvider = new ListDataProvider<Node>();
-        mDataProvider.addDataDisplay(nodeTable);
-        
         refreshNodeTable(mSessionKey);
     }
 
@@ -75,6 +72,9 @@ public class NodeView extends View {
     }
     
     private void createTable() {
+        mDataProvider = new ListDataProvider<Node>();
+        mDataProvider.addDataDisplay(nodeTable);
+        
         // set table name
         nodeTable.setTitle("Nodes");
         

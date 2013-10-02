@@ -54,4 +54,5 @@ public class Node implements Serializable {
     public String sessionKey = null;
     public String name = null;
     public State state = null;
+    public String address = null;
 }

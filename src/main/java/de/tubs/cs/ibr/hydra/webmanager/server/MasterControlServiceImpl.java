@@ -85,4 +85,9 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         return MasterServer.getSlaves();
     }
 
+    @Override
+    public ArrayList<String> getAvailableImages() {
+        return MasterServer.getAvailableImages();
+    }
+
 }

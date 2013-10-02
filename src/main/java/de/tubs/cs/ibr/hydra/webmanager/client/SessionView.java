@@ -9,6 +9,7 @@ import com.github.gwtbootstrap.client.ui.ButtonCell;
 import com.github.gwtbootstrap.client.ui.CellTable;
 import com.github.gwtbootstrap.client.ui.constants.ButtonType;
 import com.github.gwtbootstrap.client.ui.constants.IconType;
+import com.github.gwtbootstrap.client.ui.resources.ButtonSize;
 import com.google.gwt.cell.client.DateCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.GWT;
@@ -141,6 +142,7 @@ public class SessionView extends View {
         sessionTable.setColumnWidth(stateColumn, 8, Unit.EM);
 
         ButtonCell actionCell = new ButtonCell();
+        actionCell.setSize(ButtonSize.SMALL);
         Column<Session, String> actionColumn = new Column<Session, String>(actionCell) {
             @Override
             public String getValue(Session s) {

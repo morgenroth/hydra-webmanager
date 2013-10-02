@@ -1,5 +1,7 @@
 package de.tubs.cs.ibr.hydra.webmanager.server;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -26,6 +28,9 @@ public class MasterServer extends GenericServlet {
     private static ConcurrentHashMap<String, Slave> mSlaves = new ConcurrentHashMap<String, Slave>();
     private static ConcurrentHashMap<String, SlaveConnection> mConnections = new ConcurrentHashMap<String, SlaveConnection>();
     
+    // TODO: make this configurable
+    private static File mImagesPath = new File("/home/morgenro/sources/hydrasim.git/master/htdocs/dl");
+    
     private ServerSocket mSockServer = null;
     private Boolean mRunning = true;
     
@@ -36,6 +41,24 @@ public class MasterServer extends GenericServlet {
         
         for (Slave s : mSlaves.values()) {
             ret.add(s);
+        }
+        
+        return ret;
+    }
+    
+    public static ArrayList<String> getAvailableImages() {
+        ArrayList<String> ret = new ArrayList<String>();
+        
+        String[] images = mImagesPath.list(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                if (name.endsWith(".img.gz")) return true;
+                return false;
+            }
+        });
+        
+        for (String f : images) {
+            ret.add(f);
         }
         
         return ret;

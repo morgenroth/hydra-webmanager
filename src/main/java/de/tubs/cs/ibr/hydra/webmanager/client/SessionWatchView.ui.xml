@@ -5,19 +5,23 @@
  	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
 	<g:HTMLPanel>
  		<b:Row>
-	    	<b:Column size="12">
-	    	    <b:PageHeader>Session</b:PageHeader>
-	    	    <b:NavTabs>
-	    	        <b:NavLink active="true">Stats</b:NavLink>
-	    	        <b:NavLink>Nodes</b:NavLink>
-	    	        <b:NavLink>Map</b:NavLink>
-				</b:NavTabs>
-	    	</b:Column>
+ 		    <b:Column size="12">
+    	    	<b:Heading size="2">Session</b:Heading>
+   	    	</b:Column>
     	</b:Row>
     	<b:Row>
-	    	<b:Column size="12">
+    	    <b:Column size="12">
+	    	    <b:TabPanel>
+	    	        <b:Tab heading="Stats" active="true"></b:Tab>
+	    	        <b:Tab heading="Nodes"></b:Tab>
+	    	        <b:Tab heading="Map"></b:Tab>
+				</b:TabPanel>
+			</b:Column>
+    	</b:Row>
+    	<b:Row>
+    	    <b:Column size="12">
 				<b:Button icon="REPLY" type="LINK" ui:field="buttonBack">Back to sessions</b:Button>
-	    	</b:Column>
+			</b:Column>
     	</b:Row>
 	</g:HTMLPanel>
 </ui:UiBinder> 

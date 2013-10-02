@@ -66,9 +66,9 @@ public class Database {
             PreparedStatement st;
             
             if (sessionKey == null) {
-                st = mConn.prepareStatement("SELECT nodes.id, slaves.id, slaves.name, nodes.name, nodes.state FROM nodes LEFT JOIN slaves ON (slaves.id = nodes.slave);");
+                st = mConn.prepareStatement("SELECT nodes.id, slaves.id, slaves.name, nodes.name, nodes.state, nodes.address FROM nodes LEFT JOIN slaves ON (slaves.id = nodes.slave);");
             } else {
-                st = mConn.prepareStatement("SELECT nodes.id, slaves.id, slaves.name, nodes.name, nodes.state FROM nodes LEFT JOIN slaves ON (slaves.id = nodes.slave) WHERE session = ?;");
+                st = mConn.prepareStatement("SELECT nodes.id, slaves.id, slaves.name, nodes.name, nodes.state, nodes.address FROM nodes LEFT JOIN slaves ON (slaves.id = nodes.slave) WHERE session = ?;");
                 st.setString(1, sessionKey);
             }
             
@@ -82,6 +82,7 @@ public class Database {
                 n.slaveName = rs.getString(3);
                 n.name = rs.getString(4);
                 n.state = Node.State.fromString(rs.getString(5));
+                n.address = rs.getString(6);
                 
                 ret.add(n);
             }

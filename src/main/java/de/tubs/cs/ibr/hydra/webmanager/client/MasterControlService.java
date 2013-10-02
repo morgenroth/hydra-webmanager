@@ -16,4 +16,6 @@ public interface MasterControlService extends RemoteService {
     public ArrayList<Node> getNodes(String sessionKey);
     public ArrayList<Slave> getSlaves();
     public void triggerAction(Session s, Session.Action action);
+    
+    public ArrayList<String> getAvailableImages();
 }

@@ -1,66 +1,327 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
-	xmlns:g="urn:import:com.google.gwt.user.client.ui"
-	xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
- 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
-	<ui:style>
-		.gwt-Row-hidden	{ visibility:hidden }
-	</ui:style>
+	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
+	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui"
+	xmlns:base="urn:import:com.github.gwtbootstrap.client.ui.base">
 	<g:HTMLPanel>
- 		<b:Row>
-	    	<b:Column size="12">
-	    	    <b:PageHeader>Session Editor</b:PageHeader>
-	    	    <b:NavTabs>
-	    	        <b:NavLink ui:field="navProperties">Properties</b:NavLink>
-	    	        <b:NavLink ui:field="navImages">Images</b:NavLink>
-	    	        <b:NavLink ui:field="navBase">Base</b:NavLink>
-	    	        <b:NavLink ui:field="navSetup">Setup</b:NavLink>
-	    	        <b:NavLink ui:field="navMovement">Movement</b:NavLink>
-	    	        <b:NavLink ui:field="navNodes">Nodes</b:NavLink>
-				</b:NavTabs>
-	    	</b:Column>
-    	</b:Row>
-	    <g:DeckPanel ui:field="panelMain">
-	        <!-- Properties -->
-	        <g:FlowPanel>
-			    <b:Row>
-			    	<b:Column size="12">
-			    	    <b:Form type="HORIZONTAL">
-			    	        <b:Fieldset>
-			    	            <b:ControlGroup>
-			    	                <b:ControlLabel for="textDescription">Description</b:ControlLabel>
-			    	                <b:Controls>
-			    	                    <b:TextBox alternateSize="XLARGE" b:id="textDescription" ui:field="textPropDesc"></b:TextBox>
-			    	                    <b:HelpBlock>This is the description shown in the list of sessions.</b:HelpBlock>
-			    	                </b:Controls>
-			    	            </b:ControlGroup>
-			    	            <b:ControlGroup>
-			    	                <b:ControlLabel for="textOwner">Owner</b:ControlLabel>
-			    	                <b:Controls>
-			    	                    <b:TextBox alternateSize="XLARGE" b:id="textOwner" ui:field="textPropOwner"></b:TextBox>
-			    	                    <b:HelpBlock>The creator and owner of this session.</b:HelpBlock>
-			    	                </b:Controls>
-			    	            </b:ControlGroup>
-			    	        </b:Fieldset>
-			    	    </b:Form>
+		<b:Row>
+			<b:Column size="12">
+				<b:Heading size="2">Session Editor</b:Heading>
+			</b:Column>
+		</b:Row>
+		<b:TabPanel>
+			<b:Tab heading="Properties" active="true">
+				<!-- Properties -->
+				<b:Form type="HORIZONTAL">
+					<b:Row>
+						<b:Column size="12">
+							<b:ControlGroup>
+								<b:ControlLabel for="textKey">Key</b:ControlLabel>
+								<b:Controls>
+									<b:TextBox alternateSize="XLARGE" b:id="textKey"
+										ui:field="textPropKey" b:readOnly="true"></b:TextBox>
+								</b:Controls>
+							</b:ControlGroup>
+							<b:ControlGroup>
+								<b:ControlLabel for="textOwner">Owner</b:ControlLabel>
+								<b:Controls>
+									<b:TextBox alternateSize="XLARGE" b:id="textOwner"
+										ui:field="textPropOwner"></b:TextBox>
+								</b:Controls>
+							</b:ControlGroup>
+							<b:ControlGroup>
+								<b:ControlLabel for="textDescription">Description</b:ControlLabel>
+								<b:Controls>
+									<b:TextBox alternateSize="XLARGE" b:id="textDescription"
+										ui:field="textPropDesc"></b:TextBox>
+									<b:HelpBlock>This is the description shown in the list of
+										sessions.</b:HelpBlock>
+								</b:Controls>
+							</b:ControlGroup>
+						</b:Column>
+					</b:Row>
+					<b:Row>
+						<b:Column size="12">
+							<b:FormActions>
+								<b:Button icon="OK" type="SUCCESS" ui:field="buttonPropApply">Apply</b:Button>
+								<b:Button icon="REMOVE" type="DEFAULT" ui:field="buttonPropReset">Reset</b:Button>
+							</b:FormActions>
+						</b:Column>
+					</b:Row>
+				</b:Form>
+			</b:Tab>
+			<!-- Base -->
+			<b:Tab heading="Base">
+				<b:Form type="HORIZONTAL">
+					<b:Row>
+						<b:Column size="12">
+							<!-- base node image -->
+							<b:ControlGroup>
+								<b:ControlLabel for="listImage">Node image</b:ControlLabel>
+								<b:Controls>
+									<b:ListBox alternateSize="XLARGE" b:id="listImage"
+										ui:field="listBaseImage"></b:ListBox>
+									<b:HelpBlock>The selected image will be the base for all
+										created nodes.</b:HelpBlock>
+								</b:Controls>
+							</b:ControlGroup>
+
+							<!-- opkg respository -->
+							<b:ControlGroup>
+								<b:ControlLabel for="textRepository">Package repository</b:ControlLabel>
+								<b:Controls>
+									<b:InputAddOn prependIcon="GLOBE">
+										<b:TextBox alternateSize="XLARGE" b:id="textRepository"
+											ui:field="textBaseRepository" b:placeholder="http://"></b:TextBox>
+									</b:InputAddOn>
+									<b:HelpBlock>This OpenWrt repository will be added to the file
+										/etc/opkg.conf and used as source for installation packages.</b:HelpBlock>
+								</b:Controls>
+							</b:ControlGroup>
+
+							<!-- packages.install -->
+							<b:ControlGroup>
+								<b:ControlLabel for="textPackages">Packages</b:ControlLabel>
+								<b:Controls>
+									<b:TextArea alternateSize="XLARGE" b:id="textPackages"
+										ui:field="textBasePackages"></b:TextArea>
+									<b:HelpBlock>These packages are installed during the base
+										preparation. Put each package into a separate line.</b:HelpBlock>
+								</b:Controls>
+							</b:ControlGroup>
+
+							<!-- TODO: additional packages (GwtUpload) -->
+
+							<!-- Monitor Nodes -->
+							<b:ControlGroup>
+								<b:ControlLabel for="textMonitorNodes">Monitor nodes</b:ControlLabel>
+								<b:Controls>
+									<b:TextArea alternateSize="XLARGE" b:id="textMonitorNodes"
+										ui:field="textBaseMonitorNodes"></b:TextArea>
+									<b:HelpBlock>These hosts can communicate to all the nodes and
+										never gets blocked. Put each IP address (IPv4 only) into a
+										separate line.</b:HelpBlock>
+								</b:Controls>
+							</b:ControlGroup>
+
+							<!-- Node Template (qemu) -->
+							<b:ControlGroup>
+								<b:ControlLabel for="textQemuTemplate">Template (QEMU)</b:ControlLabel>
+								<b:Controls>
+									<b:TextArea alternateSize="XLARGE" b:id="textQemuTemplate"
+										ui:field="textBaseQemuTemplate"></b:TextArea>
+									<b:HelpBlock>This is the template for QEMU virtualization used
+										to create nodes on the slaves.</b:HelpBlock>
+								</b:Controls>
+							</b:ControlGroup>
+
+							<!-- Node Template (vbox) -->
+							<b:ControlGroup>
+								<b:ControlLabel for="textVboxTemplate">Template (VirtualBox)</b:ControlLabel>
+								<b:Controls>
+									<b:TextArea alternateSize="XLARGE" b:id="textVboxTemplate"
+										ui:field="textBaseVboxTemplate"></b:TextArea>
+									<b:HelpBlock>This is the template for VirtualBox virtualization
+										used to create nodes on the slaves.</b:HelpBlock>
+								</b:Controls>
+							</b:ControlGroup>
+						</b:Column>
+					</b:Row>
+					<b:Row>
+						<b:Column size="12">
+							<b:FormActions>
+								<b:Button icon="OK" type="SUCCESS" ui:field="buttonBaseApply">Apply</b:Button>
+								<b:Button icon="REMOVE" type="DEFAULT" ui:field="buttonBaseReset">Reset</b:Button>
+							</b:FormActions>
+						</b:Column>
+					</b:Row>
+				</b:Form>
+		</b:Tab>
+			<!-- Movement -->
+			<b:Tab heading="Movement">
+				<b:Form type="HORIZONTAL">
+					<b:Row>
+						<b:Column size="12">
+							<!-- movement module -->
+							<b:ControlGroup>
+								<b:ControlLabel for="listMovementAlgorithm">Movement Algorithm</b:ControlLabel>
+								<b:Controls>
+									<b:ListBox alternateSize="XLARGE" b:id="listMovementAlgorithm"
+										ui:field="listMovementAlgorithm">
+										<g:item g:value="random_walk">Random Walk</g:item>
+										<g:item g:value="theone">The ONE Trace Player</g:item>
+										<g:item g:value="static">Static Connections</g:item>
+									</b:ListBox>
+									<b:HelpBlock>The movement will be calculated using the selected
+										algorithm.</b:HelpBlock>
+								</b:Controls>
+							</b:ControlGroup>
+							<!-- Each movement algorithm has its own settings -->
+							<g:DeckPanel ui:field="panelMovement">
+								<!-- Random Walk -->
+								<g:FlowPanel>
+									<!-- Duration -->
+									<b:ControlGroup>
+										<b:ControlLabel for="textRwpDuration">Duration</b:ControlLabel>
+										<b:Controls>
+											<b:InputAddOn prependIcon="TIME" appendText="s">
+												<b:TextBox alternateSize="SMALL" b:id="textRwpDuration"
+													ui:field="textMovementRwpDuration" b:placeholder="infinite" />
+											</b:InputAddOn>
+											<b:HelpBlock>
+												This is the time the simulation will last.
+											</b:HelpBlock>
+										</b:Controls>
+									</b:ControlGroup>
+
+									<!-- Number of nodes -->
+									<b:ControlGroup>
+										<b:ControlLabel for="textRwpNumberOfNodes">Number of nodes</b:ControlLabel>
+										<b:Controls>
+											<b:TextBox alternateSize="SMALL" b:id="textRwpNumberOfNodes"
+												ui:field="textMovementRwpNumberOfNodes" b:placeholder="10" />
+										</b:Controls>
+									</b:ControlGroup>
+
+									<!-- Area size -->
+									<b:ControlGroup>
+										<b:ControlLabel for="textRwpAreaSizeHeight">Area</b:ControlLabel>
+										<b:Controls>
+											<b:InputAddOn prependText="Size" appendText="m">
+												<b:TextBox alternateSize="SMALL" b:id="textRwpAreaSizeHeight"
+													ui:field="textMovementRwpAreaSizeHeight" b:placeholder="500" />
+												<base:AddOn text="x" />
+												<b:TextBox alternateSize="SMALL" b:id="textRwpAreaSizeWidth"
+													ui:field="textMovementRwpAreaSizeWidth" b:placeholder="500" />
+											</b:InputAddOn>
+										</b:Controls>
+									</b:ControlGroup>
+
+									<!-- Resolution -->
+									<b:ControlGroup>
+										<b:ControlLabel for="textRwpResolution">Unit size / Resolution</b:ControlLabel>
+										<b:Controls>
+											<b:InputAddOn appendText="s">
+												<b:TextBox alternateSize="SMALL" b:id="textRwpResolution"
+													ui:field="textMovementRwpResolution" b:placeholder="0.2" />
+											</b:InputAddOn>
+											<b:HelpBlock>
+												Calculate step and connection every
+												x seconds.
+												Strict adherence to the resolution
+												can not be guaranteed,
+												however drift in
+												# sleep() will not affect the correctness of
+												the traces.
+											</b:HelpBlock>
+										</b:Controls>
+									</b:ControlGroup>
+
+									<!-- Moving Time -->
+									<b:ControlGroup>
+										<b:ControlLabel for="textRwpMovetime">Moving Time</b:ControlLabel>
+										<b:Controls>
+											<b:InputAddOn appendText="units">
+												<b:TextBox alternateSize="SMALL" b:id="textRwpMovetime"
+													ui:field="textMovementRwpMovetime" b:placeholder="75" />
+											</b:InputAddOn>
+											<b:HelpBlock>
+												Change direction after x units of time.
+											</b:HelpBlock>
+										</b:Controls>
+									</b:ControlGroup>
+
+									<!-- Velocity -->
+									<b:ControlGroup>
+										<b:ControlLabel for="textRwpVelocity">Velocity</b:ControlLabel>
+										<b:Controls>
+											<b:InputAddOn prependText="Range" appendText="m/s">
+												<b:TextBox alternateSize="SMALL" b:id="textRwpVelocity"
+													ui:field="textMovementRwpVmin" b:placeholder="10" />
+												<base:AddOn text="-" />
+												<b:TextBox alternateSize="SMALL" b:id="textRwpVelocityMax"
+													ui:field="textMovementRwpVmax" b:placeholder="10" />
+											</b:InputAddOn>
+											<b:HelpBlock>
+												Speed is uniformly distributed between minimum
+												and maximum.
+											</b:HelpBlock>
+										</b:Controls>
+									</b:ControlGroup>
+
+									<!-- Communication Range -->
+									<b:ControlGroup>
+										<b:ControlLabel for="textRwpRange">Communication Range</b:ControlLabel>
+										<b:Controls>
+											<b:InputAddOn appendText="m">
+												<b:TextBox alternateSize="SMALL" b:id="textRwpRange"
+													ui:field="textMovementRwpRange" b:placeholder="300" />
+											</b:InputAddOn>
+										</b:Controls>
+									</b:ControlGroup>
+								</g:FlowPanel>
+								<!-- ONE Traces -->
+								<g:FlowPanel>
+									<!-- TODO: upload mechanism for trace files -->
+									<b:ControlGroup>
+										<b:ControlLabel for="textOneUpload">Trace</b:ControlLabel>
+										<b:Controls>
+											<b:FileUpload b:id="textOneUpload" ui:field="textMovementOneUpload"></b:FileUpload>
+										</b:Controls>
+									</b:ControlGroup>
+								</g:FlowPanel>
+								<!-- Static -->
+								<g:FlowPanel>
+									<!-- Static connections -->
+									<b:ControlGroup>
+										<b:ControlLabel for="textStaticConnections">Static Connections</b:ControlLabel>
+										<b:Controls>
+											<b:TextArea alternateSize="XLARGE" b:id="textStaticConnections"
+												ui:field="textMovementStaticConnections"></b:TextArea>
+											<b:HelpBlock>Static connections are defined by each
+												connection in one line.
+												Each line defines an unidirectional link. For bidirectional
+												links, both connections
+												must be defined separately.</b:HelpBlock>
+										</b:Controls>
+									</b:ControlGroup>
+								</g:FlowPanel>
+							</g:DeckPanel>
+						</b:Column>
+					</b:Row>
+					<b:Row>
+						<b:Column size="12">
+							<b:FormActions>
+								<b:Button icon="OK" type="SUCCESS" ui:field="buttonMovementApply">Apply</b:Button>
+								<b:Button icon="REMOVE" type="DEFAULT" ui:field="buttonMovementReset">Reset</b:Button>
+							</b:FormActions>
+						</b:Column>
+					</b:Row>
+				</b:Form>
+		</b:Tab>
+			<!-- Nodes -->
+			<b:Tab heading="Nodes">
+				<b:Row>
+					<b:Column size="12">
+						<b:Button icon="PLUS" type="PRIMARY" ui:field="buttonGenerate">Generate
+							nodes</b:Button>
+						<b:Button icon="TRASH" type="DANGER" ui:field="buttonClearAll">Clear all
+							nodes</b:Button>
 					</b:Column>
 				</b:Row>
-			</g:FlowPanel>
-			<!-- Images -->
-			<g:FlowPanel></g:FlowPanel>
-			<!-- Base -->
-			<g:FlowPanel></g:FlowPanel>
-			<!-- Setup -->
-			<g:FlowPanel></g:FlowPanel>
-			<!-- Movement -->
-			<g:FlowPanel></g:FlowPanel>
-			<!-- Nodes -->
-			<g:FlowPanel></g:FlowPanel>
-		</g:DeckPanel>
-   		<b:Row>
-	    	<b:Column size="12">
-				<b:Button icon="REPLY" type="LINK" ui:field="buttonBack">Back to sessions</b:Button>
-	    	</b:Column>
-    	</b:Row>
+				<b:Row>
+					<!-- table of nodes -->
+					<b:Column size="12">
+						<b:CellTable ui:field="tableNodes" />
+					</b:Column>
+				</b:Row>
+			</b:Tab>
+		</b:TabPanel>
+		<b:Row>
+			<b:Column size="12">
+				<b:Button icon="REPLY" type="LINK" ui:field="buttonBack">Back to
+					sessions</b:Button>
+			</b:Column>
+		</b:Row>
 	</g:HTMLPanel>
 </ui:UiBinder> 
