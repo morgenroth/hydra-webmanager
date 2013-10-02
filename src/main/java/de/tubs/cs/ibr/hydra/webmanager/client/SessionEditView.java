@@ -21,6 +21,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventEntry;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
@@ -166,8 +167,18 @@ public class SessionEditView extends View {
     public void eventRaised(Event evt) {
         // refresh table on refresh event
         if (EventType.NODE_STATE_CHANGED.equals(evt)) {
-            // TODO: check the session id
-            refreshNodeTable(mSession);
+            // do not update, if we don't have a session
+            if (mSession == null) return;
+            
+            for (EventEntry e : evt.getEntries()) {
+                if (EventType.EXTRA_SESSION_ID.equals(e.getKey())) {
+                    if (mSession.id.toString().equals(e.getData())) {
+                        // refresh nodes
+                        refreshNodeTable(mSession);
+                        return;
+                    }
+                }
+            }
         }
     }
 

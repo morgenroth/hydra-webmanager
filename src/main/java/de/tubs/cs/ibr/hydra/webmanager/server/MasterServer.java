@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -76,14 +77,22 @@ public class MasterServer extends GenericServlet {
         mSlaves.put(s.toString(), s);
         mConnections.put(s.toString(), sc);
         
-        broadcast(EventType.SLAVE_CONNECTED, null);
+        List<EventEntry> entries = new ArrayList<EventEntry>();
+        entries.add(createEventEntry(EventType.EXTRA_SLAVE_NAME, s.name));
+        entries.add(createEventEntry(EventType.EXTRA_SLAVE_ADDRESS, s.address));
+        
+        broadcast(EventType.SLAVE_CONNECTED, entries);
     }
 
     public static void unregister(Slave s) {
         mSlaves.remove(s.toString());
         mConnections.remove(s.toString());
         
-        broadcast(EventType.SLAVE_DISCONNECTED, null);
+        List<EventEntry> entries = new ArrayList<EventEntry>();
+        entries.add(createEventEntry(EventType.EXTRA_SLAVE_NAME, s.name));
+        entries.add(createEventEntry(EventType.EXTRA_SLAVE_ADDRESS, s.address));
+        
+        broadcast(EventType.SLAVE_DISCONNECTED, entries);
     }
     
     private Thread mSocketLoop = new Thread() {
@@ -139,7 +148,15 @@ public class MasterServer extends GenericServlet {
         mTaskLoop.execute(t);
     }
     
-    public static void broadcast(EventType t, ArrayList<EventEntry> entries) {
+    public static EventEntry createEventEntry(String key, String data) {
+        EventFactory factory = AutoBeanFactorySource.create(EventFactory.class);
+        EventEntry e = factory.evententry().as();
+        e.setKey(key);
+        e.setData(data);
+        return e;
+    }
+    
+    public static void broadcast(EventType t, List<EventEntry> entries) {
         EventFactory factory = AutoBeanFactorySource.create(EventFactory.class);
         Event event = factory.event().as();
         

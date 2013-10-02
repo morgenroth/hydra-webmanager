@@ -8,7 +8,13 @@ public enum EventType {
     SLAVE_DISCONNECTED("slave_disconnected"),
     NODE_STATE_CHANGED("node_state_changed");
     
-    private String mCode = null; 
+    public static final String EXTRA_SESSION_ID = "session_id";
+    public static final String EXTRA_NEW_STATE = "new_state";
+    
+    public static final String EXTRA_SLAVE_NAME = "slave_name";
+    public static final String EXTRA_SLAVE_ADDRESS = "slave_address";
+    
+    private String mCode = null;
     
     EventType(String code) {
         mCode = code;
