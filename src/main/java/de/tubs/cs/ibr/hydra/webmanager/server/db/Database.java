@@ -9,8 +9,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
-import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
-import de.tubs.cs.ibr.hydra.webmanager.shared.Event.EventType;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
@@ -207,7 +206,7 @@ public class Database {
             st.execute();
             
             // broadcast session change
-            MasterServer.broadcast(new Event(EventType.SESSION_STATE_CHANGED));
+            MasterServer.broadcast(EventType.SESSION_STATE_CHANGED, null);
         } catch (SQLException e) {
             e.printStackTrace();
         }

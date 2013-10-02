@@ -12,6 +12,10 @@ import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import org.atmosphere.cpr.Serializer;
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
 
+import com.google.web.bindery.autobean.shared.AutoBean;
+import com.google.web.bindery.autobean.shared.AutoBeanCodex;
+import com.google.web.bindery.autobean.shared.AutoBeanUtils;
+
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 
 public class AtmosphereHandler extends AbstractReflectorAtmosphereHandler {
@@ -39,7 +43,9 @@ public class AtmosphereHandler extends AbstractReflectorAtmosphereHandler {
 
             public void write(OutputStream os, Object o) throws IOException {
                 if (o instanceof Event) {
-                    String payload = Event.encode((Event)o);
+                    AutoBean<Event> bean = AutoBeanUtils.getAutoBean((Event)o);
+                    
+                    String payload = AutoBeanCodex.encode(bean).getPayload();
                     os.write(payload.getBytes(charset));
                     os.flush();
                 }

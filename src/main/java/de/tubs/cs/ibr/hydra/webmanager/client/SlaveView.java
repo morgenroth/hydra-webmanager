@@ -17,7 +17,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
-import de.tubs.cs.ibr.hydra.webmanager.shared.Event.EventType;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
 public class SlaveView extends View {

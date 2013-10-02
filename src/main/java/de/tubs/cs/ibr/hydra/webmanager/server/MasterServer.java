@@ -19,8 +19,12 @@ import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.DefaultBroadcasterFactory;
 
+import com.google.web.bindery.autobean.vm.AutoBeanFactorySource;
+
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
-import de.tubs.cs.ibr.hydra.webmanager.shared.Event.EventType;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventEntry;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventFactory;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
 public class MasterServer extends GenericServlet {
@@ -72,14 +76,14 @@ public class MasterServer extends GenericServlet {
         mSlaves.put(s.toString(), s);
         mConnections.put(s.toString(), sc);
         
-        broadcast(new Event(EventType.SLAVE_CONNECTED));
+        broadcast(EventType.SLAVE_CONNECTED, null);
     }
 
     public static void unregister(Slave s) {
         mSlaves.remove(s.toString());
         mConnections.remove(s.toString());
         
-        broadcast(new Event(EventType.SLAVE_DISCONNECTED));
+        broadcast(EventType.SLAVE_DISCONNECTED, null);
     }
     
     private Thread mSocketLoop = new Thread() {
@@ -133,6 +137,19 @@ public class MasterServer extends GenericServlet {
     
     public static void invoke(Task t) {
         mTaskLoop.execute(t);
+    }
+    
+    public static void broadcast(EventType t, ArrayList<EventEntry> entries) {
+        EventFactory factory = AutoBeanFactorySource.create(EventFactory.class);
+        Event event = factory.event().as();
+        
+        event.setType(t);
+        
+        if (entries != null) {
+            event.setEntries(entries);
+        }
+        
+        broadcast(event);
     }
     
     public static void broadcast(Event evt) {

@@ -21,9 +21,13 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.web.bindery.autobean.shared.AutoBean;
+import com.google.web.bindery.autobean.shared.AutoBeanCodex;
+import com.google.web.bindery.autobean.shared.AutoBeanUtils;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
-import de.tubs.cs.ibr.hydra.webmanager.shared.Event.EventType;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventFactory;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 
 public class HydraApp extends Composite {
 
@@ -51,15 +55,25 @@ public class HydraApp extends Composite {
 
             @Override
             public Object deserialize(String message) throws SerializationException {
-                return Event.decode(message);
+                try {
+                    WebManager.logger.info("message received: " + message.toString());
+                    
+                    EventFactory factory = GWT.create(EventFactory.class);
+                    AutoBean<Event> bean = AutoBeanCodex.decode(factory, Event.class, message);
+                    return bean.as();
+                } catch (java.lang.RuntimeException e) {
+                    //throw new SerializationException("could not decode " + message.toString());
+                    return null;
+                }
             }
 
             @Override
             public String serialize(Object message) throws SerializationException {
                 if (message instanceof Event) {
-                    return Event.encode((Event)message);
+                    AutoBean<Event> bean = AutoBeanUtils.getAutoBean((Event)message);
+                    return AutoBeanCodex.encode(bean).getPayload();
                 }
-                return message.toString();
+                throw new SerializationException("only event objects are allowed");
             }
             
         });
@@ -88,7 +102,7 @@ public class HydraApp extends Composite {
                     // ignore none events
                     if (EventType.NONE.equals(event)) continue;
                     
-                    WebManager.logger.info("received message: " + event.toString());
+                    WebManager.logger.info("received event: " + event.getType().toString());
 
                     // forward the event to the current view
                     if (currentView != null) {
