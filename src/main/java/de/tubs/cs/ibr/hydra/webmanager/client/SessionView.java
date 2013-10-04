@@ -276,6 +276,9 @@ public class SessionView extends View {
         else if (EventType.SESSION_ADDED.equals(evt)) {
             refreshSessionTable();
         }
+        else if (EventType.SESSION_DATA_UPDATED.equals(evt)) {
+            refreshSessionTable();
+        }
     }
     
     @UiHandler("buttonAdd")

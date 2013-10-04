@@ -37,9 +37,10 @@ public class SessionEditView extends View {
     @UiField TextBox textPropDesc;
     @UiField TextBox textPropOwner;
     @UiField TextBox textPropState;
-    
     @UiField CheckBox checkRemove;
     @UiField Button buttonRemove;
+    @UiField Button buttonPropApply;
+    @UiField Button buttonPropReset;
     
     @UiField ListBox listBaseImage;
     @UiField TextBox textBaseRepository;
@@ -217,6 +218,11 @@ public class SessionEditView extends View {
                 refresh();
             }
         }
+        else if (EventType.SESSION_DATA_UPDATED.equals(evt)) {
+            if (isRelated(evt)) {
+                refresh();
+            }
+        }
     }
     
     private boolean isRelated(Event evt) {
@@ -257,6 +263,32 @@ public class SessionEditView extends View {
             }
             
         });
+    }
+    
+    @UiHandler("buttonPropApply")
+    void onPropertiesApply(ClickEvent e) {
+        // apply all properties to the session object
+        mSession.name = textPropDesc.getText();
+        
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.updateSession(mSession, new AsyncCallback<Void>() {
+
+            @Override
+            public void onFailure(Throwable caught) {
+                Window.alert("Could not apply changes to session " + mSession.id.toString());
+            }
+
+            @Override
+            public void onSuccess(Void result) {
+                // do nothing, wait until the event updates the view
+            }
+            
+        });
+    }
+    
+    @UiHandler("buttonPropReset")
+    void onPropertiesReset(ClickEvent e) {
+        refresh();
     }
     
     @UiHandler("listMovementAlgorithm")

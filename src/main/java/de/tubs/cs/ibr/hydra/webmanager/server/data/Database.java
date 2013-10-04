@@ -244,6 +244,26 @@ public class Database {
         }
     }
     
+    public void updateSession(Session s) {
+        try {
+            PreparedStatement st = mConn.prepareStatement("UPDATE sessions SET `name` = ? WHERE id = ?;");
+            
+            st.setString(1, s.name);
+            st.setLong(2, s.id);
+            
+            // execute the query
+            st.execute();
+            
+            List<EventExtra> entries = new ArrayList<EventExtra>();
+            entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+            
+            // broadcast session change
+            MasterServer.broadcast(EventType.SESSION_DATA_UPDATED, entries);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
     public String getUsername(Long userid) {
         String ret = null;
         

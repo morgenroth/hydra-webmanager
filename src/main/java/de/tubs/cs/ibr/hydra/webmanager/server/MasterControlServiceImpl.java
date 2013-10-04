@@ -174,4 +174,9 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         return s;
     }
 
+    @Override
+    public void updateSession(Session s) {
+        Database.getInstance().updateSession(s);
+    }
+
 }

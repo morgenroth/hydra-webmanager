@@ -3,6 +3,7 @@ package de.tubs.cs.ibr.hydra.webmanager.shared;
 
 public enum EventType {
     NONE("none"),
+    SESSION_DATA_UPDATED("session_data_updated"),
     SESSION_STATE_CHANGED("session_state_changed"),
     SESSION_ADDED("session_added"),
     SESSION_REMOVED("session_removed"),
@@ -54,6 +55,9 @@ public enum EventType {
         }
         else if (SESSION_ADDED.getCode().equals(data)) {
             return SESSION_ADDED;
+        }
+        else if (SESSION_DATA_UPDATED.getCode().equals(data)) {
+            return SESSION_DATA_UPDATED;
         }
         
         return NONE;

@@ -18,6 +18,12 @@ public interface MasterControlService extends RemoteService {
     public Session createSession();
     
     /**
+     * Store writable values of the session in the database
+     * @param s
+     */
+    public void updateSession(Session s);
+    
+    /**
      * Get the session data of the given session id
      * @param id Session ID of the requested data
      * @return A session object
