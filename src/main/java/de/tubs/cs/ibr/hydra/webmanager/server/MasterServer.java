@@ -64,11 +64,26 @@ public class MasterServer extends GenericServlet {
         return new File(home_path);
     }
     
-    public static File getWebLocation() throws IOException {
-        File ret = null;
+    public static String getWebLocation() throws IOException {
+        String ret = null;
         
         Properties p = getProperties();
         String webLocation = p.getProperty("web.location");
+        
+        if (webLocation == null) {
+            ret = "http://localhost/hydra";
+        } else {
+            ret = webLocation;
+        }
+        
+        return ret;
+    }
+    
+    public static File getWebDirectory() throws IOException {
+        File ret = null;
+        
+        Properties p = getProperties();
+        String webLocation = p.getProperty("web.dir");
         
         if (webLocation == null) {
             ret = new File(getHomePath(), "htdocs");
@@ -99,7 +114,7 @@ public class MasterServer extends GenericServlet {
     }
     
     private static File getImagesPath() throws IOException {
-        File imagePath = new File(getWebLocation(), "dl");
+        File imagePath = new File(getWebDirectory(), "dl");
         
         if (!imagePath.exists()) {
             imagePath.mkdirs();
