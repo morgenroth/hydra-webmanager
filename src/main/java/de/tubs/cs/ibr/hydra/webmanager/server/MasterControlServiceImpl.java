@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 import de.tubs.cs.ibr.hydra.webmanager.client.MasterControlService;
+import de.tubs.cs.ibr.hydra.webmanager.server.data.Configuration;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
@@ -89,7 +90,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     @Override
     public ArrayList<String> getAvailableImages() {
         try {
-            return MasterServer.getAvailableImages();
+            return Configuration.getAvailableImages();
         } catch (IOException e) {
             // error - can not query the list of images
             return new ArrayList<String>();

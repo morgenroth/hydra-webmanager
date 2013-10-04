@@ -1,4 +1,4 @@
-package de.tubs.cs.ibr.hydra.webmanager.server;
+package de.tubs.cs.ibr.hydra.webmanager.server.data;
 
 import java.io.IOException;
 

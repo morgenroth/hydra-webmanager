@@ -39,7 +39,7 @@ public class Database {
         String driver = "com.mysql.jdbc.Driver";
 
         try {
-            Properties p = MasterServer.getProperties();
+            Properties p = Configuration.getProperties();
             String url = p.getProperty("db.url");
             String dbname = p.getProperty("db.name");
             String username = p.getProperty("db.username");
