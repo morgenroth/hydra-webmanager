@@ -1,6 +1,7 @@
 
 package de.tubs.cs.ibr.hydra.webmanager.server.db;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -8,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
@@ -18,11 +20,6 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 public class Database {
 
     private static Database __db__ = new Database();
-    private static String __url__ = "jdbc:mysql://localhost:3306/";
-    private static String __dbname__ = "hydra";
-    private static String __username__ = "hydra";
-    private static String __password__ = "hyd5$s1mul$tor";
-
     private Connection mConn = null;
 
     public static Database getInstance() {
@@ -38,15 +35,21 @@ public class Database {
         }
     }
 
-    public void open() {
+    private void open() {
         String driver = "com.mysql.jdbc.Driver";
 
         try {
+            Properties p = MasterServer.getProperties();
+            String url = p.getProperty("db.url");
+            String dbname = p.getProperty("db.name");
+            String username = p.getProperty("db.username");
+            String password = p.getProperty("db.password");
+            
             // look for the mysql driver
             Class.forName(driver).newInstance();
             
             // open db connection
-            mConn = DriverManager.getConnection(__url__ + __dbname__ + "?autoReconnect=true", __username__, __password__);
+            mConn = DriverManager.getConnection(url + dbname + "?autoReconnect=true", username, password);
         } catch (SQLException e) {
             mConn = null;
             System.err.println("Mysql Connection Error: ");
@@ -56,6 +59,8 @@ public class Database {
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

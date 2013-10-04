@@ -1,12 +1,15 @@
 package de.tubs.cs.ibr.hydra.webmanager.server;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,11 +36,11 @@ public class MasterServer extends GenericServlet {
     private static ConcurrentHashMap<String, Slave> mSlaves = new ConcurrentHashMap<String, Slave>();
     private static ConcurrentHashMap<String, SlaveConnection> mConnections = new ConcurrentHashMap<String, SlaveConnection>();
     
-    // TODO: make this configurable
-    private static File mImagesPath = new File("/opt/hydrasim.git/master/htdocs/dl");
-    
     private ServerSocket mSockServer = null;
     private Boolean mRunning = true;
+    
+    private static boolean mPropertiesLoaded = false;
+    private static Properties mProperties = new Properties();
     
     private static ExecutorService mTaskLoop = null;
     
@@ -51,10 +54,44 @@ public class MasterServer extends GenericServlet {
         return ret;
     }
     
-    public static ArrayList<String> getAvailableImages() {
+    private static File getHomePath() throws HomePathNotSetException {
+        // get hydra home path
+        String home_path = System.getProperty("config.hydra");
+        
+        if (home_path == null)
+            throw new HomePathNotSetException();
+        
+        return new File(home_path);
+    }
+    
+    public static Properties getProperties() throws IOException {
+        if (!mPropertiesLoaded) {
+            synchronized(mProperties) {
+                if (mPropertiesLoaded) return mProperties;
+                BufferedInputStream stream = new BufferedInputStream(new FileInputStream(new File(getHomePath(), "config.properties")));
+                mProperties.load(stream);
+                stream.close();
+                mPropertiesLoaded = true;
+            }
+        }
+        
+        return mProperties;
+    }
+    
+    private static File getImagesPath() throws IOException {
+        File imagePath = new File(getHomePath(), "images");
+        
+        if (!imagePath.exists()) {
+            imagePath.mkdirs();
+        }
+        
+        return imagePath;
+    }
+    
+    public static ArrayList<String> getAvailableImages() throws IOException {
         ArrayList<String> ret = new ArrayList<String>();
         
-        String[] images = mImagesPath.list(new FilenameFilter() {
+        String[] images = getImagesPath().list(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
                 if (name.endsWith(".img.gz")) return true;
