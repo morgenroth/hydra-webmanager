@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CellTable;
+import com.github.gwtbootstrap.client.ui.CheckBox;
 import com.github.gwtbootstrap.client.ui.ListBox;
 import com.github.gwtbootstrap.client.ui.NavLink;
 import com.github.gwtbootstrap.client.ui.TextBox;
@@ -35,6 +36,10 @@ public class SessionEditView extends View {
     @UiField TextBox textPropKey;
     @UiField TextBox textPropDesc;
     @UiField TextBox textPropOwner;
+    @UiField TextBox textPropState;
+    
+    @UiField CheckBox checkRemove;
+    @UiField Button buttonRemove;
     
     @UiField ListBox listBaseImage;
     @UiField TextBox textBaseRepository;
@@ -68,7 +73,12 @@ public class SessionEditView extends View {
             init(s);
         }
     }
-        
+    
+    private void refresh() {
+        if (mSession == null) return;
+        init(mSession);
+    }
+    
     private void init(Session s) {
         // load session properties
         refreshSessionProperties(s);
@@ -97,6 +107,7 @@ public class SessionEditView extends View {
                 textPropKey.setText(result.id.toString());
                 textPropDesc.setText(result.name);
                 textPropOwner.setText(result.username);
+                textPropState.setText(result.state.toString());
                 
                 // load session images
                 refreshSessionImages(result.image);
@@ -185,27 +196,67 @@ public class SessionEditView extends View {
 
     @Override
     public void eventRaised(Event evt) {
+        // do not update, if we don't have a session
+        if (mSession == null) return;
+        
         // refresh table on refresh event
         if (EventType.NODE_STATE_CHANGED.equals(evt)) {
-            // do not update, if we don't have a session
-            if (mSession == null) return;
-            
-            for (EventExtra e : evt.getExtras()) {
-                if (EventType.EXTRA_SESSION_ID.equals(e.getKey())) {
-                    if (mSession.id.toString().equals(e.getData())) {
-                        // refresh nodes
-                        refreshNodeTable(mSession);
-                        return;
-                    }
+            if (isRelated(evt)) {
+                // refresh nodes
+                refreshNodeTable(mSession);
+            }
+        }
+        else if (EventType.SESSION_REMOVED.equals(evt)) {
+            if (isRelated(evt)) {
+                // close current view
+                resetView();
+            }
+        }
+        else if (EventType.SESSION_STATE_CHANGED.equals(evt)) {
+            if (isRelated(evt)) {
+                refresh();
+            }
+        }
+    }
+    
+    private boolean isRelated(Event evt) {
+        for (EventExtra e : evt.getExtras()) {
+            if (EventType.EXTRA_SESSION_ID.equals(e.getKey())) {
+                if (mSession.id.toString().equals(e.getData())) {
+                    return true;
                 }
             }
         }
+        return false;
     }
 
     @UiHandler("buttonBack")
     void onClickBack(ClickEvent e) {
         // switch back to session view
         resetView();
+    }
+    
+    @UiHandler("checkRemove")
+    void onRemoveLockChanged(ClickEvent e) {
+        buttonRemove.setEnabled(checkRemove.isChecked());
+    }
+    
+    @UiHandler("buttonRemove")
+    void onRemoveSession(ClickEvent e) {
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.triggerAction(mSession, Session.Action.REMOVE, new AsyncCallback<Void>() {
+
+            @Override
+            public void onFailure(Throwable caught) {
+                Window.alert("Can not remove session " + mSession.id.toString());
+            }
+
+            @Override
+            public void onSuccess(Void result) {
+                // do nothing, wait until the removal event closes this view
+            }
+            
+        });
     }
     
     @UiHandler("listMovementAlgorithm")

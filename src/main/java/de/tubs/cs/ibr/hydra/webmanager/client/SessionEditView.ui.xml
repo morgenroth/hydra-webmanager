@@ -38,6 +38,20 @@
 										sessions.</b:HelpBlock>
 								</b:Controls>
 							</b:ControlGroup>
+							<b:ControlGroup>
+								<b:ControlLabel for="textState">State</b:ControlLabel>
+								<b:Controls>
+									<b:TextBox alternateSize="XLARGE" b:id="textState"
+										ui:field="textPropState" b:readOnly="true" text="initial"></b:TextBox>
+								</b:Controls>
+							</b:ControlGroup>
+							<b:ControlGroup>
+								<b:ControlLabel>Removal</b:ControlLabel>
+								<b:Controls>
+									<b:CheckBox ui:field="checkRemove">Yes, I want to DELETE this session.</b:CheckBox>
+									<b:Button ui:field="buttonRemove" type="DANGER" b:enabled="false">Remove</b:Button>
+								</b:Controls>
+							</b:ControlGroup>
 						</b:Column>
 					</b:Row>
 					<b:Row>

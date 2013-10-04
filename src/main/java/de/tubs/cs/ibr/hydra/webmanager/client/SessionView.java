@@ -195,7 +195,7 @@ public class SessionView extends View {
 
                     @Override
                     public void onFailure(Throwable caught) {
-                        Window.alert("Action '" + action.toString() + "' on session '" + s.name + "' failed!");
+                        Window.alert("Action '" + action.toString() + "' on session " + s.id.toString() + " failed!");
                     }
 
                     @Override
