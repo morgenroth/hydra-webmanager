@@ -39,25 +39,29 @@ public class SessionContainer {
         // only initialize once
         if (mPath != null) return;
         
+        File p = null;
+        
         // check if the session key is set
         if (mSessionKey == null) {
             // initialize default session container
-            mPath = Configuration.getDefaultSessionPath();
+            p = Configuration.getDefaultSessionPath();
         } else {
             // construct the container path
-            mPath = new File(Configuration.getSessionPath(), mSessionKey);
+            p = new File(Configuration.getSessionPath(), mSessionKey);
         }
         
         // check if the session already exists
-        if (!mPath.exists()) {
+        if (!p.exists()) {
             // throw exception if no default container is specified
             if (defaultContainer == null) {
                 throw new SessionContainerNotInitialized();
             }
             
             // session not available - copy the default session
-            copy(defaultContainer, mPath);
+            copy(defaultContainer, p);
         }
+        
+        mPath = p;
     }
     
     public synchronized void destroy() {
