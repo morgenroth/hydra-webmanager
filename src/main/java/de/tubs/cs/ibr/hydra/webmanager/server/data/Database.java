@@ -1,5 +1,5 @@
 
-package de.tubs.cs.ibr.hydra.webmanager.server.db;
+package de.tubs.cs.ibr.hydra.webmanager.server.data;
 
 import java.io.IOException;
 import java.sql.Connection;
