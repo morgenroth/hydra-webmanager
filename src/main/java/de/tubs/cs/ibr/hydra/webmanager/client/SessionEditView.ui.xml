@@ -13,6 +13,7 @@
 			<b:Tab heading="Properties" active="true">
 				<!-- Properties -->
 				<b:Form type="HORIZONTAL">
+				    <b:Row><b:Column size="12" ui:field="alertPropColumn" /></b:Row>
 					<b:Row>
 						<b:Column size="12">
 							<b:ControlGroup>
@@ -67,6 +68,7 @@
 			<!-- Base -->
 			<b:Tab heading="Base">
 				<b:Form type="HORIZONTAL">
+				    <b:Row><b:Column size="12" ui:field="alertBaseColumn" /></b:Row>
 					<b:Row>
 						<b:Column size="12">
 							<!-- base node image -->
@@ -154,6 +156,7 @@
 			<!-- Movement -->
 			<b:Tab heading="Movement">
 				<b:Form type="HORIZONTAL">
+				    <b:Row><b:Column size="12" ui:field="alertMovementColumn" /></b:Row>
 					<b:Row>
 						<b:Column size="12">
 							<!-- movement module -->
@@ -315,6 +318,7 @@
 		</b:Tab>
 			<!-- Nodes -->
 			<b:Tab heading="Nodes">
+				<b:Row><b:Column size="12" ui:field="alertNodesColumn" /></b:Row>
 				<b:Row>
 					<b:Column size="12">
 						<b:Button icon="PLUS" type="PRIMARY" ui:field="buttonGenerate">Generate

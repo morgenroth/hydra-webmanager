@@ -3,12 +3,15 @@ package de.tubs.cs.ibr.hydra.webmanager.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.gwtbootstrap.client.ui.Alert;
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CellTable;
 import com.github.gwtbootstrap.client.ui.CheckBox;
+import com.github.gwtbootstrap.client.ui.Column;
 import com.github.gwtbootstrap.client.ui.ListBox;
 import com.github.gwtbootstrap.client.ui.NavLink;
 import com.github.gwtbootstrap.client.ui.TextBox;
+import com.github.gwtbootstrap.client.ui.constants.AlertType;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -41,6 +44,7 @@ public class SessionEditView extends View {
     @UiField Button buttonRemove;
     @UiField Button buttonPropApply;
     @UiField Button buttonPropReset;
+    @UiField Column alertPropColumn;
     
     @UiField ListBox listBaseImage;
     @UiField TextBox textBaseRepository;
@@ -52,6 +56,8 @@ public class SessionEditView extends View {
     
     NavLink activeNavLink = null;
     Session mSession = null;
+    
+    final Alert mPropAlert = new Alert();
     
     // data provider for the node table
     ListDataProvider<Node> mDataProvider = new ListDataProvider<Node>();
@@ -254,12 +260,28 @@ public class SessionEditView extends View {
 
             @Override
             public void onFailure(Throwable caught) {
-                Window.alert("Can not remove session " + mSession.id.toString());
+                if (mPropAlert.getElement().hasParentElement())
+                    mPropAlert.removeFromParent();
+                
+                mPropAlert.setType(AlertType.ERROR);
+                mPropAlert.setText("Failure! Can not remove this session.");
+                mPropAlert.setClose(true);
+                mPropAlert.setAnimation(true);
+                alertPropColumn.add(mPropAlert);
             }
 
             @Override
             public void onSuccess(Void result) {
-                // do nothing, wait until the removal event closes this view
+                if (mPropAlert.getElement().hasParentElement())
+                    mPropAlert.removeFromParent();
+                
+                mPropAlert.setType(AlertType.SUCCESS);
+                mPropAlert.setText("Successful removed!");
+                mPropAlert.setClose(true);
+                mPropAlert.setAnimation(true);
+                alertPropColumn.add(mPropAlert);
+                
+                // now the removal event will close this view
             }
             
         });
@@ -275,12 +297,24 @@ public class SessionEditView extends View {
 
             @Override
             public void onFailure(Throwable caught) {
-                Window.alert("Could not apply changes to session " + mSession.id.toString());
+                alertPropColumn.clear();
+                
+                mPropAlert.setType(AlertType.ERROR);
+                mPropAlert.setText("Failure! Can not apply session changes.");
+                mPropAlert.setClose(true);
+                mPropAlert.setAnimation(true);
+                alertPropColumn.add(mPropAlert);
             }
 
             @Override
             public void onSuccess(Void result) {
-                // do nothing, wait until the event updates the view
+                alertPropColumn.clear();
+                
+                mPropAlert.setType(AlertType.SUCCESS);
+                mPropAlert.setText("Successful saved!");
+                mPropAlert.setClose(true);
+                mPropAlert.setAnimation(true);
+                alertPropColumn.add(mPropAlert);
             }
             
         });
