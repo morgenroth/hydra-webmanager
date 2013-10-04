@@ -1,34 +1,64 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
-	xmlns:g="urn:import:com.google.gwt.user.client.ui"
-	xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
- 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
+	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
+	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
 	<g:HTMLPanel>
- 		<b:Row>
- 		    <b:Column size="12">
-    	    	<b:Heading size="2">Session</b:Heading>
-   	    	</b:Column>
-    	</b:Row>
-    	<b:Row>
-    	    <b:Column size="12">
-	    	    <b:TabPanel>
-	    	        <b:Tab heading="Stats" active="true"></b:Tab>
-	    	        <b:Tab heading="Nodes">
+		<b:Row>
+			<b:Column size="12">
+				<b:Heading size="2">Session</b:Heading>
+			</b:Column>
+		</b:Row>
+		<b:Row>
+			<b:Column size="12">
+				<b:TabPanel>
+					<b:Tab heading="Stats" active="true">
+						<b:Form type="HORIZONTAL">
+							<b:ControlGroup>
+								<b:ControlLabel for="textDescription">Description</b:ControlLabel>
+								<b:Controls>
+									<b:TextBox alternateSize="XLARGE" b:id="textDescription" b:readOnly="true" ui:field="textStatsDesc" />
+								</b:Controls>
+							</b:ControlGroup>
+							<b:ControlGroup>
+								<b:ControlLabel for="textState">State</b:ControlLabel>
+								<b:Controls>
+									<b:TextBox alternateSize="XLARGE" b:id="textState"
+										ui:field="textStatsState" b:readOnly="true" text="initial"></b:TextBox>
+								</b:Controls>
+							</b:ControlGroup>
+							<b:ControlGroup>
+								<b:ControlLabel for="textElapsedTime">Elapsed Time</b:ControlLabel>
+								<b:Controls>
+									<b:InputAddOn prependIcon="TIME">
+										<b:TextBox b:id="textElapsedTime" ui:field="textStatsElapsedTime" b:readOnly="true" text="00:00:00 / 00:00:00" />
+									</b:InputAddOn>
+								</b:Controls>
+							</b:ControlGroup>
+							<b:ControlGroup>
+								<b:ControlLabel for="progressStats">Progress</b:ControlLabel>
+								<b:Controls>
+									<b:ProgressBar type="ANIMATED" percent="100" ui:field="progressStats" />
+								</b:Controls>
+							</b:ControlGroup>
+						</b:Form>
+					</b:Tab>
+					<b:Tab heading="Nodes">
 						<b:Row>
 							<!-- table of nodes -->
 							<b:Column size="12">
 								<b:CellTable ui:field="tableNodes" />
 							</b:Column>
 						</b:Row>
-	    	        </b:Tab>
-	    	        <b:Tab heading="Map"></b:Tab>
+					</b:Tab>
+					<b:Tab heading="Map"></b:Tab>
 				</b:TabPanel>
 			</b:Column>
-    	</b:Row>
-    	<b:Row>
-    	    <b:Column size="12">
-				<b:Button icon="REPLY" type="LINK" ui:field="buttonBack">Back to sessions</b:Button>
+		</b:Row>
+		<b:Row>
+			<b:Column size="12">
+				<b:Button icon="REPLY" type="LINK" ui:field="buttonBack">Back to
+					sessions</b:Button>
 			</b:Column>
-    	</b:Row>
+		</b:Row>
 	</g:HTMLPanel>
 </ui:UiBinder> 
