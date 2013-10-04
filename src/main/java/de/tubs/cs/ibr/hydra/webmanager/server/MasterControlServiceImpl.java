@@ -8,6 +8,7 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import de.tubs.cs.ibr.hydra.webmanager.client.MasterControlService;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Configuration;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
+import de.tubs.cs.ibr.hydra.webmanager.server.data.SessionContainer;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session.Action;
@@ -50,11 +51,26 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
                         
                     case RESET:
                         // check if transition is allowed
-                        if (Session.State.RUNNING.equals(session.state) || Session.State.DRAFT.equals(session.state)) break;
+                        if (Session.State.RUNNING.equals(session.state)
+                                || Session.State.DRAFT.equals(session.state)
+                                || Session.State.ERROR.equals(session.state))
+                            break;
                         
                         // set new state in database
                         Database.getInstance().setState(session, Session.State.DRAFT);
 
+                        break;
+                        
+                    case REMOVE:
+                        // check if transition is allowed
+                        if (!Session.State.DRAFT.equals(session.state)
+                                && !Session.State.ERROR.equals(session.state)
+                                && !Session.State.INITIAL.equals(session.state))
+                            break;
+                        
+                        // set new state in database
+                        Database.getInstance().removeSession(session);
+                        
                         break;
                         
                     default:
@@ -69,7 +85,23 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
 
     @Override
     public Session getSession(Long id) {
-        return Database.getInstance().getSession(id);
+        Session s = Database.getInstance().getSession(id);
+        
+        // get a session container
+        SessionContainer sc = SessionContainer.getContainer(s);
+        
+        try {
+            // initialize the container
+            sc.initialize(null);
+            
+            // inject container parameters
+            sc.inject(s);
+        } catch (IOException e) {
+            // container not ready
+            s.state = Session.State.INITIAL;
+        }
+        
+        return s;
     }
 
     @Override
@@ -95,6 +127,32 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
             // error - can not query the list of images
             return new ArrayList<String>();
         }
+    }
+
+    @Override
+    public Session createSession() {
+        // create a new session in the database
+        final Session s = Database.getInstance().createSession();
+        
+        final SessionContainer sc = SessionContainer.getContainer(s);
+        
+        MasterServer.invoke(new Task() {
+            @Override
+            public void run() {
+                try {
+                    // trigger initialization of the session
+                    sc.initialize(SessionContainer.getDefault());
+                    
+                    // set session state to DRAFT
+                    Database.getInstance().setState(s, Session.State.DRAFT);
+                } catch (IOException e) {
+                    // set session state to ERROR
+                    Database.getInstance().setState(s, Session.State.ERROR);
+                }
+            }
+        });
+        
+        return s;
     }
 
 }

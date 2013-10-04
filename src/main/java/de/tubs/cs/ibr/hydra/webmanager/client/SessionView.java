@@ -169,6 +169,14 @@ public class SessionView extends View {
                         button.setType(ButtonType.DANGER);
                         button.setIcon(IconType.STOP);
                         return "Abort";
+                    case INITIAL:
+                        button.setType(ButtonType.DANGER);
+                        button.setIcon(IconType.REMOVE);
+                        return "Remove";
+                    case ERROR:
+                        button.setType(ButtonType.DANGER);
+                        button.setIcon(IconType.REMOVE);
+                        return "Remove";
                     default:
                         button.setType(ButtonType.WARNING);
                         button.setIcon(IconType.BACKWARD);
@@ -260,6 +268,12 @@ public class SessionView extends View {
     public void eventRaised(Event evt) {
         // refresh table on refresh event
         if (EventType.SESSION_STATE_CHANGED.equals(evt)) {
+            refreshSessionTable();
+        }
+        else if (EventType.SESSION_REMOVED.equals(evt)) {
+            refreshSessionTable();
+        }
+        else if (EventType.SESSION_ADDED.equals(evt)) {
             refreshSessionTable();
         }
     }

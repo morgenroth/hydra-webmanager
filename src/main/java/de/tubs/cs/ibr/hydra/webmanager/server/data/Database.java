@@ -7,11 +7,13 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
+import de.tubs.cs.ibr.hydra.webmanager.server.Task;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
@@ -166,6 +168,80 @@ public class Database {
         }
         
         return null;
+    }
+    
+    public Session createSession() {
+        Long sessionId = null;
+
+        try {
+            PreparedStatement st = mConn.prepareStatement("INSERT INTO sessions (`user`, `created`) VALUES (?, NOW());", Statement.RETURN_GENERATED_KEYS);
+            
+            // TODO: set right user id
+            st.setLong(1, 1);
+            
+            // execute insertion
+            st.execute();
+            
+            // get session id from result-set
+            ResultSet rs = st.getGeneratedKeys();
+            if (rs.next()) {
+                sessionId = rs.getLong(1);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        // something went wrong
+        if (sessionId == null)
+            return null;
+        
+        // broadcast session removal
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, sessionId.toString()));
+        
+        MasterServer.broadcast(EventType.SESSION_ADDED, entries);
+        
+        return getSession(sessionId);
+    }
+    
+    public void removeSession(final Session s) {
+        try {
+            PreparedStatement st = mConn.prepareStatement("DELETE FROM sessions WHERE id = ?;");
+            
+            // set the session id
+            st.setLong(1, s.id);
+            
+            // execute insertion
+            st.execute();
+            
+            // enqueue directory removal
+            MasterServer.invoke(new Task() {
+                @Override
+                public void run() {
+                    try {
+                        SessionContainer sc = SessionContainer.getContainer(s);
+                        
+                        // trigger initialization of the session
+                        sc.initialize(null);
+
+                        // destroy the container (remove all files)
+                        sc.destroy();
+                    } catch (IOException e) {
+                        // ignore any errors
+                        e.printStackTrace();
+                    }
+                }
+            });
+            
+            // broadcast session removal
+            List<EventExtra> entries = new ArrayList<EventExtra>();
+            entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+            
+            MasterServer.broadcast(EventType.SESSION_REMOVED, entries);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
     
     public String getUsername(Long userid) {

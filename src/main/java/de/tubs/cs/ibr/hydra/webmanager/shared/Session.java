@@ -13,7 +13,8 @@ public class Session implements Serializable {
     public enum Action {
         ABORT("Abort"),
         RESET("Reset"),
-        QUEUE("Queue");
+        QUEUE("Queue"),
+        REMOVE("Remove");
         
         private String mValue;
         
@@ -37,16 +38,21 @@ public class Session implements Serializable {
             else if (RESET.equals(value)) {
                 return Action.RESET;
             }
+            else if (REMOVE.equals(value)) {
+                return Action.REMOVE;
+            }
             return Action.ABORT;
         }
     };
 
     public enum State {
+        INITIAL("initial"),
         DRAFT("draft"),
         PENDING("pending"),
         RUNNING("running"),
         FINISHED("finished"),
-        ABORTED("aborted");
+        ABORTED("aborted"),
+        ERROR("error");
         
         private String mTag;
         
@@ -79,6 +85,12 @@ public class Session implements Serializable {
             }
             else if (ABORTED.equals(tag)) {
                 return State.ABORTED;
+            }
+            else if (INITIAL.equals(tag)) {
+                return State.INITIAL;
+            }
+            else if (ERROR.equals(tag)) {
+                return State.ERROR;
             }
             return State.DRAFT;
         }

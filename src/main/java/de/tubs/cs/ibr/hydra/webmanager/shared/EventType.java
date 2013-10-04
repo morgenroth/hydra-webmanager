@@ -4,6 +4,8 @@ package de.tubs.cs.ibr.hydra.webmanager.shared;
 public enum EventType {
     NONE("none"),
     SESSION_STATE_CHANGED("session_state_changed"),
+    SESSION_ADDED("session_added"),
+    SESSION_REMOVED("session_removed"),
     SLAVE_CONNECTED("slave_connected"),
     SLAVE_DISCONNECTED("slave_disconnected"),
     NODE_STATE_CHANGED("node_state_changed");
@@ -46,6 +48,12 @@ public enum EventType {
         }
         else if (NODE_STATE_CHANGED.getCode().equals(data)) {
             return NODE_STATE_CHANGED;
+        }
+        else if (SESSION_REMOVED.getCode().equals(data)) {
+            return SESSION_REMOVED;
+        }
+        else if (SESSION_ADDED.getCode().equals(data)) {
+            return SESSION_ADDED;
         }
         
         return NONE;

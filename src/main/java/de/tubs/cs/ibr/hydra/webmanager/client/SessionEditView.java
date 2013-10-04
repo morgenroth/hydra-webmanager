@@ -60,6 +60,16 @@ public class SessionEditView extends View {
         // create node table
         createNodeTable();
         
+        if (s == null) {
+            // create a session first
+            createSession();
+        } else {
+            // initialize the session directly
+            init(s);
+        }
+    }
+        
+    private void init(Session s) {
         // load session properties
         refreshSessionProperties(s);
         
@@ -68,11 +78,8 @@ public class SessionEditView extends View {
     }
     
     private void refreshSessionProperties(Session session) {
-        if (session == null) {
-            textPropKey.setText("- not assigned -");
-            refreshSessionImages(null);
-            return;
-        }
+        // check for null session objects
+        if (session == null) return;
         
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
         mcs.getSession(session.id, new AsyncCallback<Session>() {
@@ -90,7 +97,6 @@ public class SessionEditView extends View {
                 textPropKey.setText(result.id.toString());
                 textPropDesc.setText(result.name);
                 textPropOwner.setText(result.username);
-                textPropOwner.setReadOnly(true);
                 
                 // load session images
                 refreshSessionImages(result.image);
@@ -149,6 +155,20 @@ public class SessionEditView extends View {
                 }
             }
             
+        });
+    }
+    
+    private void createSession() {
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.createSession(new AsyncCallback<Session>() {
+            @Override
+            public void onFailure(Throwable caught) {
+            }
+
+            @Override
+            public void onSuccess(Session result) {
+                init(result);
+            }
         });
     }
     

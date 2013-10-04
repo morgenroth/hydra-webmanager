@@ -12,6 +12,14 @@ public class Configuration {
     private static boolean mPropertiesLoaded = false;
     private static Properties mProperties = new Properties();
     
+    public static File getSessionPath() throws IOException {
+        return new File(getHomePath(), "sessions");
+    }
+    
+    public static File getDefaultSessionPath() throws IOException {
+        return new File(getSessionPath(), "default");
+    }
+    
     public static File getHomePath() throws HomePathNotSetException {
         // get hydra home path
         String home_path = System.getProperty("config.hydra");

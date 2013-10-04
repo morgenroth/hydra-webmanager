@@ -19,14 +19,14 @@
 								<b:ControlLabel for="textKey">Key</b:ControlLabel>
 								<b:Controls>
 									<b:TextBox alternateSize="XLARGE" b:id="textKey"
-										ui:field="textPropKey" b:readOnly="true"></b:TextBox>
+										ui:field="textPropKey" b:readOnly="true" text="- not assigned -"></b:TextBox>
 								</b:Controls>
 							</b:ControlGroup>
 							<b:ControlGroup>
 								<b:ControlLabel for="textOwner">Owner</b:ControlLabel>
 								<b:Controls>
 									<b:TextBox alternateSize="XLARGE" b:id="textOwner"
-										ui:field="textPropOwner"></b:TextBox>
+										ui:field="textPropOwner" b:readOnly="true" text="- not assigned -"></b:TextBox>
 								</b:Controls>
 							</b:ControlGroup>
 							<b:ControlGroup>
