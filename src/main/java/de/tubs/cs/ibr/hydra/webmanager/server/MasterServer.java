@@ -54,7 +54,7 @@ public class MasterServer extends GenericServlet {
         return ret;
     }
     
-    private static File getHomePath() throws HomePathNotSetException {
+    public static File getHomePath() throws HomePathNotSetException {
         // get hydra home path
         String home_path = System.getProperty("config.hydra");
         
@@ -62,6 +62,26 @@ public class MasterServer extends GenericServlet {
             throw new HomePathNotSetException();
         
         return new File(home_path);
+    }
+    
+    public static File getWebLocation() throws IOException {
+        File ret = null;
+        
+        Properties p = getProperties();
+        String webLocation = p.getProperty("web.location");
+        
+        if (webLocation == null) {
+            ret = new File(getHomePath(), "htdocs");
+        } else {
+            ret = new File(webLocation);
+        }
+        
+        // create directory is it does not exists
+        if (!ret.exists()) {
+            ret.mkdirs();
+        }
+        
+        return ret;
     }
     
     public static Properties getProperties() throws IOException {
@@ -79,7 +99,7 @@ public class MasterServer extends GenericServlet {
     }
     
     private static File getImagesPath() throws IOException {
-        File imagePath = new File(getHomePath(), "images");
+        File imagePath = new File(getWebLocation(), "dl");
         
         if (!imagePath.exists()) {
             imagePath.mkdirs();
