@@ -28,6 +28,15 @@ public class Database {
         if (__db__.isClosed()) __db__.open();
         return __db__;
     }
+    
+    public void close() {
+        if (mConn != null)
+            try {
+                mConn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+    }
 
     public boolean isClosed() {
         try {
