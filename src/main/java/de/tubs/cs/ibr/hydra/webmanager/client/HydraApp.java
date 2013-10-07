@@ -6,7 +6,6 @@ import org.atmosphere.gwt20.client.Atmosphere;
 import org.atmosphere.gwt20.client.AtmosphereCloseHandler;
 import org.atmosphere.gwt20.client.AtmosphereMessageHandler;
 import org.atmosphere.gwt20.client.AtmosphereOpenHandler;
-import org.atmosphere.gwt20.client.AtmosphereRequest;
 import org.atmosphere.gwt20.client.AtmosphereRequestConfig;
 import org.atmosphere.gwt20.client.AtmosphereResponse;
 import org.atmosphere.gwt20.client.ClientSerializer;
@@ -18,9 +17,9 @@ import com.github.gwtbootstrap.client.ui.NavLink;
 import com.github.gwtbootstrap.client.ui.constants.AlertType;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
@@ -36,7 +35,7 @@ public class HydraApp extends Composite {
 
     private static HydraAppUiBinder uiBinder = GWT.create(HydraAppUiBinder.class);
 
-    private AtmosphereRequest jsonRequest;
+    private Atmosphere atmosphere = null;
 
     interface HydraAppUiBinder extends UiBinder<Widget, HydraApp> {
     }
@@ -53,27 +52,52 @@ public class HydraApp extends Composite {
 
     public HydraApp() {
         initWidget(uiBinder.createAndBindUi(this));
+    }
+    
+    @Override
+    protected void initWidget(Widget widget) {
+        super.initWidget(widget);
         
         mAlert.setType(AlertType.INFO);
         mAlert.setHeading("Server:");
         mAlert.setText("Connecting...");
         mAlert.setAnimation(true);
         alertColumn.add(mAlert);
+        
+        changeView(null);
+    }
+    
+    @UiHandler("navSession")
+    void onSessionsClick(ClickEvent e) {
+        changeView(null);
+    }
+    
+    @UiHandler("navSlaves")
+    void onSlavesClick(ClickEvent e) {
+        changeView(new SlaveView(HydraApp.this));
+    }
+    
+    @UiHandler("navNodes")
+    void onNodesClick(ClickEvent e) {
+        changeView(new NodeView(HydraApp.this, null));
+    }
 
-        Atmosphere atmosphere = Atmosphere.create();
+    @Override
+    protected void onAttach() {
+        super.onAttach();
+        
+        // create a new atmosphere client
+        atmosphere = Atmosphere.create();
 
         // setup JSON Atmosphere connection
         AtmosphereRequestConfig jsonRequestConfig = AtmosphereRequestConfig.create(new ClientSerializer() {
             
-            boolean mInitialized = false;
-
             @Override
             public Object deserialize(String message) throws SerializationException {
                 EventFactory factory = GWT.create(EventFactory.class);
-                
-                // drop the first message
-                if (!mInitialized) {
-                    mInitialized = true;
+
+                // drop invalid messages
+                if (!message.startsWith("{")) {
                     Event e = factory.event().as();
                     e.setType(EventType.NONE);
                     return e;
@@ -139,39 +163,17 @@ public class HydraApp extends Composite {
         });
 
         // subscribe to atmosphere channel
-        jsonRequest = atmosphere.subscribe(jsonRequestConfig);
-        
-        // add navigation
-        navSession.addClickHandler(new ClickHandler() {
-
-            @Override
-            public void onClick(ClickEvent event) {
-                changeView(null);
-            }
-            
-        });
-        
-        navSlaves.addClickHandler(new ClickHandler() {
-
-            @Override
-            public void onClick(ClickEvent event) {
-                changeView(new SlaveView(HydraApp.this));
-            }
-            
-        });
-        
-        navNodes.addClickHandler(new ClickHandler() {
-
-            @Override
-            public void onClick(ClickEvent event) {
-                changeView(new NodeView(HydraApp.this, null));
-            }
-            
-        });
-        
-        changeView(null);
+        atmosphere.subscribe(jsonRequestConfig);
     }
-    
+
+    @Override
+    protected void onDetach() {
+        // unsubscribe from atmosphere channel
+        atmosphere.unsubscribe();
+        
+        super.onDetach();
+    }
+
     public void changeView(View newView) {
         if (newView == null) {
             newView = new SessionView(HydraApp.this);
