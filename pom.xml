@@ -16,7 +16,7 @@
     <!-- Convenience property to set the GWT version -->
     <gwtVersion>2.5.1</gwtVersion>
     <!-- Convenience property to set the Atmosphere version -->
-    <atmosphere-version>1.1.0.RC5</atmosphere-version>
+    <atmosphere-version>2.0.0</atmosphere-version>
     <!-- GWT needs at least java 1.5 -->
     <webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -104,6 +104,26 @@
 		<groupId>org.json</groupId>
 		<artifactId>json</artifactId>
 		<version>20090211</version>
+	</dependency>
+	<dependency>
+		<groupId>org.atmosphere</groupId>
+		<artifactId>atmosphere-compat-tomcat7</artifactId>
+		<version>${atmosphere-version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.atmosphere</groupId>
+		<artifactId>atmosphere-compat-tomcat</artifactId>
+		<version>${atmosphere-version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.atmosphere</groupId>
+		<artifactId>atmosphere-compat-jbossweb</artifactId>
+		<version>${atmosphere-version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.atmosphere</groupId>
+		<artifactId>atmosphere-runtime</artifactId>
+		<version>${atmosphere-version}</version>
 	</dependency>
   </dependencies>
 
