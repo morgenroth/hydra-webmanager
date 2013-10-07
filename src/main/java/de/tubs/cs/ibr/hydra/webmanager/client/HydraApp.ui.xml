@@ -16,7 +16,7 @@
 		            <b:NavLink>Not logged in</b:NavLink>
 				</b:Nav>
 			</b:Navbar>
-			
+			<b:Row><b:Column size="12" ui:field="alertColumn" /></b:Row>
             <b:Container ui:field="containerContent" />
 		</b:Container>
 	</g:HTMLPanel>

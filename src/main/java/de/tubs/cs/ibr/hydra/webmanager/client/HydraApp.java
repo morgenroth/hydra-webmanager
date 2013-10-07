@@ -11,8 +11,11 @@ import org.atmosphere.gwt20.client.AtmosphereRequestConfig;
 import org.atmosphere.gwt20.client.AtmosphereResponse;
 import org.atmosphere.gwt20.client.ClientSerializer;
 
+import com.github.gwtbootstrap.client.ui.Alert;
+import com.github.gwtbootstrap.client.ui.Column;
 import com.github.gwtbootstrap.client.ui.Container;
 import com.github.gwtbootstrap.client.ui.NavLink;
+import com.github.gwtbootstrap.client.ui.constants.AlertType;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -43,27 +46,45 @@ public class HydraApp extends Composite {
     @UiField NavLink navSlaves;
     @UiField NavLink navNodes;
     
+    @UiField Column alertColumn;
+    final Alert mAlert = new Alert();
+    
     View currentView = null;
 
     public HydraApp() {
         initWidget(uiBinder.createAndBindUi(this));
+        
+        mAlert.setType(AlertType.INFO);
+        mAlert.setHeading("Server:");
+        mAlert.setText("Connecting...");
+        mAlert.setAnimation(true);
+        alertColumn.add(mAlert);
 
         Atmosphere atmosphere = Atmosphere.create();
 
         // setup JSON Atmosphere connection
         AtmosphereRequestConfig jsonRequestConfig = AtmosphereRequestConfig.create(new ClientSerializer() {
+            
+            boolean mInitialized = false;
 
             @Override
             public Object deserialize(String message) throws SerializationException {
+                EventFactory factory = GWT.create(EventFactory.class);
+                
+                // drop the first message
+                if (!mInitialized) {
+                    mInitialized = true;
+                    Event e = factory.event().as();
+                    e.setType(EventType.NONE);
+                    return e;
+                }
+                
                 try {
                     WebManager.logger.info("message received: " + message.toString());
-                    
-                    EventFactory factory = GWT.create(EventFactory.class);
                     AutoBean<Event> bean = AutoBeanCodex.decode(factory, Event.class, message);
                     return bean.as();
                 } catch (java.lang.RuntimeException e) {
-                    //throw new SerializationException("could not decode " + message.toString());
-                    return null;
+                    throw new SerializationException("could not decode " + message.toString());
                 }
             }
 
@@ -85,13 +106,18 @@ public class HydraApp extends Composite {
         jsonRequestConfig.setOpenHandler(new AtmosphereOpenHandler() {
             @Override
             public void onOpen(AtmosphereResponse response) {
-                //WebManager.logger.info("JSON Connection opened");
+                mAlert.close();
             }
         });
         jsonRequestConfig.setCloseHandler(new AtmosphereCloseHandler() {
             @Override
             public void onClose(AtmosphereResponse response) {
-                //WebManager.logger.info("JSON Connection closed");
+                alertColumn.clear();
+                mAlert.setType(AlertType.ERROR);
+                mAlert.setHeading("Server:");
+                mAlert.setText("Disconnected!");
+                mAlert.setAnimation(true);
+                alertColumn.add(mAlert);
             }
         });
         jsonRequestConfig.setMessageHandler(new AtmosphereMessageHandler() {
