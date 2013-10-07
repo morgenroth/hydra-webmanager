@@ -6,6 +6,7 @@ import org.atmosphere.gwt20.client.Atmosphere;
 import org.atmosphere.gwt20.client.AtmosphereCloseHandler;
 import org.atmosphere.gwt20.client.AtmosphereMessageHandler;
 import org.atmosphere.gwt20.client.AtmosphereOpenHandler;
+import org.atmosphere.gwt20.client.AtmosphereRequest;
 import org.atmosphere.gwt20.client.AtmosphereRequestConfig;
 import org.atmosphere.gwt20.client.AtmosphereResponse;
 import org.atmosphere.gwt20.client.ClientSerializer;
@@ -49,6 +50,8 @@ public class HydraApp extends Composite {
     final Alert mAlert = new Alert();
     
     View currentView = null;
+    
+    AtmosphereRequest jsonRequest;
 
     public HydraApp() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -163,7 +166,7 @@ public class HydraApp extends Composite {
         });
 
         // subscribe to atmosphere channel
-        atmosphere.subscribe(jsonRequestConfig);
+        jsonRequest = atmosphere.subscribe(jsonRequestConfig);
     }
 
     @Override
