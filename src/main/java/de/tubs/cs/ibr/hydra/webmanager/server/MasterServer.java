@@ -20,6 +20,7 @@ import org.atmosphere.cpr.DefaultBroadcasterFactory;
 
 import com.google.web.bindery.autobean.vm.AutoBeanFactorySource;
 
+import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventFactory;
@@ -119,6 +120,29 @@ public class MasterServer extends GenericServlet {
         mSocketLoop.start();
         mTaskLoop = Executors.newSingleThreadExecutor();
         System.out.println("Master service initialized.");
+    }
+    
+    @Override
+    public void destroy() {
+        mRunning = false;
+        
+        try {
+            mSockServer.close();
+            
+            // wait until the main thread is terminated
+            mSocketLoop.join();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
+        mTaskLoop.shutdown();
+        
+        // close the global database
+        Database.getInstance().close();
+        
+        super.destroy();
     }
     
     public static void invoke(Task t) {
