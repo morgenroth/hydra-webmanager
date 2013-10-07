@@ -18,6 +18,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DeckPanel;
@@ -316,9 +317,22 @@ public class SessionEditView extends View {
                 mAlert.setClose(true);
                 mAlert.setAnimation(true);
                 alertColumn.add(mAlert);
+                
+                scheduleAlertClear(mAlert, 5000);
             }
             
         });
+    }
+    
+    private void scheduleAlertClear(final Alert alert, int delay) {
+        Timer t = new Timer() {
+            @Override
+            public void run() {
+                alert.close();
+            }
+        };
+        
+        t.schedule(delay);
     }
     
     @UiHandler("buttonReset")
