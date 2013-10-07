@@ -10,38 +10,46 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 public class SlaveConnection extends Thread {
     
     private Socket mSocket = null;
-    private String mIdentifier = null;
+    private BufferedReader mReader = null;
+    private Slave mSlave = null;
+    private boolean mRunning = true;
 
-    public SlaveConnection(Socket s) {
+    public SlaveConnection(Socket s) throws IOException {
         this.mSocket = s;
+        
+        // open buffered
+        mReader = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
+    }
+    
+    public String getIdentifier() {
+        if (mSlave == null) return null;
+        return mSlave.name;
+    }
+    
+    public Slave doHandshake() throws IOException {
+        // receive slave banner
+        String banner = mReader.readLine();
+        
+        // read identifier
+        String identifier = mReader.readLine();
+        String name = identifier.split(": ")[1];
+        
+        // create a slave object
+        mSlave = new Slave(name);
+        
+        // set address
+        mSlave.address = mSocket.getRemoteSocketAddress().toString();
+        
+        return mSlave;
     }
 
     @Override
     public void run() {
         try {
-            // receive slave banner
-            BufferedReader reader = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
-            
-            // read banner
-            String banner = reader.readLine();
-            
-            // read identifier
-            String identifier = reader.readLine();
-            mIdentifier = identifier.split(": ")[1];
-            
-            // create a slave object
-            Slave slave = new Slave(mIdentifier);
-            
-            // set address
-            slave.address = mSocket.getRemoteSocketAddress().toString();
-            
-            // register this slave globally
-            MasterServer.register(slave, this);
-            
             String data = null;
-            while (mSocket.isConnected()) {
+            while (mRunning) {
                 // read next line
-                data = reader.readLine();
+                data = mReader.readLine();
                 
                 // if readline returns null the connection is down
                 if (data == null) break;
@@ -49,18 +57,27 @@ public class SlaveConnection extends Thread {
                 // print out received data
                 System.out.println(data);
             }
-            
-            // unregister this slave
-            MasterServer.unregister(slave);
         } catch (IOException e) {
             // error while processing slave connection
             e.printStackTrace();
         } finally {
+            // unregister this slave
+            MasterServer.unregister(mSlave);
+            
             try {
                 mSocket.close();
             } catch (IOException e) {
                 // could not close socket
             }
+            
+            // mark this thread as detached
+            setDaemon(true);
         }
+    }
+    
+    public void close() throws IOException {
+        mRunning = false;
+        mSocket.close();
+        mReader.close();
     }
 }

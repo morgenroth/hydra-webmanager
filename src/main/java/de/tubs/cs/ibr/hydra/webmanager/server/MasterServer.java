@@ -4,15 +4,13 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.servlet.GenericServlet;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -27,10 +25,10 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.EventFactory;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
-public class MasterServer extends GenericServlet {
+public class MasterServer implements ServletContextListener {
     
-    private static ConcurrentHashMap<String, Slave> mSlaves = new ConcurrentHashMap<String, Slave>();
-    private static ConcurrentHashMap<String, SlaveConnection> mConnections = new ConcurrentHashMap<String, SlaveConnection>();
+    private static final HashMap<String, Slave> mSlaves = new HashMap<String, Slave>();
+    private static final HashMap<String, SlaveConnection> mConnections = new HashMap<String, SlaveConnection>();
     
     private ServerSocket mSockServer = null;
     private Boolean mRunning = true;
@@ -40,20 +38,27 @@ public class MasterServer extends GenericServlet {
     public static ArrayList<Slave> getSlaves() {
         ArrayList<Slave> ret = new ArrayList<Slave>();
         
-        for (Slave s : mSlaves.values()) {
-            ret.add(s);
+        synchronized(mConnections) {
+            for (Slave s : mSlaves.values()) {
+                ret.add(s);
+            }
         }
         
         return ret;
     }
     
     public static SlaveConnection getConnection(Slave s) {
-        return mConnections.get(s.toString());
+        synchronized(mConnections) {
+            return mConnections.get(s.toString());
+        }
     }
 
     public static void register(Slave s, SlaveConnection sc) {
-        mSlaves.put(s.toString(), s);
-        mConnections.put(s.toString(), sc);
+        synchronized(mConnections) {
+            mSlaves.put(s.toString(), s);
+            mConnections.put(s.toString(), sc);
+            mConnections.notifyAll();
+        }
         
         List<EventExtra> entries = new ArrayList<EventExtra>();
         entries.add(createEventExtra(EventType.EXTRA_SLAVE_NAME, s.name));
@@ -63,8 +68,11 @@ public class MasterServer extends GenericServlet {
     }
 
     public static void unregister(Slave s) {
-        mSlaves.remove(s.toString());
-        mConnections.remove(s.toString());
+        synchronized(mConnections) {
+            mSlaves.remove(s.toString());
+            mConnections.remove(s.toString());
+            mConnections.notifyAll();
+        }
         
         List<EventExtra> entries = new ArrayList<EventExtra>();
         entries.add(createEventExtra(EventType.EXTRA_SLAVE_NAME, s.name));
@@ -80,70 +88,33 @@ public class MasterServer extends GenericServlet {
             try {
                 mSockServer = new ServerSocket(4244);
                 
+                System.out.println("Master service listening...");
+                
                 while (mRunning) {
                     // accept a new client connection
                     Socket client = mSockServer.accept();
                     
                     // create a new SlaveConnection object
-                    SlaveConnection slave = new SlaveConnection(client);
+                    SlaveConnection sc = new SlaveConnection(client);
                     
-                    // start slave connection in a separate thread
-                    slave.start();
+                    try {
+                        // do handshake in the main-loop
+                        Slave s = sc.doHandshake();
+                        
+                        // register new slave connection
+                        register(s, sc);
+                        
+                        // start slave connection in a separate thread
+                        sc.start();
+                    } catch (IOException ex) {
+                        // connection failed
+                    }
                 }
             } catch (IOException e) {
-                // failed to create a server socket
-                e.printStackTrace();
-            } finally {
-                try {
-                    mSockServer.close();
-                } catch (IOException e) {
-                    // error while closing server socket
-                }
+                System.out.println("Master service terminated.");
             }
-            
-            // shutdown task loop
-            mTaskLoop.shutdown();
         }
     };
-
-    /**
-     * Serial ID
-     */
-    private static final long serialVersionUID = -408760991182258654L;
-
-    @Override
-    public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
-    }
-
-    @Override
-    public void init() throws ServletException {
-        mSocketLoop.start();
-        mTaskLoop = Executors.newSingleThreadExecutor();
-        System.out.println("Master service initialized.");
-    }
-    
-    @Override
-    public void destroy() {
-        mRunning = false;
-        
-        try {
-            mSockServer.close();
-            
-            // wait until the main thread is terminated
-            mSocketLoop.join();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        
-        mTaskLoop.shutdown();
-        
-        // close the global database
-        Database.getInstance().close();
-        
-        super.destroy();
-    }
     
     public static void invoke(Task t) {
         mTaskLoop.execute(t);
@@ -177,5 +148,59 @@ public class MasterServer extends GenericServlet {
         
         // broadcast the event to the clients
         channel.broadcast(evt);
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent evt) {
+        mRunning = false;
+        
+        try {
+            // close server socket
+            mSockServer.close();
+            
+            // wait until the main thread is terminated
+            mSocketLoop.join();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
+        synchronized(mConnections) {
+            // shutdown all clients
+            for (SlaveConnection sc : mConnections.values()) {
+                try {
+                    // close the connection to terminate the thread
+                    sc.close();
+                } catch (IOException e) {
+                    // close failed
+                    e.printStackTrace();
+                }
+            }
+            
+            try {
+                // wait until all connections closed
+                while (!mConnections.isEmpty()) {
+                    mConnections.wait();
+                }
+                
+                System.out.println("all slave connections closed");
+            } catch (InterruptedException e) {
+                // interrupted
+                e.printStackTrace();
+            }
+        }
+        
+        // shutdown task loop
+        mTaskLoop.shutdown();
+        
+        // close the global database
+        Database.getInstance().close();
+    }
+
+    @Override
+    public void contextInitialized(ServletContextEvent evt) {
+        mSocketLoop.start();
+        mTaskLoop = Executors.newSingleThreadExecutor();
     }
 }

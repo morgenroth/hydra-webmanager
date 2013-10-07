@@ -4,6 +4,10 @@
     "http://java.sun.com/dtd/web-app_2_3.dtd">
 
 <web-app>
+	<!-- ServletListener -->
+	<listener>
+		<listener-class>de.tubs.cs.ibr.hydra.webmanager.server.MasterServer</listener-class>
+	</listener>
 
 	<!-- Servlets -->
 	<servlet>
@@ -24,13 +28,6 @@
 		<servlet-class>de.tubs.cs.ibr.hydra.webmanager.server.MasterControlServiceImpl</servlet-class>
 	</servlet>
 	
-	<servlet>
-		<servlet-name>MasterServer</servlet-name>
-		<description>Handles the communication channels to the slaves.</description>
-		<servlet-class>de.tubs.cs.ibr.hydra.webmanager.server.MasterServer</servlet-class>
-		<load-on-startup>2</load-on-startup>
-	</servlet>
-
 	<servlet-mapping>
 		<servlet-name>AtmosphereServlet</servlet-name>
 		<url-pattern>/WebManager/atmosphere/*</url-pattern>
@@ -40,7 +37,7 @@
 		<servlet-name>MasterControlService</servlet-name>
 		<url-pattern>/WebManager/master</url-pattern>
 	</servlet-mapping>
-
+	
 	<!-- Default page to serve -->
 	<welcome-file-list>
 		<welcome-file>WebManager.html</welcome-file>
