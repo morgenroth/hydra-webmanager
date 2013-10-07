@@ -9,11 +9,11 @@
 				<b:Heading size="2">Session Editor</b:Heading>
 			</b:Column>
 		</b:Row>
+		<b:Row><b:Column size="12" ui:field="alertColumn" /></b:Row>
 		<b:TabPanel>
 			<b:Tab heading="Properties" active="true">
 				<!-- Properties -->
 				<b:Form type="HORIZONTAL">
-				    <b:Row><b:Column size="12" ui:field="alertPropColumn" /></b:Row>
 					<b:Row>
 						<b:Column size="12">
 							<b:ControlGroup>
@@ -55,20 +55,11 @@
 							</b:ControlGroup>
 						</b:Column>
 					</b:Row>
-					<b:Row>
-						<b:Column size="12">
-							<b:FormActions>
-								<b:Button icon="OK" type="SUCCESS" ui:field="buttonPropApply">Apply</b:Button>
-								<b:Button icon="REMOVE" type="DEFAULT" ui:field="buttonPropReset">Reset</b:Button>
-							</b:FormActions>
-						</b:Column>
-					</b:Row>
 				</b:Form>
 			</b:Tab>
 			<!-- Base -->
 			<b:Tab heading="Base">
 				<b:Form type="HORIZONTAL">
-				    <b:Row><b:Column size="12" ui:field="alertBaseColumn" /></b:Row>
 					<b:Row>
 						<b:Column size="12">
 							<!-- base node image -->
@@ -143,20 +134,11 @@
 							</b:ControlGroup>
 						</b:Column>
 					</b:Row>
-					<b:Row>
-						<b:Column size="12">
-							<b:FormActions>
-								<b:Button icon="OK" type="SUCCESS" ui:field="buttonBaseApply">Apply</b:Button>
-								<b:Button icon="REMOVE" type="DEFAULT" ui:field="buttonBaseReset">Reset</b:Button>
-							</b:FormActions>
-						</b:Column>
-					</b:Row>
 				</b:Form>
 		</b:Tab>
 			<!-- Movement -->
 			<b:Tab heading="Movement">
 				<b:Form type="HORIZONTAL">
-				    <b:Row><b:Column size="12" ui:field="alertMovementColumn" /></b:Row>
 					<b:Row>
 						<b:Column size="12">
 							<!-- movement module -->
@@ -306,19 +288,10 @@
 							</g:DeckPanel>
 						</b:Column>
 					</b:Row>
-					<b:Row>
-						<b:Column size="12">
-							<b:FormActions>
-								<b:Button icon="OK" type="SUCCESS" ui:field="buttonMovementApply">Apply</b:Button>
-								<b:Button icon="REMOVE" type="DEFAULT" ui:field="buttonMovementReset">Reset</b:Button>
-							</b:FormActions>
-						</b:Column>
-					</b:Row>
 				</b:Form>
 		</b:Tab>
 			<!-- Nodes -->
 			<b:Tab heading="Nodes">
-				<b:Row><b:Column size="12" ui:field="alertNodesColumn" /></b:Row>
 				<b:Row>
 					<b:Column size="12">
 						<b:Button icon="PLUS" type="PRIMARY" ui:field="buttonGenerate">Generate
@@ -335,6 +308,14 @@
 				</b:Row>
 			</b:Tab>
 		</b:TabPanel>
+		<b:Row>
+			<b:Column size="12" ui:field="columnFormActions">
+				<b:FormActions>
+					<b:Button icon="OK" type="SUCCESS" ui:field="buttonApply">Apply</b:Button>
+					<b:Button icon="REMOVE" type="DEFAULT" ui:field="buttonReset">Reset</b:Button>
+				</b:FormActions>
+			</b:Column>
+		</b:Row>
 		<b:Row>
 			<b:Column size="12">
 				<b:Button icon="REPLY" type="LINK" ui:field="buttonBack">Back to

@@ -21,7 +21,7 @@ public interface MasterControlService extends RemoteService {
      * Store writable values of the session in the database
      * @param s
      */
-    public void updateSession(Session s);
+    public void applySession(Session s);
     
     /**
      * Get the session data of the given session id

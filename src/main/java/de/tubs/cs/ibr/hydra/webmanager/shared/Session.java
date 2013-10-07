@@ -101,12 +101,17 @@ public class Session implements Serializable {
     public String username = null;
     public String name = null;
     public State state = null;
-    public String image = null;
     
     public Date created = null;
     public Date started = null;
     public Date aborted = null;
     public Date finished = null;
+    
+    // base settings
+    public String image = null;
+    
+    // movement settings
+    
 
     public Session() {
     }

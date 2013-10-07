@@ -36,15 +36,17 @@ public class SessionEditView extends View {
     
     @UiField Button buttonBack;
     
+    @UiField Column columnFormActions;
+    @UiField Button buttonApply;
+    @UiField Button buttonReset;
+    @UiField Column alertColumn;
+    
     @UiField TextBox textPropKey;
     @UiField TextBox textPropDesc;
     @UiField TextBox textPropOwner;
     @UiField TextBox textPropState;
     @UiField CheckBox checkRemove;
     @UiField Button buttonRemove;
-    @UiField Button buttonPropApply;
-    @UiField Button buttonPropReset;
-    @UiField Column alertPropColumn;
     
     @UiField ListBox listBaseImage;
     @UiField TextBox textBaseRepository;
@@ -57,7 +59,7 @@ public class SessionEditView extends View {
     NavLink activeNavLink = null;
     Session mSession = null;
     
-    final Alert mPropAlert = new Alert();
+    final Alert mAlert = new Alert();
     
     // data provider for the node table
     ListDataProvider<Node> mDataProvider = new ListDataProvider<Node>();
@@ -260,26 +262,26 @@ public class SessionEditView extends View {
 
             @Override
             public void onFailure(Throwable caught) {
-                if (mPropAlert.getElement().hasParentElement())
-                    mPropAlert.removeFromParent();
+                if (mAlert.getElement().hasParentElement())
+                    mAlert.removeFromParent();
                 
-                mPropAlert.setType(AlertType.ERROR);
-                mPropAlert.setText("Failure! Can not remove this session.");
-                mPropAlert.setClose(true);
-                mPropAlert.setAnimation(true);
-                alertPropColumn.add(mPropAlert);
+                mAlert.setType(AlertType.ERROR);
+                mAlert.setText("Failure! Can not remove this session.");
+                mAlert.setClose(true);
+                mAlert.setAnimation(true);
+                alertColumn.add(mAlert);
             }
 
             @Override
             public void onSuccess(Void result) {
-                if (mPropAlert.getElement().hasParentElement())
-                    mPropAlert.removeFromParent();
+                if (mAlert.getElement().hasParentElement())
+                    mAlert.removeFromParent();
                 
-                mPropAlert.setType(AlertType.SUCCESS);
-                mPropAlert.setText("Successful removed!");
-                mPropAlert.setClose(true);
-                mPropAlert.setAnimation(true);
-                alertPropColumn.add(mPropAlert);
+                mAlert.setType(AlertType.SUCCESS);
+                mAlert.setText("Successful removed!");
+                mAlert.setClose(true);
+                mAlert.setAnimation(true);
+                alertColumn.add(mAlert);
                 
                 // now the removal event will close this view
             }
@@ -287,40 +289,39 @@ public class SessionEditView extends View {
         });
     }
     
-    @UiHandler("buttonPropApply")
+    @UiHandler("buttonApply")
     void onPropertiesApply(ClickEvent e) {
         // apply all properties to the session object
         mSession.name = textPropDesc.getText();
+        mSession.image = listBaseImage.getValue();
         
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.updateSession(mSession, new AsyncCallback<Void>() {
+        mcs.applySession(mSession, new AsyncCallback<Void>() {
 
             @Override
             public void onFailure(Throwable caught) {
-                alertPropColumn.clear();
-                
-                mPropAlert.setType(AlertType.ERROR);
-                mPropAlert.setText("Failure! Can not apply session changes.");
-                mPropAlert.setClose(true);
-                mPropAlert.setAnimation(true);
-                alertPropColumn.add(mPropAlert);
+                alertColumn.clear();
+                mAlert.setType(AlertType.ERROR);
+                mAlert.setText("Failure! Can not apply session changes.");
+                mAlert.setClose(true);
+                mAlert.setAnimation(true);
+                alertColumn.add(mAlert);
             }
 
             @Override
             public void onSuccess(Void result) {
-                alertPropColumn.clear();
-                
-                mPropAlert.setType(AlertType.SUCCESS);
-                mPropAlert.setText("Successful saved!");
-                mPropAlert.setClose(true);
-                mPropAlert.setAnimation(true);
-                alertPropColumn.add(mPropAlert);
+                alertColumn.clear();
+                mAlert.setType(AlertType.SUCCESS);
+                mAlert.setText("Successful saved!");
+                mAlert.setClose(true);
+                mAlert.setAnimation(true);
+                alertColumn.add(mAlert);
             }
             
         });
     }
     
-    @UiHandler("buttonPropReset")
+    @UiHandler("buttonReset")
     void onPropertiesReset(ClickEvent e) {
         refresh();
     }

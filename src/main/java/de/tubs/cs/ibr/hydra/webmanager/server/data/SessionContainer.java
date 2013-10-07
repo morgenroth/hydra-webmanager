@@ -8,11 +8,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.InvalidParameterException;
 
+import com.nikhaldimann.inieditor.IniEditor;
+
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
 public class SessionContainer {
     private String mSessionKey = null;
     private File mPath = null;
+    private File mBasePath = null;
+    private File mSetupPath = null;
     
     // create a static default session
     private static final SessionContainer mDefault = new SessionContainer();
@@ -62,6 +66,8 @@ public class SessionContainer {
         }
         
         mPath = p;
+        mBasePath = new File(mPath, "base");
+        mSetupPath = new File(mPath, "setup");
     }
     
     public synchronized void destroy() {
@@ -76,7 +82,46 @@ public class SessionContainer {
     }
     
     public void inject(Session s) {
-        // TODO: inject container data into session object
+        if (mPath == null) return;
+        
+        // inject container data into session object
+        IniEditor base = new IniEditor();
+        
+        try {
+            // load configuration of 'base'
+            base.load(new File(mBasePath, "config.properties").getPath());
+            
+            // get selected image file
+            s.image = base.get("image", "file");
+        } catch (IOException e) {
+            // can not load configuration
+            e.printStackTrace();
+        }
+    }
+    
+    public void apply(Session s) {
+        // save configuration
+        IniEditor base = new IniEditor();
+        
+        try {
+            File conf = new File(mBasePath, "config.properties");
+            
+            // read configuration of 'base'
+            base.load(conf);
+            
+            // assign new parameters
+            if (s.image != null) {
+                base.set("image", "file", s.image);
+            } else {
+                base.remove("image", "file");
+            }
+            
+            // write configuration of 'base'
+            base.save(conf);
+        } catch (IOException e) {
+            // can not save configuration
+            e.printStackTrace();
+        }
     }
     
     private static void copy(SessionContainer source, File targetPath) throws IOException {

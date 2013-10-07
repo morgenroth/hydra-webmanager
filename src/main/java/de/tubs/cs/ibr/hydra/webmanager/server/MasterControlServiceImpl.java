@@ -175,7 +175,21 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     }
 
     @Override
-    public void updateSession(Session s) {
+    public void applySession(Session s) {
+        // get session container
+        SessionContainer sc = SessionContainer.getContainer(s);
+        
+        try {
+            // try to initialize the container
+            sc.initialize(null);
+            
+            // store configuration
+            sc.apply(s);
+        } catch (IOException e) {
+            // can not initialize the container
+        }
+        
+        // update database
         Database.getInstance().updateSession(s);
     }
 
