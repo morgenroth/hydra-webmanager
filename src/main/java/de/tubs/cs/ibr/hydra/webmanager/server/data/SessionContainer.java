@@ -12,13 +12,14 @@ import java.security.InvalidParameterException;
 
 import com.nikhaldimann.inieditor.IniEditor;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet;
+import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet.MobilityModel;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
 public class SessionContainer {
     private String mSessionKey = null;
     private File mPath = null;
     private File mBasePath = null;
-    private File mSetupPath = null;
     
     // create a static default session
     private static final SessionContainer mDefault = new SessionContainer();
@@ -69,7 +70,6 @@ public class SessionContainer {
         
         mPath = p;
         mBasePath = new File(mPath, "base");
-        mSetupPath = new File(mPath, "setup");
     }
     
     public synchronized void destroy() {
@@ -135,6 +135,68 @@ public class SessionContainer {
         // load vbox template
         File vbox_template = new File(mBasePath, "node-template.vbox.xml");
         s.vbox_template = loadFile(vbox_template);
+        
+        /**
+         * Read session configuration
+         */
+        IniEditor sessionConf = new IniEditor();
+        
+        try {
+            // load configuration of 'base'
+            sessionConf.load(new File(mPath, "config.properties").getPath());
+            
+            MobilityParameterSet m = new MobilityParameterSet();
+            if (sessionConf.hasOption("mobility", "model")) {
+                m.model = MobilityModel.fromString(sessionConf.get("mobility", "model"));
+                String section = null;
+                
+                // clear all parameters
+                m.parameters.clear();
+                
+                switch (m.model) {
+                    case NONE:
+                        break;
+                    case RANDOM_WALK:
+                        section = "randomwalk";
+                        break;
+                    case STATIC:
+                        section = "staticconnections";
+                        
+                        // read connections from file
+                        if (sessionConf.hasOption(section, "connections")) {
+                            File f = new File(mPath, sessionConf.get(section, "connections"));
+                            String data = SessionContainer.loadFile(f);
+                            
+                            if (data != null) {
+                                m.parameters.put("connections", data);
+                            }
+                        }
+                        
+                        break;
+                    case THE_ONE:
+                        section = "onetrace";
+                        
+                        break;
+                    default:
+                        break;
+                }
+                
+                if ((section != null) && sessionConf.hasSection(section)) {
+                    for (String name : sessionConf.optionNames(section)) {
+                        // only set parameter if not already set
+                        if (!m.parameters.containsKey(name)) {
+                            m.parameters.put(name, sessionConf.get(section, name));
+                        }
+                    }
+                }
+            }
+            
+            // assign mobility parameters
+            s.mobility = m;
+        } catch (IOException e) {
+            // can not load configuration
+            e.printStackTrace();
+        }
     }
     
     public void apply(Session s) {
@@ -237,7 +299,7 @@ public class SessionContainer {
         folder.delete();
     }
     
-    private String loadFile(File f) {
+    private static String loadFile(File f) {
         String ret = null;
         if (f.exists()) {
             ret = "";

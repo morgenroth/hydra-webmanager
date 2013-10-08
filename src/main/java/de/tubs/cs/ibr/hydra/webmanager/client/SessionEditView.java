@@ -8,6 +8,7 @@ import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CellTable;
 import com.github.gwtbootstrap.client.ui.CheckBox;
 import com.github.gwtbootstrap.client.ui.Column;
+import com.github.gwtbootstrap.client.ui.FileUpload;
 import com.github.gwtbootstrap.client.ui.ListBox;
 import com.github.gwtbootstrap.client.ui.NavLink;
 import com.github.gwtbootstrap.client.ui.TextArea;
@@ -59,6 +60,23 @@ public class SessionEditView extends View {
     
     @UiField ListBox listMovementAlgorithm;
     @UiField DeckPanel panelMovement;
+    
+    // RWP
+    @UiField TextBox textMovementRwpDuration;
+    @UiField TextBox textMovementRwpNumberOfNodes;
+    @UiField TextBox textMovementRwpAreaSizeHeight;
+    @UiField TextBox textMovementRwpAreaSizeWidth;
+    @UiField TextBox textMovementRwpResolution;
+    @UiField TextBox textMovementRwpMovetime;
+    @UiField TextBox textMovementRwpVmin;
+    @UiField TextBox textMovementRwpVmax;
+    @UiField TextBox textMovementRwpRange;
+    
+    // ONE
+    @UiField FileUpload textMovementOneUpload;
+    
+    // STATIC
+    @UiField TextArea textMovementStaticConnections;
     
     @UiField CellTable<Node> tableNodes;
     
@@ -116,27 +134,7 @@ public class SessionEditView extends View {
 
             @Override
             public void onSuccess(Session result) {
-                // store data locally
-                mSession = result;
-
-                // load properties
-                textPropKey.setText(result.id.toString());
-                textPropDesc.setText(result.name);
-                textPropOwner.setText(result.username);
-                textPropState.setText(result.state.toString());
-                
-                // load base
-                textBaseRepository.setText(result.repository);
-                textBasePackages.setText(result.packages);
-                textBaseMonitorNodes.setText(result.monitor_nodes);
-                textBaseQemuTemplate.setText(result.qemu_template);
-                textBaseVboxTemplate.setText(result.vbox_template);
-                
-                // load session images
-                refreshSessionImages(result.image);
-                
-                // TODO: show movement algorithm
-                panelMovement.showWidget(0);
+                setSession(result);
             }
         });
     }
@@ -190,6 +188,83 @@ public class SessionEditView extends View {
             }
             
         });
+    }
+    
+    private void setSession(Session result) {
+        // store data locally
+        mSession = result;
+
+        // load properties
+        textPropKey.setText(result.id.toString());
+        textPropDesc.setText(result.name);
+        textPropOwner.setText(result.username);
+        textPropState.setText(result.state.toString());
+        
+        // load base
+        textBaseRepository.setText(result.repository);
+        textBasePackages.setText(result.packages);
+        textBaseMonitorNodes.setText(result.monitor_nodes);
+        textBaseQemuTemplate.setText(result.qemu_template);
+        textBaseVboxTemplate.setText(result.vbox_template);
+        
+        // load session images
+        refreshSessionImages(result.image);
+        
+        // show movement algorithm
+        listMovementAlgorithm.setSelectedValue(result.mobility.model.toString());
+        panelMovement.showWidget(listMovementAlgorithm.getSelectedIndex());
+        
+        switch (result.mobility.model) {
+            case RANDOM_WALK:
+                if (result.mobility.parameters.containsKey("duration")) {
+                    textMovementRwpDuration.setText(result.mobility.parameters.get("duration"));
+                }
+                
+                if (result.mobility.parameters.containsKey("nodes")) {
+                    textMovementRwpNumberOfNodes.setText(result.mobility.parameters.get("nodes"));
+                }
+                
+                if (result.mobility.parameters.containsKey("height")) {
+                    textMovementRwpAreaSizeHeight.setText(result.mobility.parameters.get("height"));
+                }
+                
+                if (result.mobility.parameters.containsKey("width")) {
+                    textMovementRwpAreaSizeWidth.setText(result.mobility.parameters.get("width"));
+                }
+                
+                if (result.mobility.parameters.containsKey("resolution")) {
+                    textMovementRwpResolution.setText(result.mobility.parameters.get("resolution"));
+                }
+                
+                if (result.mobility.parameters.containsKey("movetime")) {
+                    textMovementRwpMovetime.setText(result.mobility.parameters.get("movetime"));
+                }
+                
+                if (result.mobility.parameters.containsKey("vmin")) {
+                    textMovementRwpVmin.setText(result.mobility.parameters.get("vmin"));
+                }
+                
+                if (result.mobility.parameters.containsKey("vmax")) {
+                    textMovementRwpVmax.setText(result.mobility.parameters.get("vmax"));
+                }
+                
+                if (result.mobility.parameters.containsKey("range")) {
+                    textMovementRwpRange.setText(result.mobility.parameters.get("range"));
+                }
+                break;
+            case STATIC:
+                if (result.mobility.parameters.containsKey("connections")) {
+                    textMovementStaticConnections.setText(result.mobility.parameters.get("connections"));
+                }
+                break;
+            case THE_ONE:
+                if (result.mobility.parameters.containsKey("file")) {
+                    textMovementOneUpload.setText(result.mobility.parameters.get("file"));
+                }
+                break;
+            default:
+                break;
+        }
     }
     
     private void createSession() {

@@ -116,7 +116,7 @@ public class Session implements Serializable {
     public String vbox_template = null;
     
     // movement settings
-    
+    public MobilityParameterSet mobility = null;
 
     public Session() {
     }

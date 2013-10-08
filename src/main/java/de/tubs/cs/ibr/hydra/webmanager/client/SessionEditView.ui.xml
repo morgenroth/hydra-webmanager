@@ -143,13 +143,14 @@
 						<b:Column size="12">
 							<!-- movement module -->
 							<b:ControlGroup>
-								<b:ControlLabel for="listMovementAlgorithm">Movement Algorithm</b:ControlLabel>
+								<b:ControlLabel for="listMovAlgorithm">Movement Algorithm</b:ControlLabel>
 								<b:Controls>
-									<b:ListBox alternateSize="XLARGE" b:id="listMovementAlgorithm"
+									<b:ListBox alternateSize="XLARGE" b:id="listMovAlgorithm"
 										ui:field="listMovementAlgorithm">
-										<g:item g:value="random_walk">Random Walk</g:item>
-										<g:item g:value="theone">The ONE Trace Player</g:item>
-										<g:item g:value="static">Static Connections</g:item>
+										<b:item value="none">None</b:item>
+										<b:item value="randomwalk">Random Walk</b:item>
+										<b:item value="theone">The ONE Trace Player</b:item>
+										<b:item value="static">Static Connections</b:item>
 									</b:ListBox>
 									<b:HelpBlock>The movement will be calculated using the selected
 										algorithm.</b:HelpBlock>
@@ -157,6 +158,9 @@
 							</b:ControlGroup>
 							<!-- Each movement algorithm has its own settings -->
 							<g:DeckPanel ui:field="panelMovement">
+								<!-- None -->
+								<g:FlowPanel>
+								</g:FlowPanel>
 								<!-- Random Walk -->
 								<g:FlowPanel>
 									<!-- Duration -->
