@@ -30,8 +30,10 @@ import com.google.gwt.view.client.ListDataProvider;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
+import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
+import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet.MobilityModel;
 
 public class SessionEditView extends View {
 
@@ -82,6 +84,7 @@ public class SessionEditView extends View {
     
     NavLink activeNavLink = null;
     Session mSession = null;
+    Session mChangedSession = null;
     
     final Alert mAlert = new Alert();
     
@@ -191,6 +194,10 @@ public class SessionEditView extends View {
     }
     
     private void setSession(Session result) {
+        // reset changes
+        mChangedSession = new Session();
+        mChangedSession.id = result.id;
+        
         // store data locally
         mSession = result;
 
@@ -212,59 +219,7 @@ public class SessionEditView extends View {
         
         // show movement algorithm
         listMovementAlgorithm.setSelectedValue(result.mobility.model.toString());
-        panelMovement.showWidget(listMovementAlgorithm.getSelectedIndex());
-        
-        switch (result.mobility.model) {
-            case RANDOM_WALK:
-                if (result.mobility.parameters.containsKey("duration")) {
-                    textMovementRwpDuration.setText(result.mobility.parameters.get("duration"));
-                }
-                
-                if (result.mobility.parameters.containsKey("nodes")) {
-                    textMovementRwpNumberOfNodes.setText(result.mobility.parameters.get("nodes"));
-                }
-                
-                if (result.mobility.parameters.containsKey("height")) {
-                    textMovementRwpAreaSizeHeight.setText(result.mobility.parameters.get("height"));
-                }
-                
-                if (result.mobility.parameters.containsKey("width")) {
-                    textMovementRwpAreaSizeWidth.setText(result.mobility.parameters.get("width"));
-                }
-                
-                if (result.mobility.parameters.containsKey("resolution")) {
-                    textMovementRwpResolution.setText(result.mobility.parameters.get("resolution"));
-                }
-                
-                if (result.mobility.parameters.containsKey("movetime")) {
-                    textMovementRwpMovetime.setText(result.mobility.parameters.get("movetime"));
-                }
-                
-                if (result.mobility.parameters.containsKey("vmin")) {
-                    textMovementRwpVmin.setText(result.mobility.parameters.get("vmin"));
-                }
-                
-                if (result.mobility.parameters.containsKey("vmax")) {
-                    textMovementRwpVmax.setText(result.mobility.parameters.get("vmax"));
-                }
-                
-                if (result.mobility.parameters.containsKey("range")) {
-                    textMovementRwpRange.setText(result.mobility.parameters.get("range"));
-                }
-                break;
-            case STATIC:
-                if (result.mobility.parameters.containsKey("connections")) {
-                    textMovementStaticConnections.setText(result.mobility.parameters.get("connections"));
-                }
-                break;
-            case THE_ONE:
-                if (result.mobility.parameters.containsKey("file")) {
-                    textMovementOneUpload.setText(result.mobility.parameters.get("file"));
-                }
-                break;
-            default:
-                break;
-        }
+        onMovementAlgorithmChanged(null);
     }
     
     private void createSession() {
@@ -380,12 +335,11 @@ public class SessionEditView extends View {
     
     @UiHandler("buttonApply")
     void onPropertiesApply(ClickEvent e) {
-        // apply all properties to the session object
-        mSession.name = textPropDesc.getText();
-        mSession.image = listBaseImage.getValue();
+        // do not apply uninitialized changes
+        if (mChangedSession == null) return;
         
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.applySession(mSession, new AsyncCallback<Void>() {
+        mcs.applySession(mChangedSession, new AsyncCallback<Void>() {
 
             @Override
             public void onFailure(Throwable caught) {
@@ -428,8 +382,191 @@ public class SessionEditView extends View {
         refresh();
     }
     
+    @UiHandler("textPropDesc")
+    void onDescriptionChanged(ChangeEvent evt) {
+        mChangedSession.name = textPropDesc.getText();
+    }
+    
+    @UiHandler("listBaseImage")
+    void onBaseImageChanged(ChangeEvent evt) {
+        mChangedSession.image = listBaseImage.getValue();
+    }
+    
+    @UiHandler("textBaseRepository")
+    void onBaseRepositoryChanged(ChangeEvent evt) {
+        mChangedSession.repository = textBaseRepository.getText();
+    }
+    
+    @UiHandler("textBasePackages")
+    void onBasePackagesChanged(ChangeEvent evt) {
+        mChangedSession.packages = textBasePackages.getText();
+    }
+    
+    @UiHandler("textBaseMonitorNodes")
+    void onBaseMonitorNodesChanged(ChangeEvent evt) {
+        mChangedSession.monitor_nodes = textBaseMonitorNodes.getText();
+    }
+    
+    @UiHandler("textBaseQemuTemplate")
+    void onBaseQemuTemplateChanged(ChangeEvent evt) {
+        mChangedSession.qemu_template = textBaseQemuTemplate.getText();
+    }
+    
+    @UiHandler("textBaseVboxTemplate")
+    void onBaseVboxTemplateChanged(ChangeEvent evt) {
+        mChangedSession.vbox_template = textBaseVboxTemplate.getText();
+    }
+    
     @UiHandler("listMovementAlgorithm")
-    void onMovementChange(ChangeEvent e) {
+    void onMovementAlgorithmChanged(ChangeEvent evt) {
         panelMovement.showWidget(listMovementAlgorithm.getSelectedIndex());
+        
+        MobilityParameterSet m = new MobilityParameterSet();
+        m.model = MobilityModel.fromString(listMovementAlgorithm.getValue());
+        mChangedSession.mobility = m;
+        
+        // load parameters
+        switch (m.model) {
+            case RANDOM_WALK:
+                if (mSession.mobility.parameters.containsKey("duration")) {
+                    textMovementRwpDuration.setText(mSession.mobility.parameters.get("duration"));
+                } else {
+                    textMovementRwpDuration.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("nodes")) {
+                    textMovementRwpNumberOfNodes.setText(mSession.mobility.parameters.get("nodes"));
+                } else {
+                    textMovementRwpNumberOfNodes.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("height")) {
+                    textMovementRwpAreaSizeHeight.setText(mSession.mobility.parameters.get("height"));
+                } else {
+                    textMovementRwpAreaSizeHeight.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("width")) {
+                    textMovementRwpAreaSizeWidth.setText(mSession.mobility.parameters.get("width"));
+                } else {
+                    textMovementRwpAreaSizeWidth.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("resolution")) {
+                    textMovementRwpResolution.setText(mSession.mobility.parameters.get("resolution"));
+                } else {
+                    textMovementRwpResolution.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("movetime")) {
+                    textMovementRwpMovetime.setText(mSession.mobility.parameters.get("movetime"));
+                } else {
+                    textMovementRwpMovetime.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("vmin")) {
+                    textMovementRwpVmin.setText(mSession.mobility.parameters.get("vmin"));
+                } else {
+                    textMovementRwpVmin.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("vmax")) {
+                    textMovementRwpVmax.setText(mSession.mobility.parameters.get("vmax"));
+                } else {
+                    textMovementRwpVmax.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("range")) {
+                    textMovementRwpRange.setText(mSession.mobility.parameters.get("range"));
+                } else {
+                    textMovementRwpRange.setText(null);
+                }
+                break;
+            case STATIC:
+                if (mSession.mobility.parameters.containsKey("connections")) {
+                    textMovementStaticConnections.setText(mSession.mobility.parameters.get("connections"));
+                } else {
+                    textMovementStaticConnections.setText(null);
+                }
+                break;
+            case THE_ONE:
+                if (mSession.mobility.parameters.containsKey("file")) {
+                    textMovementOneUpload.setText(mSession.mobility.parameters.get("file"));
+                } else {
+                    textMovementOneUpload.setText(null);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    
+    // RWP
+    @UiHandler("textMovementRwpDuration")
+    void onMovementRwpDurationChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("duration", textMovementRwpDuration.getText());
+    }
+    
+    @UiHandler("textMovementRwpNumberOfNodes")
+    void onMovementRwpNumberOfNodesChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("nodes", textMovementRwpNumberOfNodes.getText());
+    }
+    
+    @UiHandler("textMovementRwpAreaSizeHeight")
+    void onMovementRwpAreaSizeHeightChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("height", textMovementRwpAreaSizeHeight.getText());
+    }
+    
+    @UiHandler("textMovementRwpAreaSizeWidth")
+    void onMovementRwpAreaSizeWidthChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("width", textMovementRwpAreaSizeWidth.getText());
+    }
+    
+    @UiHandler("textMovementRwpResolution")
+    void onMovementRwpResolutionChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("resolution", textMovementRwpResolution.getText());
+    }
+    
+    @UiHandler("textMovementRwpMovetime")
+    void onMovementRwpMovetimeChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("movetime", textMovementRwpMovetime.getText());
+    }
+    
+    @UiHandler("textMovementRwpVmin")
+    void onMovementRwpVminChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("vmin", textMovementRwpVmin.getText());
+    }
+    
+    @UiHandler("textMovementRwpVmax")
+    void onMovementRwpVmaxChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("vmax", textMovementRwpVmax.getText());
+    }
+    
+    @UiHandler("textMovementRwpRange")
+    void onMovementRwpRangeChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("range", textMovementRwpRange.getText());
+    }
+    
+    // ONE
+    @UiHandler("textMovementOneUpload")
+    void onMovementOneUploadChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("file", textMovementOneUpload.getText());
+    }
+    
+    // STATIC
+    @UiHandler("textMovementStaticConnections")
+    void onMovementStaticConnectionsChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("connections", textMovementStaticConnections.getText());
     }
 }

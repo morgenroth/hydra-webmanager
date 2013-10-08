@@ -2,6 +2,7 @@ package de.tubs.cs.ibr.hydra.webmanager.server;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -9,6 +10,8 @@ import de.tubs.cs.ibr.hydra.webmanager.client.MasterControlService;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Configuration;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SessionContainer;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session.Action;
@@ -191,6 +194,13 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         
         // update database
         Database.getInstance().updateSession(s);
+        
+        // prepare session change extras
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+        
+        // broadcast session change
+        MasterServer.broadcast(EventType.SESSION_DATA_UPDATED, entries);
     }
 
 }

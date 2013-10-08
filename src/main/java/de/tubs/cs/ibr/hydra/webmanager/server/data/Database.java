@@ -254,6 +254,9 @@ public class Database {
     }
     
     public void updateSession(Session s) {
+        // do not update session if name is not set
+        if (s.name == null) return;
+        
         try {
             PreparedStatement st = mConn.prepareStatement("UPDATE sessions SET `name` = ? WHERE id = ?;");
             
@@ -262,12 +265,6 @@ public class Database {
             
             // execute the query
             st.execute();
-            
-            List<EventExtra> entries = new ArrayList<EventExtra>();
-            entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
-            
-            // broadcast session change
-            MasterServer.broadcast(EventType.SESSION_DATA_UPDATED, entries);
         } catch (SQLException e) {
             e.printStackTrace();
         }

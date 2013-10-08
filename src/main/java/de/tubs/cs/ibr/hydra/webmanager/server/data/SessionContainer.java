@@ -212,8 +212,6 @@ public class SessionContainer {
             // assign new parameters
             if (s.image != null) {
                 base.set("image", "file", s.image);
-            } else {
-                base.remove("image", "file");
             }
             
             // write configuration of 'base'
