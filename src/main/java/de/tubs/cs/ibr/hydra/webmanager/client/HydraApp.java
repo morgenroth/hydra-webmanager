@@ -130,6 +130,7 @@ public class HydraApp extends Composite {
         jsonRequestConfig.setContentType("application/json; charset=UTF-8");
         jsonRequestConfig.setTransport(AtmosphereRequestConfig.Transport.STREAMING);
         jsonRequestConfig.setFallbackTransport(AtmosphereRequestConfig.Transport.LONG_POLLING);
+        jsonRequestConfig.setTimeout(0);
         jsonRequestConfig.setOpenHandler(new AtmosphereOpenHandler() {
             @Override
             public void onOpen(AtmosphereResponse response) {
