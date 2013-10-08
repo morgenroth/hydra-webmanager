@@ -109,6 +109,11 @@ public class Session implements Serializable {
     
     // base settings
     public String image = null;
+    public String repository = null;
+    public String packages = null;
+    public String monitor_nodes = null;
+    public String qemu_template = null;
+    public String vbox_template = null;
     
     // movement settings
     

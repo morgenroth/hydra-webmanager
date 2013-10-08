@@ -1,8 +1,10 @@
 package de.tubs.cs.ibr.hydra.webmanager.server.data;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -97,6 +99,42 @@ public class SessionContainer {
             // can not load configuration
             e.printStackTrace();
         }
+        
+        // load package repository
+        File repo_file = new File(mBasePath, "opkg.external");
+        if (repo_file.exists()) {
+            try {
+                BufferedReader in = new BufferedReader(new FileReader(repo_file));
+                try {
+                    String data = in.readLine();
+                    String[] fragments = data.split(" ");
+                    if (fragments.length >= 3) {
+                        s.repository = fragments[2];
+                    }
+                } finally {
+                    in.close();
+                }
+            } catch (IOException e) {
+                // can not read repository
+                e.printStackTrace();
+            }
+        }
+        
+        // load packages
+        File packages_file = new File(mBasePath, "packages.install");
+        s.packages = loadFile(packages_file);
+        
+        // load monitor nodes
+        File monitor_file = new File(mBasePath, "monitor-nodes.txt");
+        s.monitor_nodes = loadFile(monitor_file);
+        
+        // load qemu template
+        File qemu_template = new File(mBasePath, "node-template.qemu.xml");
+        s.qemu_template = loadFile(qemu_template);
+        
+        // load vbox template
+        File vbox_template = new File(mBasePath, "node-template.vbox.xml");
+        s.vbox_template = loadFile(vbox_template);
     }
     
     public void apply(Session s) {
@@ -197,5 +235,29 @@ public class SessionContainer {
             }
         }
         folder.delete();
+    }
+    
+    private String loadFile(File f) {
+        String ret = null;
+        if (f.exists()) {
+            ret = "";
+            try {
+                BufferedReader in = new BufferedReader(new FileReader(f));
+                try {
+                    String data = null;
+                    while ((data = in.readLine()) != null) {
+                        ret += data + "\n";
+                    }
+                } finally {
+                    in.close();
+                }
+            } catch (IOException e) {
+                // can not read monitor nodes
+                e.printStackTrace();
+                
+                return null;
+            }
+        }
+        return ret;
     }
 }

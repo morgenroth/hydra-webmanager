@@ -10,6 +10,7 @@ import com.github.gwtbootstrap.client.ui.CheckBox;
 import com.github.gwtbootstrap.client.ui.Column;
 import com.github.gwtbootstrap.client.ui.ListBox;
 import com.github.gwtbootstrap.client.ui.NavLink;
+import com.github.gwtbootstrap.client.ui.TextArea;
 import com.github.gwtbootstrap.client.ui.TextBox;
 import com.github.gwtbootstrap.client.ui.constants.AlertType;
 import com.google.gwt.core.client.GWT;
@@ -51,6 +52,10 @@ public class SessionEditView extends View {
     
     @UiField ListBox listBaseImage;
     @UiField TextBox textBaseRepository;
+    @UiField TextArea textBasePackages;
+    @UiField TextArea textBaseMonitorNodes;
+    @UiField TextArea textBaseQemuTemplate;
+    @UiField TextArea textBaseVboxTemplate;
     
     @UiField ListBox listMovementAlgorithm;
     @UiField DeckPanel panelMovement;
@@ -114,10 +119,18 @@ public class SessionEditView extends View {
                 // store data locally
                 mSession = result;
 
+                // load properties
                 textPropKey.setText(result.id.toString());
                 textPropDesc.setText(result.name);
                 textPropOwner.setText(result.username);
                 textPropState.setText(result.state.toString());
+                
+                // load base
+                textBaseRepository.setText(result.repository);
+                textBasePackages.setText(result.packages);
+                textBaseMonitorNodes.setText(result.monitor_nodes);
+                textBaseQemuTemplate.setText(result.qemu_template);
+                textBaseVboxTemplate.setText(result.vbox_template);
                 
                 // load session images
                 refreshSessionImages(result.image);
