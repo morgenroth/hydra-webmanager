@@ -11,6 +11,7 @@ import com.github.gwtbootstrap.client.ui.TextBox;
 import com.github.gwtbootstrap.client.ui.constants.AlertType;
 import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.cell.client.EditTextCell;
+import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -185,8 +186,33 @@ public class SessionNodesEditor extends Composite {
                 return s.name;
             }
         };
+        nameColumn.setFieldUpdater(new FieldUpdater<Node, String>() {
+            @Override
+            public void update(int index, Node object, String value) {
+                object.name = value;
+                applyNode(object);
+            }
+        });
 
         table.addColumn(nameColumn, "Name");
+    }
+    
+    private void applyNode(Node object) {
+        ArrayList<Node> list = new ArrayList<Node>();
+        list.add(object);
+        
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.applyNodes(list, new AsyncCallback<Void>() {
+
+            @Override
+            public void onFailure(Throwable caught) {
+            }
+
+            @Override
+            public void onSuccess(Void result) {
+            }
+
+        });
     }
     
     public void refreshSlaveList(ArrayList<Slave> slaves, boolean showClearElement) {
