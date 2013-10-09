@@ -68,6 +68,9 @@ public class SessionNodesEditor extends Composite {
             return item.id;
         }
     });
+    
+    int mSelectedCount = 0;
+    ArrayList<Slave> mSlaves = new ArrayList<Slave>();
 
     public SessionNodesEditor() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -87,32 +90,36 @@ public class SessionNodesEditor extends Composite {
             @Override
             public void onSelectionChange(SelectionChangeEvent event) {
                 int count = 0;
-                Node selectedNode = null;
+                Node sn = null;
                 
                 for (Node n : mDataProvider.getList()) {
                     if (selectionModel.isSelected(n)) {
-                        selectedNode = n;
+                        sn = n;
                         count++;
                     }
                 }
                 
+                mSelectedCount = count;
+                
                 if (count > 0) {
+                    refreshSlaveList(mSlaves, true);
+                    
                     // at least one item is selected
                     buttonSelectNone.setEnabled(true);
                     buttonRemoveSelected.setEnabled(true);
-                    listSlave.setEnabled(true);
                     
-                    if ((count == 1) && (selectedNode.slaveId != null)) {
-                        listSlave.setSelectedValue(selectedNode.slaveName);
+                    if ((count == 1) && (sn.slaveId != null)) {
+                        listSlave.setSelectedValue(sn.slaveName);
                     } else {
                         listSlave.setSelectedIndex(0);
                     }
                 } else {
+                    refreshSlaveList(mSlaves, false);
+                    
                     // nothing is selected
                     buttonSelectNone.setEnabled(false);
                     buttonRemoveSelected.setEnabled(false);
                     listSlave.setSelectedIndex(0);
-                    listSlave.setEnabled(false);
                 }
             }
         });
@@ -182,6 +189,28 @@ public class SessionNodesEditor extends Composite {
         table.addColumn(nameColumn, "Name");
     }
     
+    public void refreshSlaveList(ArrayList<Slave> slaves, boolean showClearElement) {
+        // store selected value
+        String selected = listSlave.getValue();
+        
+        // remove all non-default items
+        while (listSlave.getItemCount() > 1) {
+            listSlave.removeItem(1);
+        }
+        
+        // add clear element
+        if (showClearElement)
+            listSlave.addItem("- clear assignment -", "-");
+        
+        // add all slaves
+        for (Slave s : slaves) {
+            listSlave.addItem(s.name);
+        }
+        
+        // restore selected value
+        listSlave.setSelectedValue(selected);
+    }
+    
     public void refresh(Session s) {
         if (s == null) return;
         
@@ -194,21 +223,8 @@ public class SessionNodesEditor extends Composite {
 
             @Override
             public void onSuccess(ArrayList<Slave> result) {
-                // store selected value
-                String selected = listSlave.getValue();
-                
-                // remove all non-default items
-                while (listSlave.getItemCount() > 2) {
-                    listSlave.removeItem(2);
-                }
-                
-                // add all slaves
-                for (Slave s : result) {
-                    listSlave.addItem(s.name);
-                }
-                
-                // restore selected value
-                listSlave.setSelectedValue(selected);
+                mSlaves = result;
+                refreshSlaveList(result, false);
             }
 
         });
@@ -257,6 +273,9 @@ public class SessionNodesEditor extends Composite {
     
     @UiHandler("listSlave")
     void onSlaveChange(ChangeEvent e) {
+        // do not commit if no node is selected
+        if (mSelectedCount == 0) return;
+        
         ArrayList<Node> nodes = null;
         
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);

@@ -22,9 +22,8 @@
 					</g:SimplePanel>
 					<g:SimplePanel>
 						<b:InputAddOn prependText="Slave" appendIcon="PUSHPIN" addStyleNames="{style.formButton}">
-						    <b:ListBox alternateSize="MEDIUM" ui:field="listSlave" enabled="false">
-						        <g:item value="-">- not assigned -</g:item>
-						    	<g:item value="auto">- clear assignment -</g:item>
+						    <b:ListBox alternateSize="MEDIUM" ui:field="listSlave">
+						        <g:item value="">- not assigned -</g:item>
 						    </b:ListBox>
 						</b:InputAddOn>
 					</g:SimplePanel>
