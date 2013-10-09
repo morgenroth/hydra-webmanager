@@ -72,6 +72,8 @@ public class SessionNodesEditor extends Composite {
     
     int mSelectedCount = 0;
     ArrayList<Slave> mSlaves = new ArrayList<Slave>();
+    
+    Session mSession = null;
 
     public SessionNodesEditor() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -93,6 +95,7 @@ public class SessionNodesEditor extends Composite {
                 int count = 0;
                 Node sn = null;
                 
+                // count selected nodes
                 for (Node n : mDataProvider.getList()) {
                     if (selectionModel.isSelected(n)) {
                         sn = n;
@@ -253,6 +256,9 @@ public class SessionNodesEditor extends Composite {
     public void refresh(Session s) {
         if (s == null) return;
         
+        // store session locally
+        mSession = s;
+        
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
         mcs.getSlaves(new AsyncCallback<ArrayList<Slave>>() {
 
@@ -305,9 +311,76 @@ public class SessionNodesEditor extends Composite {
         t.schedule(delay);
     }
     
+    private ArrayList<Node> getSelectedNodes() {
+        ArrayList<Node> ret = new ArrayList<Node>();
+        
+        for (Node n : mDataProvider.getList()) {
+            if (selectionModel.isSelected(n)) {
+                ret.add(n);
+            }
+        }
+        
+        return ret;
+    }
+    
     @UiHandler("buttonAdd")
     void onAddNodes(ClickEvent e) {
+        Long amount = Long.valueOf(textAddNumber.getText());
         
+        if ((amount == null) || (amount < 1)) {
+            alertColumn.clear();
+            mAlert.setType(AlertType.ERROR);
+            mAlert.setText("Failure! Could not process the requested amount of nodes.");
+            mAlert.setClose(true);
+            mAlert.setAnimation(true);
+            alertColumn.add(mAlert);
+            return;
+        }
+        
+        String slaveValue = listSlave.getValue(listSlave.getSelectedIndex());
+        
+        Long slaveId = null;
+        
+        if (!"-".equals(slaveValue))
+        {
+            slaveId = Long.valueOf(slaveValue);
+            if (slaveId == null) {
+                alertColumn.clear();
+                mAlert.setType(AlertType.ERROR);
+                mAlert.setText("Failure! The selected slave is invalid.");
+                mAlert.setClose(true);
+                mAlert.setAnimation(true);
+                alertColumn.add(mAlert);
+                return;
+            }
+        }
+        
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.createNodes(amount, mSession.id, slaveId, new AsyncCallback<Void>() {
+
+            @Override
+            public void onFailure(Throwable caught) {
+                alertColumn.clear();
+                mAlert.setType(AlertType.ERROR);
+                mAlert.setText("Failure! Could not create nodes.");
+                mAlert.setClose(true);
+                mAlert.setAnimation(true);
+                alertColumn.add(mAlert);
+            }
+
+            @Override
+            public void onSuccess(Void result) {
+                alertColumn.clear();
+                mAlert.setType(AlertType.SUCCESS);
+                mAlert.setText("Successful created!");
+                mAlert.setClose(true);
+                mAlert.setAnimation(true);
+                alertColumn.add(mAlert);
+                
+                scheduleAlertClear(mAlert, 5000);
+            }
+
+        });
     }
     
     @UiHandler("listSlave")
@@ -315,7 +388,31 @@ public class SessionNodesEditor extends Composite {
         // do not commit if no node is selected
         if (mSelectedCount == 0) return;
         
-        ArrayList<Node> nodes = null;
+        String slaveValue = listSlave.getValue(listSlave.getSelectedIndex());
+        
+        Long slaveId = null;
+        
+        if (!"-".equals(slaveValue))
+        {
+            slaveId = Long.valueOf(slaveValue);
+            if (slaveId == null) {
+                alertColumn.clear();
+                mAlert.setType(AlertType.ERROR);
+                mAlert.setText("Failure! The selected slave is invalid.");
+                mAlert.setClose(true);
+                mAlert.setAnimation(true);
+                alertColumn.add(mAlert);
+                return;
+            }
+        }
+        
+        // get all selected nodes
+        ArrayList<Node> nodes = getSelectedNodes();
+        
+        // apply slave change to all nodes
+        for (Node n : nodes) {
+            n.slaveId = slaveId;
+        }
         
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
         mcs.applyNodes(nodes, new AsyncCallback<Void>() {
@@ -324,7 +421,7 @@ public class SessionNodesEditor extends Composite {
             public void onFailure(Throwable caught) {
                 alertColumn.clear();
                 mAlert.setType(AlertType.ERROR);
-                mAlert.setText("Failure! Can not change slave.");
+                mAlert.setText("Failure! Could not change slave.");
                 mAlert.setClose(true);
                 mAlert.setAnimation(true);
                 alertColumn.add(mAlert);
@@ -368,6 +465,34 @@ public class SessionNodesEditor extends Composite {
     
     @UiHandler("buttonRemoveSelected")
     void onRemoveSelection(ClickEvent e) {
+        // get all selected nodes
+        ArrayList<Node> nodes = getSelectedNodes();
         
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.removeNodes(nodes, new AsyncCallback<Void>() {
+
+            @Override
+            public void onFailure(Throwable caught) {
+                alertColumn.clear();
+                mAlert.setType(AlertType.ERROR);
+                mAlert.setText("Failure! Could not remove selected slaves.");
+                mAlert.setClose(true);
+                mAlert.setAnimation(true);
+                alertColumn.add(mAlert);
+            }
+
+            @Override
+            public void onSuccess(Void result) {
+                alertColumn.clear();
+                mAlert.setType(AlertType.SUCCESS);
+                mAlert.setText("Successful removed!");
+                mAlert.setClose(true);
+                mAlert.setAnimation(true);
+                alertColumn.add(mAlert);
+                
+                scheduleAlertClear(mAlert, 5000);
+            }
+            
+        });
     }
 }

@@ -23,7 +23,7 @@
 					<g:SimplePanel>
 						<b:InputAddOn prependText="Slave" appendIcon="PUSHPIN" addStyleNames="{style.formButton}">
 						    <b:ListBox alternateSize="MEDIUM" ui:field="listSlave">
-						        <g:item value="">- not assigned -</g:item>
+						        <g:item value="-">- not assigned -</g:item>
 						    </b:ListBox>
 						</b:InputAddOn>
 					</g:SimplePanel>

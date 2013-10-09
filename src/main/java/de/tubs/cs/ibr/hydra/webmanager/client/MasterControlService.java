@@ -37,6 +37,13 @@ public interface MasterControlService extends RemoteService {
     public ArrayList<Session> getSessions();
     
     /**
+     * Add a number of nodes
+     * @param amount
+     * @param slaveId
+     */
+    public void createNodes(Long amount, Long sessionId, Long slaveId);
+    
+    /**
      * Get all nodes related to the given sessionKey
      * @param sessionKey
      * @return

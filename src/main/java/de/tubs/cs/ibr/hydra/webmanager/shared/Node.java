@@ -10,6 +10,7 @@ public class Node implements Serializable {
     private static final long serialVersionUID = 2954357776414155391L;
 
     public enum State {
+        DRAFT("draft"),
         SCHEDULED("scheduled"),
         CREATED("created"),
         CONNECTED("connected"),
@@ -26,23 +27,30 @@ public class Node implements Serializable {
             return mTag;
         }
         
+        public boolean equals(String value) {
+            return mTag.equals(value);
+        }
+        
         @Override
         public String toString() {
             return mTag;
         }
         
         public static State fromString(String tag) {
-            if (tag.equals("scheduled")) {
+            if (State.SCHEDULED.equals(tag)) {
                 return State.SCHEDULED;
             }
-            else if (tag.equals("created")) {
+            else if (State.CREATED.equals(tag)) {
                 return State.CREATED;
             }
-            else if (tag.equals("connected")) {
+            else if (State.CONNECTED.equals(tag)) {
                 return State.CONNECTED;
             }
-            else if (tag.equals("destroyed")) {
+            else if (State.DESTROYED.equals(tag)) {
                 return State.DESTROYED;
+            }
+            else if (State.DRAFT.equals(tag)) {
+                return State.DRAFT;
             }
             return State.ERROR;
         }
@@ -50,7 +58,7 @@ public class Node implements Serializable {
     
     public Long id = null;
     public Long slaveId = null;
-    public String sessionKey = null;
+    public Long sessionId = null;
     public String name = null;
     public State state = null;
     public String address = null;

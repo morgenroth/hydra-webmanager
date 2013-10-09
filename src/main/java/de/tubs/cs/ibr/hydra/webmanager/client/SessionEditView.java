@@ -244,6 +244,8 @@ public class SessionEditView extends View {
     }
     
     private boolean isRelated(Event evt) {
+        if (evt.getExtras() == null) return true;
+        
         for (EventExtra e : evt.getExtras()) {
             if (EventType.EXTRA_SESSION_ID.equals(e.getKey())) {
                 if (mSession.id.toString().equals(e.getData())) {

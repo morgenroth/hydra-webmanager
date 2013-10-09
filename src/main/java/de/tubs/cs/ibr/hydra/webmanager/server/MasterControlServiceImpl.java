@@ -205,14 +205,37 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
 
     @Override
     public void applyNodes(ArrayList<Node> nodes) {
-        // TODO Auto-generated method stub
+        Database d = Database.getInstance();
+        for (Node n : nodes) {
+            d.updateNode(n);
+        }
         
+        MasterServer.broadcast(EventType.NODE_STATE_CHANGED, null);
     }
 
     @Override
     public void removeNodes(ArrayList<Node> nodes) {
-        // TODO Auto-generated method stub
+        Database d = Database.getInstance();
+        for (Node n : nodes) {
+            d.removeNode(n);
+        }
         
+        MasterServer.broadcast(EventType.NODE_STATE_CHANGED, null);
+    }
+
+    @Override
+    public void createNodes(Long amount, Long sessionId, Long slaveId) {
+        Database db = Database.getInstance();
+        
+        for (int i = 0; i < amount; i++) {
+            db.createNode(sessionId, slaveId);
+        }
+        
+        // prepare session change extras
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, sessionId.toString()));
+        
+        MasterServer.broadcast(EventType.NODE_STATE_CHANGED, null);
     }
 
 }

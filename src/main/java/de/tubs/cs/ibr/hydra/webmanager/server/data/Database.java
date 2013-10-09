@@ -85,9 +85,9 @@ public class Database {
             PreparedStatement st;
             
             if (sessionKey == null) {
-                st = mConn.prepareStatement("SELECT id, slave, name, state, address FROM nodes;");
+                st = mConn.prepareStatement("SELECT id, slave, session, name, state, address FROM nodes;");
             } else {
-                st = mConn.prepareStatement("SELECT id, slave, name, state, address FROM nodes WHERE session = ?;");
+                st = mConn.prepareStatement("SELECT id, slave, session, name, state, address FROM nodes WHERE session = ?;");
                 st.setString(1, sessionKey);
             }
             
@@ -101,10 +101,15 @@ public class Database {
                 n.slaveId = rs.getLong(2);
                 if (rs.wasNull()) n.slaveId = null;
                 
-                n.name = rs.getString(3);
-                n.state = Node.State.fromString(rs.getString(4));
+                n.sessionId = rs.getLong(3);
+                if (rs.wasNull()) n.sessionId = null;
                 
-                n.address = rs.getString(5);
+                n.name = rs.getString(4);
+                if (rs.wasNull()) n.name = null;
+                
+                n.state = Node.State.fromString(rs.getString(5));
+                
+                n.address = rs.getString(6);
                 if (rs.wasNull()) n.address = null;
                 
                 ret.add(n);
@@ -116,6 +121,189 @@ public class Database {
         }
         
         return ret;
+    }
+    
+    public Node getNode(Long id) {
+        Node n = null;
+        
+        try {
+            PreparedStatement st = mConn.prepareStatement("SELECT id, slave, session, name, state, address FROM nodes WHERE id = ?;");
+            st.setLong(1, id);
+            ResultSet rs = st.executeQuery();
+            
+            if (rs.next()) {
+                n = new Node();
+                
+                n.id = rs.getLong(1);
+                
+                n.slaveId = rs.getLong(2);
+                if (rs.wasNull()) n.slaveId = null;
+                
+                n.sessionId = rs.getLong(3);
+                if (rs.wasNull()) n.sessionId = null;
+                
+                n.name = rs.getString(4);
+                if (rs.wasNull()) n.name = null;
+                
+                n.state = Node.State.fromString(rs.getString(5));
+                
+                n.address = rs.getString(6);
+                if (rs.wasNull()) n.address = null;
+            }
+            
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+        
+        return n;
+    }
+    
+    public void updateNode(Node n, String address) {
+        if (n.id == null) return;
+        
+        try {
+            PreparedStatement st = mConn.prepareStatement("UPDATE nodes SET `address` = ? WHERE id = ?;");
+            
+            if (n.slaveId == null) {
+                st.setNull(1, Types.INTEGER);
+            } else {
+                st.setLong(1, n.slaveId);
+            }
+            
+            st.setLong(2, n.id);
+            
+            // execute the query
+            st.execute();
+            
+            // broadcast node state changed event
+            List<EventExtra> entries = new ArrayList<EventExtra>();
+            entries.add(MasterServer.createEventExtra(EventType.EXTRA_NODE_ID, n.id.toString()));
+            entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, n.sessionId.toString()));
+            
+            MasterServer.broadcast(EventType.NODE_STATE_CHANGED, entries);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void updateNode(Node n, Node.State s) {
+        if (n.id == null) return;
+        
+        try {
+            PreparedStatement st = mConn.prepareStatement("UPDATE nodes SET `state` = ? WHERE id = ?;");
+            
+            st.setString(1, s.toString());
+            st.setLong(2, n.id);
+            
+            // execute the query
+            st.execute();
+            
+            // broadcast node state changed event
+            List<EventExtra> entries = new ArrayList<EventExtra>();
+            entries.add(MasterServer.createEventExtra(EventType.EXTRA_NODE_ID, n.id.toString()));
+            entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, n.sessionId.toString()));
+            
+            MasterServer.broadcast(EventType.NODE_STATE_CHANGED, entries);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void updateNode(Node n) {
+        if (n.id == null) return;
+        
+        try {
+            PreparedStatement st = mConn.prepareStatement("UPDATE nodes SET `slave` = ?, `name` = ? WHERE id = ?;");
+            
+            if (n.slaveId == null) {
+                st.setNull(1, Types.INTEGER);
+            } else {
+                st.setLong(1, n.slaveId);
+            }
+            
+            if (n.name == null) {
+                st.setString(2, "n" + n.id.toString());
+            } else {
+                st.setString(2, n.name);
+            }
+            
+            st.setLong(3, n.id);
+            
+            // execute the query
+            st.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void removeNode(Node n) {
+        if (n.id == null) return;
+        
+        try {
+            PreparedStatement st = mConn.prepareStatement("DELETE FROM nodes WHERE id = ?;");
+            
+            // set the session id
+            st.setLong(1, n.id);
+            
+            // execute insertion
+            st.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public Node createNode(Long sessionId, Long slaveId) {
+        Long nodeId = null;
+
+        try {
+            PreparedStatement st = mConn.prepareStatement("INSERT INTO nodes (`session`, `slave`) VALUES (?, ?);", Statement.RETURN_GENERATED_KEYS);
+
+            // set the name
+            st.setLong(1, sessionId);
+            
+            // set the slave
+            if (slaveId == null) {
+                st.setNull(2, Types.INTEGER);
+            } else {
+                st.setLong(2, slaveId);
+            }
+            
+            // execute insertion
+            st.execute();
+            
+            // get session id from result-set
+            ResultSet rs = st.getGeneratedKeys();
+            if (rs.next()) {
+                nodeId = rs.getLong(1);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        // something went wrong
+        if (nodeId == null)
+            return null;
+        
+        // create initial node name
+        try {
+            PreparedStatement st = mConn.prepareStatement("UPDATE nodes SET `name` = ? WHERE id = ?;");
+
+            // set the node name
+            st.setString(1, "n" + nodeId.toString());
+            
+            // set the node id
+            st.setLong(2, nodeId);
+            
+            // execute insertion
+            st.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return getNode(nodeId);
     }
     
     public ArrayList<Slave> getSlaves() {

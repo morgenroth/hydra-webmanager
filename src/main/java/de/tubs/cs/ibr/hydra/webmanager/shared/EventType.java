@@ -17,6 +17,8 @@ public enum EventType {
     public static final String EXTRA_SLAVE_NAME = "slave_name";
     public static final String EXTRA_SLAVE_ADDRESS = "slave_address";
     
+    public static final String EXTRA_NODE_ID = "node_id";
+    
     private String mCode = null;
     
     EventType(String code) {
