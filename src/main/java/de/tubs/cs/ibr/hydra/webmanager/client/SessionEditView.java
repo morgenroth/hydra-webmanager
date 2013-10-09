@@ -11,6 +11,9 @@ import com.github.gwtbootstrap.client.ui.Column;
 import com.github.gwtbootstrap.client.ui.FileUpload;
 import com.github.gwtbootstrap.client.ui.ListBox;
 import com.github.gwtbootstrap.client.ui.NavLink;
+import com.github.gwtbootstrap.client.ui.Tab;
+import com.github.gwtbootstrap.client.ui.TabPanel;
+import com.github.gwtbootstrap.client.ui.TabPanel.ShownEvent;
 import com.github.gwtbootstrap.client.ui.TextArea;
 import com.github.gwtbootstrap.client.ui.TextBox;
 import com.github.gwtbootstrap.client.ui.constants.AlertType;
@@ -31,15 +34,18 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet;
+import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet.MobilityModel;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
-import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet.MobilityModel;
 
 public class SessionEditView extends View {
 
     private static SessionEditViewUiBinder uiBinder = GWT.create(SessionEditViewUiBinder.class);
     
     @UiField Button buttonBack;
+    
+    @UiField TabPanel panelTabs;
+    @UiField Tab tabNodes;
     
     @UiField Column columnFormActions;
     @UiField Button buttonApply;
@@ -555,5 +561,14 @@ public class SessionEditView extends View {
     void onMovementStaticConnectionsChanged(ChangeEvent evt) {
         if (mChangedSession.mobility == null) return;
         mChangedSession.mobility.parameters.put("connections", textMovementStaticConnections.getText());
+    }
+    
+    @UiHandler("panelTabs")
+    void onTabChange(ShownEvent event) {
+        if (tabNodes.isActive()) {
+            columnFormActions.setVisible(false);
+        } else {
+            columnFormActions.setVisible(true);
+        }
     }
 }

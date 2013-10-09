@@ -10,7 +10,7 @@
 			</b:Column>
 		</b:Row>
 		<b:Row><b:Column size="12" ui:field="alertColumn" /></b:Row>
-		<b:TabPanel>
+		<b:TabPanel ui:field="panelTabs">
 			<b:Tab heading="Properties" active="true">
 				<!-- Properties -->
 				<b:Form type="HORIZONTAL">
@@ -286,7 +286,7 @@
 				</b:Form>
 		</b:Tab>
 			<!-- Nodes -->
-			<b:Tab heading="Nodes">
+			<b:Tab heading="Nodes" ui:field="tabNodes">
 				<b:Row>
 					<b:Column size="12">
 						<b:Button icon="PLUS" type="PRIMARY" ui:field="buttonGenerate">Generate
