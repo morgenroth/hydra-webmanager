@@ -10,6 +10,7 @@ public class Slave implements Serializable {
     private static final long serialVersionUID = 1090658748223324674L;
     
     public enum State {
+        DISCONNECTED("disconnected"),
         IDLE("idle"),
         ASSIGNED("assigned"),
         PREPARING("preparing"),
@@ -52,14 +53,19 @@ public class Slave implements Serializable {
             else if (RUNNING.equals(tag)) {
                 return State.RUNNING;
             }
+            else if (DISCONNECTED.equals(tag)) {
+                return State.DISCONNECTED;
+            }
             return State.IDLE;
         }
     };
 
+    public Long id = null;
     public String name = null;
     public String address = null;
     public State state = State.IDLE;
     public String session = null;
+    public Long owner = null;
     
     public Slave() {
     }
