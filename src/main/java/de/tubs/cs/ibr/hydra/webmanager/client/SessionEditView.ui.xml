@@ -2,7 +2,8 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui"
-	xmlns:base="urn:import:com.github.gwtbootstrap.client.ui.base">
+	xmlns:base="urn:import:com.github.gwtbootstrap.client.ui.base"
+	xmlns:hydra="urn:import:de.tubs.cs.ibr.hydra.webmanager.client">
 	<g:HTMLPanel>
 		<b:Row>
 			<b:Column size="12">
@@ -287,20 +288,7 @@
 		</b:Tab>
 			<!-- Nodes -->
 			<b:Tab heading="Nodes" ui:field="tabNodes">
-				<b:Row>
-					<b:Column size="12">
-						<b:Button icon="PLUS" type="PRIMARY" ui:field="buttonGenerate">Generate
-							nodes</b:Button>
-						<b:Button icon="TRASH" type="DANGER" ui:field="buttonClearAll">Clear all
-							nodes</b:Button>
-					</b:Column>
-				</b:Row>
-				<b:Row>
-					<!-- table of nodes -->
-					<b:Column size="12">
-						<b:CellTable ui:field="tableNodes" />
-					</b:Column>
-				</b:Row>
+				<hydra:SessionNodesEditor ui:field="nodesEditor" />
 			</b:Tab>
 		</b:TabPanel>
 		<b:Row>

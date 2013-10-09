@@ -1,11 +1,9 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import com.github.gwtbootstrap.client.ui.Alert;
 import com.github.gwtbootstrap.client.ui.Button;
-import com.github.gwtbootstrap.client.ui.CellTable;
 import com.github.gwtbootstrap.client.ui.CheckBox;
 import com.github.gwtbootstrap.client.ui.Column;
 import com.github.gwtbootstrap.client.ui.FileUpload;
@@ -28,14 +26,12 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DeckPanel;
 import com.google.gwt.user.client.ui.Widget;
-import com.google.gwt.view.client.ListDataProvider;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet.MobilityModel;
-import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
 public class SessionEditView extends View {
@@ -85,7 +81,7 @@ public class SessionEditView extends View {
     // STATIC
     @UiField TextArea textMovementStaticConnections;
     
-    @UiField CellTable<Node> tableNodes;
+    @UiField SessionNodesEditor nodesEditor;
     
     NavLink activeNavLink = null;
     Session mSession = null;
@@ -93,18 +89,12 @@ public class SessionEditView extends View {
     
     final Alert mAlert = new Alert();
     
-    // data provider for the node table
-    ListDataProvider<Node> mDataProvider = new ListDataProvider<Node>();
-    
     interface SessionEditViewUiBinder extends UiBinder<Widget, SessionEditView> {
     }
 
     public SessionEditView(HydraApp app, Session s) {
         super(app);
         initWidget(uiBinder.createAndBindUi(this));
-        
-        // create node table
-        createNodeTable();
         
         if (s == null) {
             // create a session first
@@ -125,7 +115,7 @@ public class SessionEditView extends View {
         refreshSessionProperties(s);
         
         // load nodes
-        refreshNodeTable(s);
+        nodesEditor.refresh(s);
     }
     
     private void refreshSessionProperties(Session session) {
@@ -176,28 +166,6 @@ public class SessionEditView extends View {
         });
     }
     
-    private void refreshNodeTable(Session s) {
-        if (s == null) return;
-        
-        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.getNodes(s.id.toString(), new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Node>>() {
-
-            @Override
-            public void onFailure(Throwable caught) {
-            }
-
-            @Override
-            public void onSuccess(ArrayList<Node> result) {
-                List<Node> list = mDataProvider.getList();
-                list.clear();
-                for (Node n : result) {
-                    list.add(n);
-                }
-            }
-            
-        });
-    }
-    
     private void setSession(Session result) {
         // reset changes
         mChangedSession = new Session();
@@ -241,17 +209,6 @@ public class SessionEditView extends View {
         });
     }
     
-    private void createNodeTable() {
-        mDataProvider = new ListDataProvider<Node>();
-        mDataProvider.addDataDisplay(tableNodes);
-        
-        // set table name
-        tableNodes.setTitle("Nodes");
-        
-        // add common headers
-        TableUtils.addNodeHeaders(tableNodes);
-    }
-
     @Override
     public void eventRaised(Event evt) {
         // do not update, if we don't have a session
@@ -261,7 +218,7 @@ public class SessionEditView extends View {
         if (EventType.NODE_STATE_CHANGED.equals(evt)) {
             if (isRelated(evt)) {
                 // refresh nodes
-                refreshNodeTable(mSession);
+                nodesEditor.refresh(mSession);
             }
         }
         else if (EventType.SESSION_REMOVED.equals(evt)) {
