@@ -203,4 +203,10 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         MasterServer.broadcast(EventType.SESSION_DATA_UPDATED, entries);
     }
 
+    @Override
+    public void applyNodes(ArrayList<Node> nodes) {
+        // TODO Auto-generated method stub
+        
+    }
+
 }

@@ -44,6 +44,12 @@ public interface MasterControlService extends RemoteService {
     public ArrayList<Node> getNodes(String sessionKey);
     
     /**
+     * Store writable values of the nodes
+     * @param s
+     */
+    public void applyNodes(ArrayList<Node> nodes);
+    
+    /**
      * Get a list of all connected slaves
      * @return
      */

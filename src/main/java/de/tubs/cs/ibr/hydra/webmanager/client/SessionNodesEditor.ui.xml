@@ -3,19 +3,47 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui"
 	xmlns:base="urn:import:com.github.gwtbootstrap.client.ui.base">
+	<ui:style>
+		.formButton {
+			margin-left: 6px;
+			margin-right: 6px;
+		}
+	</ui:style>
 	<g:HTMLPanel>
-		<b:Row>
-			<b:Column size="12">
-				<b:Button icon="PLUS" type="PRIMARY" ui:field="buttonGenerate">Generate
-					nodes</b:Button>
-				<b:Button icon="TRASH" type="DANGER" ui:field="buttonClearAll">Clear all
-					nodes</b:Button>
-			</b:Column>
-		</b:Row>
+	    <b:Row><b:Column size="12" ui:field="alertColumn" /></b:Row>
+	    <b:Row>
+	        <b:Column size="12">
+	            <g:HorizontalPanel>
+	                <g:SimplePanel>
+						<b:InputAddOn prependText="Nodes" appendIcon="PLUS" addStyleNames="{style.formButton}">
+						    <b:TextBox value="1" alternateSize="MINI" ui:field="textAddNumber" />
+						    <b:Button type="DEFAULT" ui:field="buttonAdd">Add</b:Button>
+						</b:InputAddOn>
+					</g:SimplePanel>
+					<g:SimplePanel>
+						<b:InputAddOn prependText="Slave" appendIcon="PUSHPIN" addStyleNames="{style.formButton}">
+						    <b:ListBox alternateSize="MEDIUM" ui:field="listSlave" enabled="false">
+						        <g:item value="-">- not assigned -</g:item>
+						    	<g:item value="auto">- clear assignment -</g:item>
+						    </b:ListBox>
+						</b:InputAddOn>
+					</g:SimplePanel>
+				</g:HorizontalPanel>
+	        </b:Column>
+	    </b:Row>
 		<b:Row>
 			<!-- table of nodes -->
 			<b:Column size="12">
 				<b:CellTable ui:field="tableNodes" />
+			</b:Column>
+		</b:Row>
+		<b:Row>
+			<b:Column size="12" ui:field="columnFormActions">
+				<b:FormActions>
+					<b:Button addStyleNames="{style.formButton}" icon="CHECK" type="DEFAULT" ui:field="buttonSelectAll" enabled="false">Select all</b:Button>
+					<b:Button addStyleNames="{style.formButton}" icon="CHECK_EMPTY" type="DEFAULT" ui:field="buttonSelectNone" enabled="false">Clear selection</b:Button>
+					<b:Button addStyleNames="{style.formButton}" icon="TRASH" type="DANGER" ui:field="buttonRemoveSelected" enabled="false">Remove selection</b:Button>
+				</b:FormActions>
 			</b:Column>
 		</b:Row>
 	</g:HTMLPanel>

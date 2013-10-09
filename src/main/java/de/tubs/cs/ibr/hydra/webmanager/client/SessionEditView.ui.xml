@@ -4,6 +4,12 @@
 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui"
 	xmlns:base="urn:import:com.github.gwtbootstrap.client.ui.base"
 	xmlns:hydra="urn:import:de.tubs.cs.ibr.hydra.webmanager.client">
+	<ui:style>
+		.formButton {
+			margin-left: 6px;
+			margin-right: 6px;
+		}
+	</ui:style>
 	<g:HTMLPanel>
 		<b:Row>
 			<b:Column size="12">
@@ -294,8 +300,8 @@
 		<b:Row>
 			<b:Column size="12" ui:field="columnFormActions">
 				<b:FormActions>
-					<b:Button icon="OK" type="SUCCESS" ui:field="buttonApply">Apply</b:Button>
-					<b:Button icon="REMOVE" type="DEFAULT" ui:field="buttonReset">Reset</b:Button>
+					<b:Button addStyleNames="{style.formButton}" icon="OK" type="SUCCESS" ui:field="buttonApply">Apply</b:Button>
+					<b:Button addStyleNames="{style.formButton}" icon="REMOVE" type="DEFAULT" ui:field="buttonReset">Reset</b:Button>
 				</b:FormActions>
 			</b:Column>
 		</b:Row>
