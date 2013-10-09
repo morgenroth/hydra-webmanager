@@ -79,4 +79,15 @@ public class Slave implements Serializable {
         if (this.name != null) return this.name;
         return super.toString();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Slave) {
+            Slave s = (Slave)obj;
+            return (s.name == name) && (s.address == address);
+        }
+        return super.equals(obj);
+    }
+    
+    
 }
