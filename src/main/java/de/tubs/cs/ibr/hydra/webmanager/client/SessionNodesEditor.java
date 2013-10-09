@@ -343,7 +343,10 @@ public class SessionNodesEditor extends Composite {
                 
                 scheduleAlertClear(mAlert, 5000);
                 
-                listSlave.setSelectedIndex(0);
+                String value = listSlave.getValue(listSlave.getSelectedIndex());
+                if ("-".equals(value)) {
+                    listSlave.setSelectedIndex(0);
+                }
             }
             
         });
