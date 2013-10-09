@@ -50,6 +50,11 @@ public interface MasterControlService extends RemoteService {
     public void applyNodes(ArrayList<Node> nodes);
     
     /**
+     * Remove a list of nodes
+     */
+    public void removeNodes(ArrayList<Node> nodes);
+    
+    /**
      * Get a list of all connected slaves
      * @return
      */

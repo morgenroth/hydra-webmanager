@@ -209,4 +209,10 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         
     }
 
+    @Override
+    public void removeNodes(ArrayList<Node> nodes) {
+        // TODO Auto-generated method stub
+        
+    }
+
 }
