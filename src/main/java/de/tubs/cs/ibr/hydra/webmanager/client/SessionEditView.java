@@ -65,7 +65,6 @@ public class SessionEditView extends View {
     
     // RWP
     @UiField TextBox textMovementRwpDuration;
-    @UiField TextBox textMovementRwpNumberOfNodes;
     @UiField TextBox textMovementRwpAreaSizeHeight;
     @UiField TextBox textMovementRwpAreaSizeWidth;
     @UiField TextBox textMovementRwpResolution;
@@ -434,12 +433,6 @@ public class SessionEditView extends View {
                     textMovementRwpDuration.setText(null);
                 }
                 
-                if (mSession.mobility.parameters.containsKey("nodes")) {
-                    textMovementRwpNumberOfNodes.setText(mSession.mobility.parameters.get("nodes"));
-                } else {
-                    textMovementRwpNumberOfNodes.setText(null);
-                }
-                
                 if (mSession.mobility.parameters.containsKey("height")) {
                     textMovementRwpAreaSizeHeight.setText(mSession.mobility.parameters.get("height"));
                 } else {
@@ -506,12 +499,6 @@ public class SessionEditView extends View {
     void onMovementRwpDurationChanged(ChangeEvent evt) {
         if (mChangedSession.mobility == null) return;
         mChangedSession.mobility.parameters.put("duration", textMovementRwpDuration.getText());
-    }
-    
-    @UiHandler("textMovementRwpNumberOfNodes")
-    void onMovementRwpNumberOfNodesChanged(ChangeEvent evt) {
-        if (mChangedSession.mobility == null) return;
-        mChangedSession.mobility.parameters.put("nodes", textMovementRwpNumberOfNodes.getText());
     }
     
     @UiHandler("textMovementRwpAreaSizeHeight")

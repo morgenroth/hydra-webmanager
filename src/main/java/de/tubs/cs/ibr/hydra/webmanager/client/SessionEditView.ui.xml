@@ -177,15 +177,6 @@
 										</b:Controls>
 									</b:ControlGroup>
 
-									<!-- Number of nodes -->
-									<b:ControlGroup>
-										<b:ControlLabel for="textRwpNumberOfNodes">Number of nodes</b:ControlLabel>
-										<b:Controls>
-											<b:TextBox alternateSize="SMALL" b:id="textRwpNumberOfNodes"
-												ui:field="textMovementRwpNumberOfNodes" b:placeholder="10" />
-										</b:Controls>
-									</b:ControlGroup>
-
 									<!-- Area size -->
 									<b:ControlGroup>
 										<b:ControlLabel for="textRwpAreaSizeHeight">Area</b:ControlLabel>
