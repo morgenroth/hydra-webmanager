@@ -3,7 +3,9 @@ package de.tubs.cs.ibr.hydra.webmanager.server;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
@@ -26,8 +28,13 @@ public class SlaveConnection extends Thread {
         return mSlave.name;
     }
     
+    public void setSlave(Slave s) {
+        mSlave = s;
+    }
+    
     public Slave doHandshake() throws IOException {
         // receive slave banner
+        @SuppressWarnings("unused")
         String banner = mReader.readLine();
         
         // read identifier
@@ -38,7 +45,13 @@ public class SlaveConnection extends Thread {
         mSlave = new Slave(name);
         
         // set address
-        mSlave.address = mSocket.getRemoteSocketAddress().toString();
+        SocketAddress addr = mSocket.getRemoteSocketAddress();
+        if (addr instanceof InetSocketAddress) {
+            InetSocketAddress iaddr = (InetSocketAddress)addr;
+            mSlave.address = iaddr.getHostString();
+        } else {
+            mSlave.address = addr.toString();
+        }
         
         return mSlave;
     }
@@ -69,9 +82,6 @@ public class SlaveConnection extends Thread {
             } catch (IOException e) {
                 // could not close socket
             }
-            
-            // mark this thread as detached
-            setDaemon(true);
         }
     }
     

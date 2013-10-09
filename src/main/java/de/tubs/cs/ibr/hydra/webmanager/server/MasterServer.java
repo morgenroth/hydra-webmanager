@@ -27,8 +27,7 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
 public class MasterServer implements ServletContextListener {
     
-    private static final HashMap<String, Slave> mSlaves = new HashMap<String, Slave>();
-    private static final HashMap<String, SlaveConnection> mConnections = new HashMap<String, SlaveConnection>();
+    private static final HashMap<Long, SlaveConnection> mConnections = new HashMap<Long, SlaveConnection>();
     
     private ServerSocket mSockServer = null;
     private Boolean mRunning = true;
@@ -36,49 +35,54 @@ public class MasterServer implements ServletContextListener {
     private static ExecutorService mTaskLoop = null;
     
     public static ArrayList<Slave> getSlaves() {
-        ArrayList<Slave> ret = new ArrayList<Slave>();
-        
-        synchronized(mConnections) {
-            for (Slave s : mSlaves.values()) {
-                ret.add(s);
-            }
-        }
-        
-        return ret;
+        return Database.getInstance().getSlaves();
     }
     
-    public static SlaveConnection getConnection(Slave s) {
-        synchronized(mConnections) {
-            return mConnections.get(s.toString());
-        }
-    }
-
     public static void register(Slave s, SlaveConnection sc) {
+        Slave slave = Database.getInstance().getSlave(s.name, s.address);
+        
+        if (slave == null) {
+            // create a new slave entry
+            // TODO: add right owner
+            slave = Database.getInstance().createSlave(s.name, s.address, null);
+        }
+        
+        // update slave object
+        sc.setSlave(slave);
+        
         synchronized(mConnections) {
-            mSlaves.put(s.toString(), s);
-            mConnections.put(s.toString(), sc);
+            mConnections.put(slave.id, sc);
             mConnections.notifyAll();
         }
         
-        List<EventExtra> entries = new ArrayList<EventExtra>();
-        entries.add(createEventExtra(EventType.EXTRA_SLAVE_NAME, s.name));
-        entries.add(createEventExtra(EventType.EXTRA_SLAVE_ADDRESS, s.address));
+        // set slave to 'idle' state
+        slave.state = Slave.State.IDLE;
+        Database.getInstance().updateSlave(slave);
         
-        broadcast(EventType.SLAVE_CONNECTED, entries);
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(createEventExtra(EventType.EXTRA_SLAVE_ID, slave.id.toString()));
+        entries.add(createEventExtra(EventType.EXTRA_SLAVE_NAME, slave.name));
+        entries.add(createEventExtra(EventType.EXTRA_SLAVE_ADDRESS, slave.address));
+        
+        broadcast(EventType.SLAVE_STATE_CHANGED, entries);
     }
 
     public static void unregister(Slave s) {
         synchronized(mConnections) {
-            mSlaves.remove(s.toString());
-            mConnections.remove(s.toString());
+            mConnections.remove(s.id);
             mConnections.notifyAll();
         }
         
+        // set slave to 'disconnected' state
+        s.state = Slave.State.DISCONNECTED;
+        Database.getInstance().updateSlave(s);
+        
         List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(createEventExtra(EventType.EXTRA_SLAVE_ID, s.id.toString()));
         entries.add(createEventExtra(EventType.EXTRA_SLAVE_NAME, s.name));
         entries.add(createEventExtra(EventType.EXTRA_SLAVE_ADDRESS, s.address));
         
-        broadcast(EventType.SLAVE_DISCONNECTED, entries);
+        broadcast(EventType.SLAVE_STATE_CHANGED, entries);
     }
     
     private Thread mSocketLoop = new Thread() {
@@ -86,6 +90,9 @@ public class MasterServer implements ServletContextListener {
         @Override
         public void run() {
             try {
+                // clean-up all old slave states
+                Database.getInstance().resetSlaves();
+                
                 mSockServer = new ServerSocket(4244);
                 
                 System.out.println("Master service listening...");

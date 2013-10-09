@@ -237,6 +237,10 @@ public class SessionEditView extends View {
                 refresh();
             }
         }
+        else if (EventType.SLAVE_STATE_CHANGED.equals(evt)) {
+         // refresh nodes
+            nodesEditor.refresh(mSession);
+        }
     }
     
     private boolean isRelated(Event evt) {
