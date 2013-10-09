@@ -1,14 +1,17 @@
 package de.tubs.cs.ibr.hydra.webmanager.server.data;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.InvalidParameterException;
+import java.util.Map.Entry;
 
 import com.nikhaldimann.inieditor.IniEditor;
 
@@ -91,7 +94,7 @@ public class SessionContainer {
         
         try {
             // load configuration of 'base'
-            base.load(new File(mBasePath, "config.properties").getPath());
+            base.load(new File(mBasePath, "config.properties"));
             
             // get selected image file
             s.image = base.get("image", "file");
@@ -143,7 +146,7 @@ public class SessionContainer {
         
         try {
             // load configuration of 'base'
-            sessionConf.load(new File(mPath, "config.properties").getPath());
+            sessionConf.load(new File(mPath, "config.properties"));
             
             MobilityParameterSet m = new MobilityParameterSet();
             if (sessionConf.hasOption("mobility", "model")) {
@@ -214,11 +217,124 @@ public class SessionContainer {
                 base.set("image", "file", s.image);
             }
             
+            if (s.repository != null) {
+                // apply repository URL
+                File repo_file = new File(mBasePath, "opkg.external");
+                String repository = null;
+                
+                if (repo_file.exists()) {
+                    try {
+                        BufferedReader in = new BufferedReader(new FileReader(repo_file));
+                        try {
+                            String data = in.readLine();
+                            String[] fragments = data.split(" ");
+                            if (fragments.length >= 3) {
+                                // prepare line to write
+                                repository = fragments[0] + " " + fragments[1];
+                            }
+                        } finally {
+                            in.close();
+                        }
+                        
+                        // store new data in the file
+                        storeFile(repo_file, repository + " " + s.repository);
+                    } catch (IOException e) {
+                        // can not read/write repository data
+                        e.printStackTrace();
+                    }
+                }
+            }
+            
+            if (s.packages != null) {
+                // apply properties
+                File packages_file = new File(mBasePath, "packages.install");
+                storeFile(packages_file, s.packages);
+            }
+            
+            if (s.monitor_nodes != null) {
+                // apply properties
+                File monitor_file = new File(mBasePath, "monitor-nodes.txt");
+                storeFile(monitor_file, s.monitor_nodes);
+            }
+            
+            if (s.qemu_template != null) {
+                // apply properties
+                File qemu_template = new File(mBasePath, "node-template.qemu.xml");
+                storeFile(qemu_template, s.qemu_template);
+            }
+            
+            if (s.vbox_template != null) {
+                // apply properties
+                File vbox_template = new File(mBasePath, "node-template.vbox.xml");
+                storeFile(vbox_template, s.vbox_template);
+            }
+            
             // write configuration of 'base'
             base.save(conf);
         } catch (IOException e) {
-            // can not save configuration
+            // can not load / save configuration
             e.printStackTrace();
+        }
+        
+        // apply movement parameters
+        if (s.mobility != null) {
+            IniEditor sessionConf = new IniEditor();
+            
+            File sessionFile = new File(mPath, "config.properties");
+            
+            try {
+                // load configuration of 'base'
+                sessionConf.load(sessionFile);
+                
+                String section = null;
+                
+                // set mobility mode
+                sessionConf.set("mobility", "model", s.mobility.model.toString());
+                
+                switch (s.mobility.model) {
+                    case NONE:
+                        break;
+                    case RANDOM_WALK:
+                        section = "randomwalk";
+                        break;
+                    case STATIC:
+                        section = "staticconnections";
+    
+                        // store connections to file
+                        if (s.mobility.parameters.containsKey("connections")) {
+                            File f = new File(mPath, sessionConf.get(section, "connections"));
+                            SessionContainer.storeFile(f, s.mobility.parameters.get("connections"));
+                        }
+                        break;
+                    case THE_ONE:
+                        section = "onetrace";
+                        break;
+                    default:
+                        break;
+                }
+                
+                if (section != null) {
+                    for (Entry<String, String> e : s.mobility.parameters.entrySet()) {
+                        // exclude 'connections'
+                        if ("connections".equals(e.getKey()))
+                            continue;
+                        
+                        if ((e.getValue() == null) || (e.getValue().length() == 0)) {
+                            // remove parameter
+                            sessionConf.remove(section, e.getKey());
+                        } else {
+                            // set parameter
+                            sessionConf.set(section, e.getKey(), e.getValue());
+                        }
+                    }
+                    
+                    // store the configuration
+                    sessionConf.save(sessionFile);
+                }
+            } catch (IOException e) {
+                // can not load / save configuration
+                e.printStackTrace();
+            }
         }
     }
     
@@ -319,5 +435,21 @@ public class SessionContainer {
             }
         }
         return ret;
+    }
+    
+    private static void storeFile(File f, String data) {
+        try {
+            BufferedWriter out = new BufferedWriter(new FileWriter(f));
+            try {
+                out.write(data);
+                out.newLine();
+                out.flush();
+            } finally {
+                out.close();
+            }
+        } catch (IOException e) {
+            // can not read monitor nodes
+            e.printStackTrace();
+        }
     }
 }
