@@ -110,7 +110,7 @@ public class SessionNodesEditor extends Composite {
                     buttonRemoveSelected.setEnabled(true);
                     
                     if ((count == 1) && (sn.slaveId != null)) {
-                        listSlave.setSelectedValue(sn.slaveName);
+                        listSlave.setSelectedValue(sn.slaveId.toString());
                     } else {
                         listSlave.setSelectedIndex(0);
                     }
@@ -130,6 +130,15 @@ public class SessionNodesEditor extends Composite {
         
         // add common headers
         addHeaders(tableNodes);
+    }
+    
+    private Slave getSlave(Long id) {
+        for (Slave s : mSlaves) {
+            if (id.equals(s.id)) {
+                return s;
+            }
+        }
+        return null;
     }
     
     private void addHeaders(CellTable<Node> table) {
@@ -161,22 +170,6 @@ public class SessionNodesEditor extends Composite {
         table.setColumnWidth(idColumn, 4, Unit.EM);
         
         /**
-         * slave column
-         */
-        TextColumn<Node> slaveColumn = new TextColumn<Node>() {
-            @Override
-            public String getValue(Node s) {
-                if (s.slaveName == null) {
-                    return "<not assigned>";
-                }
-                return s.slaveName;
-            }
-        };
-        
-        table.addColumn(slaveColumn, "Slave");
-        table.setColumnWidth(slaveColumn, 16, Unit.EM);
-        
-        /**
          * name column
          */
         Column<Node, String> nameColumn = new Column<Node, String>(new EditTextCell()) {
@@ -195,6 +188,26 @@ public class SessionNodesEditor extends Composite {
         });
 
         table.addColumn(nameColumn, "Name");
+        
+        /**
+         * slave column
+         */
+        TextColumn<Node> slaveColumn = new TextColumn<Node>() {
+            @Override
+            public String getValue(Node s) {
+                if (s.slaveId == null) {
+                    return "<not assigned>";
+                }
+                Slave sobj = getSlave(s.slaveId);
+                if (sobj == null) {
+                    return "<missing>";
+                }
+                return sobj.name + " (" + sobj.state.toString() + ")";
+            }
+        };
+        
+        table.addColumn(slaveColumn, "Slave");
+        table.setColumnWidth(slaveColumn, 20, Unit.EM);
     }
     
     private void applyNode(Node object) {
@@ -230,7 +243,7 @@ public class SessionNodesEditor extends Composite {
         
         // add all slaves
         for (Slave s : slaves) {
-            listSlave.addItem(s.name);
+            listSlave.addItem(s.name + " (" + s.state.toString() + ")", s.id.toString());
         }
         
         // restore selected value

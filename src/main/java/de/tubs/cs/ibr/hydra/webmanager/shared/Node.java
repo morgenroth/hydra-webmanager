@@ -50,7 +50,6 @@ public class Node implements Serializable {
     
     public Long id = null;
     public Long slaveId = null;
-    public String slaveName = null;
     public String sessionKey = null;
     public String name = null;
     public State state = null;

@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -18,6 +19,7 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
 public class Database {
 
@@ -83,9 +85,9 @@ public class Database {
             PreparedStatement st;
             
             if (sessionKey == null) {
-                st = mConn.prepareStatement("SELECT nodes.id, slaves.id, slaves.name, nodes.name, nodes.state, nodes.address FROM nodes LEFT JOIN slaves ON (slaves.id = nodes.slave);");
+                st = mConn.prepareStatement("SELECT id, slave, name, state, address FROM nodes;");
             } else {
-                st = mConn.prepareStatement("SELECT nodes.id, slaves.id, slaves.name, nodes.name, nodes.state, nodes.address FROM nodes LEFT JOIN slaves ON (slaves.id = nodes.slave) WHERE session = ?;");
+                st = mConn.prepareStatement("SELECT id, slave, name, state, address FROM nodes WHERE session = ?;");
                 st.setString(1, sessionKey);
             }
             
@@ -95,11 +97,15 @@ public class Database {
                 Node n = new Node();
                 
                 n.id = rs.getLong(1);
+                
                 n.slaveId = rs.getLong(2);
-                n.slaveName = rs.getString(3);
-                n.name = rs.getString(4);
-                n.state = Node.State.fromString(rs.getString(5));
-                n.address = rs.getString(6);
+                if (rs.wasNull()) n.slaveId = null;
+                
+                n.name = rs.getString(3);
+                n.state = Node.State.fromString(rs.getString(4));
+                
+                n.address = rs.getString(5);
+                if (rs.wasNull()) n.address = null;
                 
                 ret.add(n);
             }
@@ -110,6 +116,169 @@ public class Database {
         }
         
         return ret;
+    }
+    
+    public ArrayList<Slave> getSlaves() {
+        ArrayList<Slave> ret = new ArrayList<Slave>();
+        
+        try {
+            PreparedStatement st = mConn.prepareStatement("SELECT id, name, address, state, owner FROM slaves WHERE owner IS NULL OR owner = ?;");
+            
+            // TODO: set right user id
+            st.setLong(1, 1);
+            
+            ResultSet rs = st.executeQuery();
+            
+            while (rs.next()) {
+                Slave s = new Slave();
+                
+                s.id = rs.getLong(1);
+                s.name = rs.getString(2);
+                s.address = rs.getString(3);
+                if (rs.wasNull()) s.address = null;
+                
+                s.state = Slave.State.fromString(rs.getString(4));
+                
+                s.owner = rs.getLong(5);
+                if (rs.wasNull()) s.owner = null;
+                
+                ret.add(s);
+            }
+            
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return ret;
+    }
+    
+    public Slave getSlave(Long id) {
+        Slave s = null;
+        
+        try {
+            PreparedStatement st = mConn.prepareStatement("SELECT id, name, address, state, owner FROM slaves WHERE id = ? LIMIT 0,1;");
+            st.setLong(1, id);
+            
+            ResultSet rs = st.executeQuery();
+            
+            if (rs.next()) {
+                s = new Slave();
+                s.id = rs.getLong(1);
+                s.name = rs.getString(2);
+                
+                s.address = rs.getString(3);
+                if (rs.wasNull()) s.address = null;
+                
+                s.state = Slave.State.fromString(rs.getString(4));
+                
+                s.owner = rs.getLong(5);
+                if (rs.wasNull()) s.owner = null;
+            }
+            
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+        
+        return s;
+    }
+    
+    public Slave getSlave(String name, String address) {
+        Slave s = null;
+        
+        try {
+            PreparedStatement st = mConn.prepareStatement("SELECT id, name, address, state, owner FROM slaves WHERE name = ? AND address = ? LIMIT 0,1;");
+            st.setString(1, name);
+            st.setString(2, address);
+            
+            ResultSet rs = st.executeQuery();
+            
+            if (rs.next()) {
+                s = new Slave();
+                s.id = rs.getLong(1);
+                s.name = rs.getString(2);
+                s.address = rs.getString(3);
+                if (rs.wasNull()) s.address = null;
+                
+                s.state = Slave.State.fromString(rs.getString(4));
+                
+                s.owner = rs.getLong(5);
+                if (rs.wasNull()) s.owner = null;
+            }
+            
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+        
+        return s;
+    }
+    
+    public void updateSlave(Slave s) {
+        try {
+            PreparedStatement st = mConn.prepareStatement("UPDATE slaves SET `state` = ? WHERE id = ?;");
+            
+            st.setString(1, s.state.toString());
+            st.setLong(2, s.id);
+            
+            // execute the query
+            st.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public Slave createSlave(String name, String address, Long owner) {
+        Long slaveId = null;
+
+        try {
+            PreparedStatement st = mConn.prepareStatement("INSERT INTO slaves (`name`, `address`, `owner`) VALUES (?, ?, ?);", Statement.RETURN_GENERATED_KEYS);
+
+            // set the name
+            st.setString(1, name);
+            
+            // set the address
+            st.setString(2, address);
+            
+            // set the owner
+            if (owner == null) {
+                st.setNull(3, Types.INTEGER);
+            } else {
+                st.setLong(3, owner);
+            }
+            
+            // execute insertion
+            st.execute();
+            
+            // get session id from result-set
+            ResultSet rs = st.getGeneratedKeys();
+            if (rs.next()) {
+                slaveId = rs.getLong(1);
+            }
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        // something went wrong
+        if (slaveId == null)
+            return null;
+        
+        return getSlave(slaveId);
+    }
+    
+    public void resetSlaves() {
+        try {
+            PreparedStatement st = mConn.prepareStatement("UPDATE slaves SET `state` = 'disconnected';");
+
+            // execute the query
+            st.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
     
     public ArrayList<Session> getSessions() {
@@ -125,12 +294,20 @@ public class Database {
                 s.id = rs.getLong(1);
                 s.userid = rs.getLong(2);
                 s.username = rs.getString(3);
+                
                 s.name = rs.getString(4);
+                if (rs.wasNull()) s.name = null;
                 
                 s.created = rs.getDate(5);
+                
                 s.started = rs.getDate(6);
+                if (rs.wasNull()) s.started = null;
+                
                 s.aborted = rs.getDate(7);
+                if (rs.wasNull()) s.aborted = null;
+                
                 s.finished = rs.getDate(8);
+                if (rs.wasNull()) s.finished = null;
                 
                 s.state = Session.State.fromString(rs.getString(9));
                 
@@ -160,11 +337,18 @@ public class Database {
                 s.userid = rs.getLong(2);
                 s.username = rs.getString(3);
                 s.name = rs.getString(4);
+                if (rs.wasNull()) s.name = null;
                 
                 s.created = rs.getDate(5);
+                
                 s.started = rs.getDate(6);
+                if (rs.wasNull()) s.started = null;
+                
                 s.aborted = rs.getDate(7);
+                if (rs.wasNull()) s.aborted = null;
+                
                 s.finished = rs.getDate(8);
+                if (rs.wasNull()) s.finished = null;
                 
                 s.state = Session.State.fromString(rs.getString(9));
             }

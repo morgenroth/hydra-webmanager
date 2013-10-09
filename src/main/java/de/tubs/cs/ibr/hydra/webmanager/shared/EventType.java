@@ -7,13 +7,13 @@ public enum EventType {
     SESSION_STATE_CHANGED("session_state_changed"),
     SESSION_ADDED("session_added"),
     SESSION_REMOVED("session_removed"),
-    SLAVE_CONNECTED("slave_connected"),
-    SLAVE_DISCONNECTED("slave_disconnected"),
+    SLAVE_STATE_CHANGED("slave_state_changed"),
     NODE_STATE_CHANGED("node_state_changed");
     
     public static final String EXTRA_SESSION_ID = "session_id";
     public static final String EXTRA_NEW_STATE = "new_state";
     
+    public static final String EXTRA_SLAVE_ID = "slave_id";
     public static final String EXTRA_SLAVE_NAME = "slave_name";
     public static final String EXTRA_SLAVE_ADDRESS = "slave_address";
     
@@ -41,11 +41,8 @@ public enum EventType {
         if (SESSION_STATE_CHANGED.getCode().equals(data)) {
             return SESSION_STATE_CHANGED;
         }
-        else if (SLAVE_CONNECTED.getCode().equals(data)) {
-            return SLAVE_CONNECTED;
-        }
-        else if (SLAVE_DISCONNECTED.getCode().equals(data)) {
-            return SLAVE_DISCONNECTED;
+        else if (SLAVE_STATE_CHANGED.getCode().equals(data)) {
+            return SLAVE_STATE_CHANGED;
         }
         else if (NODE_STATE_CHANGED.getCode().equals(data)) {
             return NODE_STATE_CHANGED;
