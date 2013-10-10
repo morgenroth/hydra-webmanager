@@ -675,6 +675,20 @@ public class Database {
     }
     
     public void removeSession(final Session s) {
+        // remove all nodes of this session
+        try {
+            PreparedStatement st = mConn.prepareStatement("DELETE FROM nodes WHERE session = ?;");
+            
+            // set the session id
+            st.setLong(1, s.id);
+            
+            // execute insertion
+            st.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        // remove the session
         try {
             PreparedStatement st = mConn.prepareStatement("DELETE FROM sessions WHERE id = ?;");
             
