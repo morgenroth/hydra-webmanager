@@ -139,10 +139,16 @@ public class NodeView extends View {
         TextColumn<Node> slaveColumn = new TextColumn<Node>() {
             @Override
             public String getValue(Node s) {
-                if (s.slaveId == null) {
+                Long slaveId = s.slaveId;
+                
+                // show assigned slave, if assigned
+                if (s.assignedSlaveId != null)
+                    slaveId = s.assignedSlaveId;
+                
+                if (slaveId == null) {
                     return "<not assigned>";
                 }
-                Slave sobj = getSlave(s.slaveId);
+                Slave sobj = getSlave(slaveId);
                 if (sobj == null) {
                     return "<missing>";
                 }
