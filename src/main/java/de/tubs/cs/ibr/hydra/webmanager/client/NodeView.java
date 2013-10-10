@@ -134,6 +134,22 @@ public class NodeView extends View {
         table.setColumnWidth(idColumn, 6, Unit.EM);
         
         /**
+         * session column
+         */
+        TextColumn<Node> sessionColumn = new TextColumn<Node>() {
+            @Override
+            public String getValue(Node s) {
+                if (s.sessionId == null) {
+                    return "<not assigned>";
+                }
+                return s.sessionId.toString();
+            }
+        };
+        
+        table.addColumn(sessionColumn, "Session");
+        table.setColumnWidth(sessionColumn, 8, Unit.EM);
+        
+        /**
          * slave column
          */
         TextColumn<Node> slaveColumn = new TextColumn<Node>() {
