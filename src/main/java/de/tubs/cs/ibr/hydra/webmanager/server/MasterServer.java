@@ -30,6 +30,15 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
 public class MasterServer implements ServletContextListener {
     
+    public static class DistributionFailedException extends Exception {
+
+        /**
+         * serial ID
+         */
+        private static final long serialVersionUID = 2242070903678118836L;
+        
+    };
+    
     public interface EventListener {
         void onEvent(Event evt);
     };
@@ -45,6 +54,9 @@ public class MasterServer implements ServletContextListener {
     
     // hash-map for all session controller, the key is the session id
     private static HashMap<Long, SessionController> mControllers = new HashMap<Long, SessionController>();
+    
+    // this object is used to lock the distribution methods against parallel execution
+    private static Object mDistributionLock = new Object();
     
     public static ArrayList<Slave> getSlaves() {
         return Database.getInstance().getSlaves();
@@ -93,6 +105,21 @@ public class MasterServer implements ServletContextListener {
         
         // set slave to 'disconnected' state
         Database.getInstance().updateSlave(s, Slave.State.DISCONNECTED);
+    }
+    
+    public static boolean tryDistribution(Session s) throws DistributionFailedException {
+        // distribute all nodes of the session over the available slaves
+        synchronized(mDistributionLock) {
+            Database db = Database.getInstance();
+            
+            // get all nodes of this session
+            ArrayList<Node> nodes = db.getNodes(s.id);
+            
+            // TODO: check if distribution is possible without changing any assignment
+            throw new DistributionFailedException();
+            
+            // TODO: assign the nodes to available slaves
+        }
     }
     
     private Thread mSocketLoop = new Thread() {

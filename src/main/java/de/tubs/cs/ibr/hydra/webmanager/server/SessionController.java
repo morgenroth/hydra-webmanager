@@ -26,15 +26,6 @@ public class SessionController {
     ScheduledExecutorService mExecutor = Executors.newScheduledThreadPool(5);
     ScheduledFuture<?> scheduledDistribution = null;
     
-    private class DistributionFailedException extends Exception {
-
-        /**
-         * serial ID
-         */
-        private static final long serialVersionUID = 2242070903678118836L;
-        
-    };
-    
     public SessionController(Session s) {
         mSession = s;
     }
@@ -79,12 +70,16 @@ public class SessionController {
                 scheduledDistribution = null;
                 
                 // try to distribute the session to slaves
-                tryDistribution();
+                MasterServer.tryDistribution(mSession);
                 
                 // switch state to running
                 setSessionState(Session.State.RUNNING);
                 
-            } catch (DistributionFailedException e) {
+                // get all nodes of this session
+                mNodes = Database.getInstance().getNodes(mSession.id);
+                
+                // TODO: PREPARE, RUN
+            } catch (MasterServer.DistributionFailedException e) {
                 // distribution failed
                 System.err.println("Distribution of session " + mSession.id.toString() + " failed.");
                 
@@ -93,19 +88,6 @@ public class SessionController {
             }
         }
     };
-    
-    private void tryDistribution() throws DistributionFailedException {
-        // get all nodes of this session
-        mNodes = Database.getInstance().getNodes(mSession.id);
-        
-        // TODO: allocate slaves to deploy all the nodes
-        
-        // reset the list of nodes
-        mNodes = null;
-        
-        // allocation failed
-        throw new DistributionFailedException();
-    }
     
     private Session getSession() {
         return Database.getInstance().getSession(mSession.id);
