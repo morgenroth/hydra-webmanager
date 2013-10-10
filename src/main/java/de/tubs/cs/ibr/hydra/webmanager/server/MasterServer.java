@@ -113,7 +113,7 @@ public class MasterServer implements ServletContextListener {
         mTaskLoop.execute(t);
     }
     
-    public static EventExtra createEventExtra(String key, String data) {
+    private static EventExtra createEventExtra(String key, String data) {
         EventFactory factory = AutoBeanFactorySource.create(EventFactory.class);
         EventExtra e = factory.eventextra().as();
         e.setKey(key);
@@ -121,7 +121,7 @@ public class MasterServer implements ServletContextListener {
         return e;
     }
     
-    public static void broadcast(EventType t, List<EventExtra> extras) {
+    private static void broadcast(EventType t, List<EventExtra> extras) {
         EventFactory factory = AutoBeanFactorySource.create(EventFactory.class);
         Event event = factory.event().as();
         
@@ -134,13 +134,124 @@ public class MasterServer implements ServletContextListener {
         broadcast(event);
     }
     
-    public static void broadcast(Event evt) {
+    private static void broadcast(final Event evt) {
+        // distribute event
+        mTaskLoop.execute(new Task() {
+            @Override
+            public void run() {
+                // notify all event listener
+                synchronized(mEventListeners) {
+                    for (EventListener l : mEventListeners) {
+                        l.onEvent(evt);
+                    }
+                }
+            }
+        });
+        
         // get/create atmosphere broadcast channel
         BroadcasterFactory bf = DefaultBroadcasterFactory.getDefault();
         Broadcaster channel = bf.lookup("events", true);
         
         // broadcast the event to the clients
         channel.broadcast(evt);
+    }
+    
+    public static void fireSessionDataUpdated(final Session s) {
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+        
+        // broadcast session change
+        MasterServer.broadcast(EventType.SESSION_DATA_UPDATED, entries);
+    }
+    
+    public static void fireNodeStateChanged(final Node n) {
+        List<EventExtra> entries = null;
+        
+        if (n != null) {
+            entries = new ArrayList<EventExtra>();
+            entries.add(MasterServer.createEventExtra(EventType.EXTRA_NODE_ID, n.id.toString()));
+            entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, n.sessionId.toString()));
+            entries.add(MasterServer.createEventExtra(EventType.EXTRA_NODE_STATE, n.state.toString()));
+        }
+        
+        MasterServer.broadcast(EventType.NODE_STATE_CHANGED, entries);
+    }
+    
+    public static void fireSlaveStateChanged(final Slave s) {
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SLAVE_ID, s.id.toString()));
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SLAVE_STATE, s.state.toString()));
+        
+        MasterServer.broadcast(EventType.SLAVE_STATE_CHANGED, entries);
+    }
+    
+    public static void fireSessionAdded(final Session s) {
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+        
+        MasterServer.broadcast(EventType.SESSION_ADDED, entries);
+    }
+    
+    public static void fireSessionRemoved(final Session s) {
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+        
+        MasterServer.broadcast(EventType.SESSION_REMOVED, entries);
+    }
+    
+    public static void fireSessionStateChanged(final Session s) {
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_NEW_STATE, s.state.toString()));
+        
+        // broadcast session change
+        MasterServer.broadcast(EventType.SESSION_STATE_CHANGED, entries);
+        
+        /*** TRIGGER LOCAL ACTIONS ***/
+        if (Session.State.PENDING.equals(s.state)) {
+            mTaskLoop.execute(new Task() {
+                @Override
+                public void run() {
+                    // check if the session controller for this session already exists
+                    if (mControllers.containsKey(s.id)) {
+                        // ERROR
+                        System.err.println("Session changed to PENDING, but there is already an active session controller.");
+                        return;
+                    }
+                    
+                    // create a session controller
+                    SessionController sc = new SessionController(s);
+                    
+                    // add the new session controller 
+                    mControllers.put(s.id, sc);
+                    
+                    // initiate the session controller
+                    sc.initiate();
+                }
+            });
+        }
+        else if (Session.State.CANCELLED.equals(s.state)) {
+            mTaskLoop.execute(new Task() {
+                @Override
+                public void run() {
+                    // check if the session controller for this session already exists
+                    if (!mControllers.containsKey(s.id)) {
+                        // ERROR
+                        System.err.println("Session changed to CANCELLED, but no session controller found.");
+                        return;
+                    }
+                    
+                    // create a session controller
+                    SessionController sc = mControllers.get(s.id);
+
+                    // shutdown the session controller
+                    sc.terminate();
+                    
+                    // remove the controller
+                    mControllers.remove(s.id);
+                }
+            });
+        }
     }
 
     @Override

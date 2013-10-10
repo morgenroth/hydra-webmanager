@@ -196,11 +196,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         Database.getInstance().updateSession(s);
         
         // prepare session change extras
-        List<EventExtra> entries = new ArrayList<EventExtra>();
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
-        
-        // broadcast session change
-        MasterServer.broadcast(EventType.SESSION_DATA_UPDATED, entries);
+        MasterServer.fireSessionDataUpdated(s);
     }
 
     @Override
@@ -210,7 +206,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
             d.updateNode(n);
         }
         
-        MasterServer.broadcast(EventType.NODE_STATE_CHANGED, null);
+        MasterServer.fireNodeStateChanged(null);
     }
 
     @Override
@@ -220,7 +216,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
             d.removeNode(n);
         }
         
-        MasterServer.broadcast(EventType.NODE_STATE_CHANGED, null);
+        MasterServer.fireNodeStateChanged(null);
     }
 
     @Override
@@ -232,10 +228,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         }
         
         // prepare session change extras
-        List<EventExtra> entries = new ArrayList<EventExtra>();
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, sessionId.toString()));
-        
-        MasterServer.broadcast(EventType.NODE_STATE_CHANGED, null);
+        MasterServer.fireNodeStateChanged(null);
     }
 
 }
