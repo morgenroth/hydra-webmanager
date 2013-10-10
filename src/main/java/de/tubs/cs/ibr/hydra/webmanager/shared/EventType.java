@@ -17,6 +17,7 @@ public enum EventType {
     public static final String EXTRA_SLAVE_STATE = "slave_state";
     
     public static final String EXTRA_NODE_ID = "node_id";
+    public static final String EXTRA_NODE_STATE = "node_state";
     
     private String mCode = null;
     

@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,9 +24,15 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventFactory;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
 public class MasterServer implements ServletContextListener {
+    
+    public interface EventListener {
+        void onEvent(Event evt);
+    };
     
     private static final HashMap<Long, SlaveConnection> mConnections = new HashMap<Long, SlaveConnection>();
     
@@ -34,8 +41,25 @@ public class MasterServer implements ServletContextListener {
     
     private static ExecutorService mTaskLoop = null;
     
+    private static HashSet<EventListener> mEventListeners = new HashSet<EventListener>();
+    
+    // hash-map for all session controller, the key is the session id
+    private static HashMap<Long, SessionController> mControllers = new HashMap<Long, SessionController>();
+    
     public static ArrayList<Slave> getSlaves() {
         return Database.getInstance().getSlaves();
+    }
+    
+    public static void registerEventListener(EventListener e) {
+        synchronized(mEventListeners) {
+            mEventListeners.add(e);
+        }
+    }
+    
+    public static void unregisterEventListener(EventListener e) {
+        synchronized(mEventListeners) {
+            mEventListeners.remove(e);
+        }
     }
     
     public static void register(Slave s, SlaveConnection sc) {

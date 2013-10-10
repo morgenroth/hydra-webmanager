@@ -2,7 +2,6 @@ package de.tubs.cs.ibr.hydra.webmanager.server;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -10,8 +9,6 @@ import de.tubs.cs.ibr.hydra.webmanager.client.MasterControlService;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Configuration;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SessionContainer;
-import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
-import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session.Action;
@@ -54,9 +51,9 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
                         
                     case RESET:
                         // check if transition is allowed
-                        if (Session.State.RUNNING.equals(session.state)
-                                || Session.State.DRAFT.equals(session.state)
-                                || Session.State.ERROR.equals(session.state))
+                        if (!Session.State.ABORTED.equals(session.state)
+                                && !Session.State.FINISHED.equals(session.state)
+                                && !Session.State.ERROR.equals(session.state))
                             break;
                         
                         // set new state in database
@@ -67,12 +64,21 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
                     case REMOVE:
                         // check if transition is allowed
                         if (!Session.State.DRAFT.equals(session.state)
-                                && !Session.State.ERROR.equals(session.state)
                                 && !Session.State.INITIAL.equals(session.state))
                             break;
                         
                         // set new state in database
                         Database.getInstance().removeSession(session);
+                        
+                        break;
+                        
+                    case CANCEL:
+                        // check if transition is allowed
+                        if (!Session.State.PENDING.equals(session.state))
+                            break;
+                        
+                        // set new state in database
+                        Database.getInstance().setState(session, Session.State.CANCELLED);
                         
                         break;
                         

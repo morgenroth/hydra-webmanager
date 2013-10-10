@@ -162,9 +162,9 @@ public class SessionView extends View {
                         button.setIcon(IconType.BACKWARD);
                         return "Reset";
                     case PENDING:
-                        button.setType(ButtonType.WARNING);
-                        button.setIcon(IconType.BACKWARD);
-                        return "Reset";
+                        button.setType(ButtonType.DANGER);
+                        button.setIcon(IconType.REMOVE_SIGN);
+                        return "Cancel";
                     case RUNNING:
                         button.setType(ButtonType.DANGER);
                         button.setIcon(IconType.STOP);
@@ -174,9 +174,9 @@ public class SessionView extends View {
                         button.setIcon(IconType.REMOVE);
                         return "Remove";
                     case ERROR:
-                        button.setType(ButtonType.DANGER);
-                        button.setIcon(IconType.REMOVE);
-                        return "Remove";
+                        button.setType(ButtonType.WARNING);
+                        button.setIcon(IconType.BACKWARD);
+                        return "Reset";
                     default:
                         button.setType(ButtonType.WARNING);
                         button.setIcon(IconType.BACKWARD);
@@ -209,6 +209,9 @@ public class SessionView extends View {
                                 break;
                             case RESET:
                                 //Window.alert("Session '" + s.name + "' resetted.");
+                                break;
+                            case CANCEL:
+                                //Window.alert("Session '" + s.name + "' cancelled.");
                                 break;
                             default:
                                 break;
