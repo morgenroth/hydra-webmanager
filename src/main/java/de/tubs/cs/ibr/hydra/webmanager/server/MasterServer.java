@@ -20,6 +20,7 @@ import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import com.google.web.bindery.autobean.vm.AutoBeanFactorySource;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
+import de.tubs.cs.ibr.hydra.webmanager.server.data.SlaveAllocation;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventFactory;
@@ -107,7 +108,7 @@ public class MasterServer implements ServletContextListener {
         Database.getInstance().updateSlave(s, Slave.State.DISCONNECTED);
     }
     
-    public static boolean tryDistribution(Session s) throws DistributionFailedException {
+    public static void tryDistribution(Session s) throws DistributionFailedException {
         // distribute all nodes of the session over the available slaves
         synchronized(mDistributionLock) {
             Database db = Database.getInstance();
@@ -115,10 +116,29 @@ public class MasterServer implements ServletContextListener {
             // get all nodes of this session
             ArrayList<Node> nodes = db.getNodes(s.id);
             
-            // TODO: check if distribution is possible without changing any assignment
-            throw new DistributionFailedException();
+            // get allocations
+            List<SlaveAllocation> allocs = db.getAllocation();
             
-            // TODO: assign the nodes to available slaves
+            // get sum of free slots
+            Long sum = 0L;
+            for (SlaveAllocation a : allocs) {
+                sum += a.getAvailableSlots();
+            }
+            
+            System.out.println("Available slots for nodes: " + sum.toString());
+
+            // check if distribution is possible without changing any assignment
+            if (sum < nodes.size()) {
+                throw new DistributionFailedException();
+            }
+            
+            /**
+             * we found enough free slots to start this session
+             * TODO: assign the nodes to available slaves
+             */
+            
+            // sort allocation data by number of occupied slots
+            // prefer slaves without any node other node (SlaveAllocation.allocation == 0)
             
             // TODO: assign unique IP addresses
         }
@@ -265,18 +285,22 @@ public class MasterServer implements ServletContextListener {
             mTaskLoop.execute(new Task() {
                 @Override
                 public void run() {
-                    // check if the session controller for this session already exists
-                    if (mControllers.containsKey(s.id)) {
-                        // ERROR
-                        System.err.println("Session changed to PENDING, but there is already an active session controller.");
-                        return;
+                    SessionController sc = null;
+                    
+                    synchronized(mControllers) {
+                        // check if the session controller for this session already exists
+                        if (mControllers.containsKey(s.id)) {
+                            // ERROR
+                            System.err.println("Session changed to PENDING, but there is already an active session controller.");
+                            return;
+                        }
+                        
+                        // create a session controller
+                        sc = new SessionController(s);
+                        
+                        // add the new session controller 
+                        mControllers.put(s.id, sc);
                     }
-                    
-                    // create a session controller
-                    SessionController sc = new SessionController(s);
-                    
-                    // add the new session controller 
-                    mControllers.put(s.id, sc);
                     
                     // initiate the session controller
                     sc.initiate();
@@ -287,23 +311,57 @@ public class MasterServer implements ServletContextListener {
             mTaskLoop.execute(new Task() {
                 @Override
                 public void run() {
-                    // check if the session controller for this session already exists
-                    if (!mControllers.containsKey(s.id)) {
-                        // ERROR
-                        System.err.println("Session changed to CANCELLED, but no session controller found.");
-                        return;
+                    SessionController sc = null;
+                    
+                    synchronized(mControllers) {
+                        // check if the session controller for this session already exists
+                        if (!mControllers.containsKey(s.id)) {
+                            // ERROR
+                            System.err.println("Session changed to CANCELLED, but no session controller found.");
+                            return;
+                        }
+                        
+                        // create a session controller
+                        sc = mControllers.get(s.id);
                     }
-                    
-                    // create a session controller
-                    SessionController sc = mControllers.get(s.id);
 
-                    // shutdown the session controller
-                    sc.terminate();
-                    
-                    // remove the controller
-                    mControllers.remove(s.id);
+                    // cancel the session
+                    sc.cancel();
                 }
             });
+        }
+        else if (Session.State.ABORTED.equals(s.state)) {
+            mTaskLoop.execute(new Task() {
+                @Override
+                public void run() {
+                    SessionController sc = null;
+                    
+                    synchronized(mControllers) {
+                        // check if the session controller for this session already exists
+                        if (!mControllers.containsKey(s.id)) {
+                            // ERROR
+                            System.err.println("Session changed to ABORTED, but no session controller found.");
+                            return;
+                        }
+                        
+                        // create a session controller
+                        sc = mControllers.get(s.id);
+                    }
+                    
+                    // abort the session
+                    sc.abort();
+                }
+            });
+        }
+    }
+    
+    public static void onSessionFinished(Session s) {
+        // clear all assignments of this session
+        Database.getInstance().clearAssignment(s);
+        
+        synchronized(mControllers) {
+            // remove the controller
+            mControllers.remove(s.id);
         }
     }
 

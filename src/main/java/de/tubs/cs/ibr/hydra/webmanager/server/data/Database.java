@@ -10,6 +10,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Properties;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
@@ -814,5 +816,47 @@ public class Database {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+    
+    public List<SlaveAllocation> getAllocation() {
+        final String query = "SELECT `slaves`.`id`, `slaves`.`capacity`, COUNT(`slaves`.`id`) as allocation, `nodes`.`assigned_slave` "+
+                "FROM `slaves` " +
+                "LEFT JOIN `nodes` ON (`slaves`.`id` = `nodes`.`assigned_slave`) " +
+                "WHERE `slaves`.`state` != 'disconnected' " +
+                "GROUP BY `slaves`.`id`;";
+        
+        // TODO: add user as filter to restricted slaves
+        
+        List<SlaveAllocation> ret = new LinkedList<SlaveAllocation>();
+        
+        try {
+            PreparedStatement st = mConn.prepareStatement(query);
+            
+            ResultSet rs = st.executeQuery();
+            
+            while (rs.next()) {
+                SlaveAllocation sa = new SlaveAllocation(rs.getLong(1));
+                
+                sa.capacity = rs.getLong(2);
+                
+                // check if nodes.assigned_slave is null
+                rs.getLong(4);
+                if (rs.wasNull()) {
+                    // if it is null, then no node is allocated to this slave
+                    sa.allocation = 0L;
+                } else {
+                    // if it is not null, then the value (3) is the number of allocations
+                    sa.allocation = rs.getLong(3);
+                }
+
+                ret.add(sa);
+            }
+            
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return ret;
     }
 }

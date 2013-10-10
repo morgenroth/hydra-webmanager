@@ -233,15 +233,15 @@ public class SessionView extends View {
                 ButtonCell button = (ButtonCell)this.getCell();
                 
                 switch (s.state) {
-                    case PENDING:
-                        button.setIcon(IconType.EYE_OPEN);
-                        return "Watch";
-                    case RUNNING:
-                        button.setIcon(IconType.EYE_OPEN);
-                        return "Watch";
-                    default:
+                    case INITIAL:
                         button.setIcon(IconType.EDIT);
                         return "Edit";
+                    case DRAFT:
+                        button.setIcon(IconType.EDIT);
+                        return "Edit";
+                    default:
+                        button.setIcon(IconType.EYE_OPEN);
+                        return "Watch";
                 }
             }
         };
@@ -250,15 +250,15 @@ public class SessionView extends View {
             @Override
             public void update(int index, Session s, String value) {
                 // watch running sessions
-                if (Session.State.PENDING.equals(s.state) || Session.State.RUNNING.equals(s.state))
-                {
-                    // open watch view
-                    changeView(new SessionWatchView(getApplication(), s));
-                }
-                else
+                if (Session.State.INITIAL.equals(s.state) || Session.State.DRAFT.equals(s.state))
                 {
                     // open edit view
                     changeView(new SessionEditView(getApplication(), s));
+                }
+                else
+                {
+                    // open watch view
+                    changeView(new SessionWatchView(getApplication(), s));
                 }
             }
         });
