@@ -56,13 +56,13 @@ public class NodeView extends View {
 
     private void refreshNodeTable(Session s) {
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        String session_key = null;
+        Long sessionId = null;
         
         if (s != null) {
-            session_key = s.id.toString();
+            sessionId = s.id;
         }
         
-        mcs.getNodes(session_key, new AsyncCallback<ArrayList<Node>>() {
+        mcs.getNodes(sessionId, new AsyncCallback<ArrayList<Node>>() {
 
             @Override
             public void onFailure(Throwable caught) {

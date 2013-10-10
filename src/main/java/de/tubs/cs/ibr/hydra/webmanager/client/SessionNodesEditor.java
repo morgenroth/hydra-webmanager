@@ -274,7 +274,7 @@ public class SessionNodesEditor extends Composite {
 
         });
         
-        mcs.getNodes(s.id.toString(), new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Node>>() {
+        mcs.getNodes(s.id, new AsyncCallback<java.util.ArrayList<de.tubs.cs.ibr.hydra.webmanager.shared.Node>>() {
 
             @Override
             public void onFailure(Throwable caught) {

@@ -79,17 +79,17 @@ public class Database {
         }
     }
     
-    public ArrayList<Node> getNodes(String sessionKey) {
+    public ArrayList<Node> getNodes(Long sessionId) {
         ArrayList<Node> ret = new ArrayList<Node>();
         
         try {
             PreparedStatement st;
             
-            if (sessionKey == null) {
+            if (sessionId == null) {
                 st = mConn.prepareStatement("SELECT id, slave, session, name, state, address FROM nodes;");
             } else {
                 st = mConn.prepareStatement("SELECT id, slave, session, name, state, address FROM nodes WHERE session = ?;");
-                st.setString(1, sessionKey);
+                st.setLong(1, sessionId);
             }
             
             ResultSet rs = st.executeQuery();

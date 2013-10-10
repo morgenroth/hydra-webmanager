@@ -48,7 +48,7 @@ public interface MasterControlService extends RemoteService {
      * @param sessionKey
      * @return
      */
-    public ArrayList<Node> getNodes(String sessionKey);
+    public ArrayList<Node> getNodes(Long sessionId);
     
     /**
      * Store writable values of the nodes
