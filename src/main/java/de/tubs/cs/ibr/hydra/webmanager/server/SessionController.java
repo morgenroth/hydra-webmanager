@@ -44,7 +44,15 @@ public class SessionController {
         if (Session.State.RUNNING.equals(getSession().state)) {
             // TODO: shutdown all nodes first
         }
+
+        // switch state to aborted
+        setSessionState(Session.State.ABORTED);
         
+        // shutdown and clean-up waste
+        onDestroy();
+    }
+    
+    private void onDestroy() {
         // cancel scheduled distribution
         scheduledDistribution.cancel(false);
         
@@ -58,8 +66,8 @@ public class SessionController {
             e.printStackTrace();
         }
         
-        // switch state to aborted
-        setSessionState(Session.State.ABORTED);
+        // clear all assignments of this session
+        Database.getInstance().clearAssignment(mSession);
     }
     
     private Runnable mRunnableDistribute = new Runnable() {

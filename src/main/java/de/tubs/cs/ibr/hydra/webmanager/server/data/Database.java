@@ -257,6 +257,28 @@ public class Database {
         }
     }
     
+    public void clearAssignment(Session s) {
+        try {
+            PreparedStatement st = null;
+            
+            if (s == null) {
+                // clear all assignments
+                st = mConn.prepareStatement("UPDATE nodes SET `assigned_slave` = NULL;");
+            } else {
+                // clear all assignments of a session
+                st = mConn.prepareStatement("UPDATE nodes SET `assigned_slave` = NULL WHERE session = ?;");
+                
+                // set session id
+                st.setLong(1, s.id);
+            }
+            
+            // execute the query
+            st.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
     public void removeNode(Node n) {
         if (n.id == null) return;
         
