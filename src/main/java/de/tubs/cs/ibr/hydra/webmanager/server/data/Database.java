@@ -83,9 +83,9 @@ public class Database {
             PreparedStatement st;
             
             if (sessionId == null) {
-                st = mConn.prepareStatement("SELECT id, slave, session, name, state, address FROM nodes;");
+                st = mConn.prepareStatement("SELECT id, slave, session, name, state, address, assigned_slave FROM nodes;");
             } else {
-                st = mConn.prepareStatement("SELECT id, slave, session, name, state, address FROM nodes WHERE session = ?;");
+                st = mConn.prepareStatement("SELECT id, slave, session, name, state, address, assigned_slave FROM nodes WHERE session = ?;");
                 st.setLong(1, sessionId);
             }
             
@@ -110,6 +110,9 @@ public class Database {
                 n.address = rs.getString(6);
                 if (rs.wasNull()) n.address = null;
                 
+                n.assignedSlaveId = rs.getLong(7);
+                if (rs.wasNull()) n.assignedSlaveId = null;
+                
                 ret.add(n);
             }
             
@@ -125,7 +128,7 @@ public class Database {
         Node n = null;
         
         try {
-            PreparedStatement st = mConn.prepareStatement("SELECT id, slave, session, name, state, address FROM nodes WHERE id = ?;");
+            PreparedStatement st = mConn.prepareStatement("SELECT id, slave, session, name, state, address, assigned_slave FROM nodes WHERE id = ?;");
             st.setLong(1, id);
             ResultSet rs = st.executeQuery();
             
@@ -147,6 +150,9 @@ public class Database {
                 
                 n.address = rs.getString(6);
                 if (rs.wasNull()) n.address = null;
+                
+                n.assignedSlaveId = rs.getLong(7);
+                if (rs.wasNull()) n.assignedSlaveId = null;
             }
             
             rs.close();
@@ -222,6 +228,27 @@ public class Database {
             }
             
             st.setLong(3, n.id);
+            
+            // execute the query
+            st.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void assignNode(Node n, Slave s) {
+        if (n.id == null) return;
+        
+        try {
+            PreparedStatement st = mConn.prepareStatement("UPDATE nodes SET `assigned_slave` = ? WHERE id = ?;");
+            
+            if ((s == null) || (s.id == null)) {
+                st.setNull(1, Types.INTEGER);
+            } else {
+                st.setLong(1, n.slaveId);
+            }
+            
+            st.setLong(2, n.id);
             
             // execute the query
             st.execute();
