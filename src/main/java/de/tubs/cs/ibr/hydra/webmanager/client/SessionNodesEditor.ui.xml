@@ -3,7 +3,12 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui"
 	xmlns:base="urn:import:com.github.gwtbootstrap.client.ui.base">
-	<ui:style>
+	<ui:style type='de.tubs.cs.ibr.hydra.webmanager.client.SessionNodesEditor.Style'>
+		.activated { color:green; }
+		.enabled { color:black; }
+		.disabled { color:gray; }
+		.error { color:red; }
+
 		.formButton {
 			margin-left: 6px;
 			margin-right: 6px;

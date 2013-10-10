@@ -7,9 +7,11 @@ import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CellTable;
 import com.github.gwtbootstrap.client.ui.ProgressBar;
 import com.github.gwtbootstrap.client.ui.TextBox;
+import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
@@ -38,6 +40,15 @@ public class SessionWatchView extends View {
     @UiField ProgressBar progressStats;
     @UiField TextBox textStatsElapsedTime;
     @UiField TextBox textStatsDesc;
+    
+    interface Style extends CssResource {
+        String activated();
+        String enabled();
+        String disabled();
+        String error();
+    }
+    
+    @UiField Style style;
     
     // data provider for the node table
     ListDataProvider<Node> mDataProvider = new ListDataProvider<Node>();
@@ -186,12 +197,12 @@ public class SessionWatchView extends View {
          */
         TextColumn<Node> slaveColumn = new TextColumn<Node>() {
             @Override
-            public String getValue(Node s) {
-                Long slaveId = s.slaveId;
+            public String getValue(Node n) {
+                Long slaveId = n.slaveId;
                 
                 // show assigned slave, if assigned
-                if (s.assignedSlaveId != null)
-                    slaveId = s.assignedSlaveId;
+                if (n.assignedSlaveId != null)
+                    slaveId = n.assignedSlaveId;
                 
                 if (slaveId == null) {
                     return "<not assigned>";
@@ -200,7 +211,32 @@ public class SessionWatchView extends View {
                 if (sobj == null) {
                     return "<missing>";
                 }
-                return sobj.name + " (" + sobj.state.toString() + ")";
+                return sobj.name;
+            }
+
+            @Override
+            public String getCellStyleNames(Context context, Node n) {
+                Long slaveId = n.slaveId;
+                
+                // show assigned slave, if assigned
+                if (n.assignedSlaveId != null)
+                    slaveId = n.assignedSlaveId;
+                
+                if (slaveId == null) {
+                    return style.disabled();
+                }
+                Slave sobj = getSlave(slaveId);
+                if (sobj == null) {
+                    return style.error();
+                }
+                
+                if (Slave.State.DISCONNECTED.equals(sobj.state)) {
+                    if (n.assignedSlaveId != null) return style.error();
+                    return style.disabled();
+                }
+                
+                if (n.assignedSlaveId != null) return style.activated();
+                return style.enabled();
             }
         };
         
@@ -228,6 +264,12 @@ public class SessionWatchView extends View {
             public String getValue(Node s) {
                 if (s.address == null) return "<not assigned>";
                 return s.address;
+            }
+            
+            @Override
+            public String getCellStyleNames(Context context, Node n) {
+                if (n.address == null) return style.disabled();
+                return style.activated();
             }
         };
 

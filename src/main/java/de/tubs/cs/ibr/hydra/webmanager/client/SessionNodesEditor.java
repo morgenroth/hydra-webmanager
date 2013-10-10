@@ -12,10 +12,12 @@ import com.github.gwtbootstrap.client.ui.constants.AlertType;
 import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.cell.client.EditTextCell;
 import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -56,6 +58,15 @@ public class SessionNodesEditor extends Composite {
     @UiField Button buttonSelectAll;
     @UiField Button buttonSelectNone;
     @UiField Button buttonRemoveSelected;
+    
+    interface Style extends CssResource {
+        String activated();
+        String enabled();
+        String disabled();
+        String error();
+    }
+    
+    @UiField Style style;
     
     // data provider for the node table
     ListDataProvider<Node> mDataProvider = new ListDataProvider<Node>();
@@ -197,12 +208,12 @@ public class SessionNodesEditor extends Composite {
          */
         TextColumn<Node> slaveColumn = new TextColumn<Node>() {
             @Override
-            public String getValue(Node s) {
-                Long slaveId = s.slaveId;
+            public String getValue(Node n) {
+                Long slaveId = n.slaveId;
                 
                 // show assigned slave, if assigned
-                if (s.assignedSlaveId != null)
-                    slaveId = s.assignedSlaveId;
+                if (n.assignedSlaveId != null)
+                    slaveId = n.assignedSlaveId;
                 
                 if (slaveId == null) {
                     return "<not assigned>";
@@ -211,7 +222,32 @@ public class SessionNodesEditor extends Composite {
                 if (sobj == null) {
                     return "<missing>";
                 }
-                return sobj.name + " (" + sobj.state.toString() + ")";
+                return sobj.name;
+            }
+
+            @Override
+            public String getCellStyleNames(Context context, Node n) {
+                Long slaveId = n.slaveId;
+                
+                // show assigned slave, if assigned
+                if (n.assignedSlaveId != null)
+                    slaveId = n.assignedSlaveId;
+                
+                if (slaveId == null) {
+                    return style.disabled();
+                }
+                Slave sobj = getSlave(slaveId);
+                if (sobj == null) {
+                    return style.error();
+                }
+                
+                if (Slave.State.DISCONNECTED.equals(sobj.state)) {
+                    if (n.assignedSlaveId != null) return style.error();
+                    return style.disabled();
+                }
+                
+                if (n.assignedSlaveId != null) return style.activated();
+                return style.enabled();
             }
         };
         
