@@ -119,6 +119,8 @@ public class MasterServer implements ServletContextListener {
             throw new DistributionFailedException();
             
             // TODO: assign the nodes to available slaves
+            
+            // TODO: assign unique IP addresses
         }
     }
     
