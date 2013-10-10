@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.MovementProvider;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
@@ -30,21 +32,50 @@ public class SessionController {
         mSession = s;
     }
     
+    private MasterServer.EventListener mEventListener = new MasterServer.EventListener() {
+        
+        @Override
+        public void onEvent(Event evt) {
+            if (EventType.SLAVE_STATE_CHANGED.equals(evt)) {
+                // if we are current try to distribute this session
+                if (scheduledDistribution != null) {
+                    // cancel scheduled distribution
+                    scheduledDistribution.cancel(false);
+                    
+                    // try to distribute the session now
+                    mExecutor.execute(mRunnableDistribute);
+                }
+            }
+        }
+    };
+    
     public void initiate() {
         if (!Session.State.PENDING.equals(getSession().state)) {
             // only start when session state is pending
             return;
         }
         
+        // register event listener
+        MasterServer.registerEventListener(mEventListener);
+        
         // try to distribute the session now
         mExecutor.execute(mRunnableDistribute);
     }
     
-    public void terminate() {
+    public void abort() {
         if (Session.State.RUNNING.equals(getSession().state)) {
             // TODO: shutdown all nodes first
         }
-
+        
+        // shutdown and clean-up waste
+        onDestroy();
+    }
+    
+    public void cancel() {
+        if (Session.State.RUNNING.equals(getSession().state)) {
+            // TODO: shutdown all nodes first
+        }
+        
         // switch state to aborted
         setSessionState(Session.State.ABORTED);
         
@@ -53,8 +84,12 @@ public class SessionController {
     }
     
     private void onDestroy() {
+        // un-register event listener
+        MasterServer.unregisterEventListener(mEventListener);
+        
         // cancel scheduled distribution
-        scheduledDistribution.cancel(false);
+        if (scheduledDistribution != null)
+            scheduledDistribution.cancel(false);
         
         // shutdown main executor
         mExecutor.shutdown();
@@ -66,8 +101,8 @@ public class SessionController {
             e.printStackTrace();
         }
         
-        // clear all assignments of this session
-        Database.getInstance().clearAssignment(mSession);
+        // clean-up from MasterServer
+        MasterServer.onSessionFinished(mSession);
     }
     
     private Runnable mRunnableDistribute = new Runnable() {
