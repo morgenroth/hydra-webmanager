@@ -44,6 +44,9 @@ public class MasterServer implements ServletContextListener {
         if (slave == null) {
             // create a new slave entry
             slave = Database.getInstance().createSlave(s.name, s.address, s.owner, s.capacity);
+        } else {
+            // update slave's owner and capacity
+            Database.getInstance().updateSlave(slave, s.owner, s.capacity);
         }
         
         // update slave object
