@@ -191,7 +191,9 @@ public class SessionEditView extends View {
         refreshSessionImages(result.image);
         
         // show movement algorithm
-        listMovementAlgorithm.setSelectedValue(result.mobility.model.toString());
+        if ((result.mobility != null) && (result.mobility.model != null))
+            listMovementAlgorithm.setSelectedValue(result.mobility.model.toString());
+        
         onMovementAlgorithmChanged(null);
     }
     

@@ -66,12 +66,15 @@ public class Slave implements Serializable {
     public State state = State.IDLE;
     public String session = null;
     public Long owner = null;
+    public Long capacity = null;
     
     public Slave() {
     }
     
-    public Slave(String name) {
+    public Slave(String name, Long owner, Long capacity) {
         this.name = name;
+        this.owner = owner;
+        this.capacity = capacity;
     }
 
     @Override

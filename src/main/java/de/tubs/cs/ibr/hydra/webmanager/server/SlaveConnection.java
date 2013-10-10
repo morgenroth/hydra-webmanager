@@ -7,7 +7,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 
+import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
+import de.tubs.cs.ibr.hydra.webmanager.shared.User;
 
 public class SlaveConnection extends Thread {
     
@@ -34,15 +36,38 @@ public class SlaveConnection extends Thread {
     
     public Slave doHandshake() throws IOException {
         // receive slave banner
-        @SuppressWarnings("unused")
-        String banner = mReader.readLine();
+        String data = mReader.readLine();
         
-        // read identifier
-        String identifier = mReader.readLine();
-        String name = identifier.split(": ")[1];
+        // read parameters
+        String name = null;
+        Long capacity = null;
+        Long owner = null;
+        
+        while (!".".equals(data)) {
+            data = mReader.readLine();
+            
+            if (data.contains(": ")) {
+                String[] data_pair = data.split(": ");
+            
+                if ("Identifier".equals(data_pair[0])) {
+                    name = data_pair[1];
+                }
+                else if ("Capacity".equals(data_pair[0])) {
+                    capacity = Long.valueOf(data_pair[1]);
+                }
+                else if ("Owner".equals(data_pair[0])) {
+                    String owner_name = data_pair[1];
+                    
+                    // get username from database
+                    User u = Database.getInstance().getUser(owner_name);
+                    
+                    if (u != null) owner = u.id;
+                }
+            }
+        }
         
         // create a slave object
-        mSlave = new Slave(name);
+        mSlave = new Slave(name, owner, capacity);
         
         // set address
         SocketAddress addr = mSocket.getRemoteSocketAddress();

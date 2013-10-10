@@ -20,6 +20,7 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
+import de.tubs.cs.ibr.hydra.webmanager.shared.User;
 
 public class Database {
 
@@ -310,7 +311,7 @@ public class Database {
         ArrayList<Slave> ret = new ArrayList<Slave>();
         
         try {
-            PreparedStatement st = mConn.prepareStatement("SELECT id, name, address, state, owner FROM slaves WHERE owner IS NULL OR owner = ?;");
+            PreparedStatement st = mConn.prepareStatement("SELECT id, name, address, state, owner, capacity FROM slaves WHERE owner IS NULL OR owner = ?;");
             
             // TODO: set right user id
             st.setLong(1, 1);
@@ -330,6 +331,9 @@ public class Database {
                 s.owner = rs.getLong(5);
                 if (rs.wasNull()) s.owner = null;
                 
+                s.capacity = rs.getLong(6);
+                if (rs.wasNull()) s.capacity = null;
+                
                 ret.add(s);
             }
             
@@ -345,7 +349,7 @@ public class Database {
         Slave s = null;
         
         try {
-            PreparedStatement st = mConn.prepareStatement("SELECT id, name, address, state, owner FROM slaves WHERE id = ? LIMIT 0,1;");
+            PreparedStatement st = mConn.prepareStatement("SELECT id, name, address, state, owner, capacity FROM slaves WHERE id = ? LIMIT 0,1;");
             st.setLong(1, id);
             
             ResultSet rs = st.executeQuery();
@@ -362,6 +366,9 @@ public class Database {
                 
                 s.owner = rs.getLong(5);
                 if (rs.wasNull()) s.owner = null;
+                
+                s.capacity = rs.getLong(6);
+                if (rs.wasNull()) s.capacity = null;
             }
             
             rs.close();
@@ -377,7 +384,7 @@ public class Database {
         Slave s = null;
         
         try {
-            PreparedStatement st = mConn.prepareStatement("SELECT id, name, address, state, owner FROM slaves WHERE name = ? AND address = ? LIMIT 0,1;");
+            PreparedStatement st = mConn.prepareStatement("SELECT id, name, address, state, owner, capacity FROM slaves WHERE name = ? AND address = ? LIMIT 0,1;");
             st.setString(1, name);
             st.setString(2, address);
             
@@ -394,6 +401,9 @@ public class Database {
                 
                 s.owner = rs.getLong(5);
                 if (rs.wasNull()) s.owner = null;
+                
+                s.capacity = rs.getLong(6);
+                if (rs.wasNull()) s.capacity = null;
             }
             
             rs.close();
@@ -405,12 +415,48 @@ public class Database {
         return s;
     }
     
-    public void updateSlave(Slave s) {
+    public void updateSlave(Slave s, Slave.State state) {
         try {
             PreparedStatement st = mConn.prepareStatement("UPDATE slaves SET `state` = ? WHERE id = ?;");
             
-            st.setString(1, s.state.toString());
+            st.setString(1, state.toString());
             st.setLong(2, s.id);
+            
+            // execute the query
+            st.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        // update slave object
+        s.state = state;
+        
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SLAVE_ID, s.id.toString()));
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SLAVE_STATE, s.state.toString()));
+        
+        MasterServer.broadcast(EventType.SLAVE_STATE_CHANGED, entries);
+    }
+    
+    public void updateSlave(Slave s, Long owner, Long capacity) {
+        try {
+            PreparedStatement st = mConn.prepareStatement("UPDATE slaves SET `owner` = ?, `capacity` = ? WHERE id = ?;");
+            
+            // set the owner
+            if (owner == null) {
+                st.setNull(1, Types.INTEGER);
+            } else {
+                st.setLong(1, owner);
+            }
+            
+            // set the capacity
+            if (capacity == null) {
+                st.setNull(2, Types.INTEGER);
+            } else {
+                st.setLong(2, capacity);
+            }
+            
+            st.setLong(3, s.id);
             
             // execute the query
             st.execute();
@@ -419,11 +465,11 @@ public class Database {
         }
     }
     
-    public Slave createSlave(String name, String address, Long owner) {
+    public Slave createSlave(String name, String address, Long owner, Long capacity) {
         Long slaveId = null;
 
         try {
-            PreparedStatement st = mConn.prepareStatement("INSERT INTO slaves (`name`, `address`, `owner`) VALUES (?, ?, ?);", Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement st = mConn.prepareStatement("INSERT INTO slaves (`name`, `address`, `owner`, `capacity`) VALUES (?, ?, ?, ?);", Statement.RETURN_GENERATED_KEYS);
 
             // set the name
             st.setString(1, name);
@@ -436,6 +482,13 @@ public class Database {
                 st.setNull(3, Types.INTEGER);
             } else {
                 st.setLong(3, owner);
+            }
+            
+            // set the capacity
+            if (capacity == null) {
+                st.setNull(4, Types.INTEGER);
+            } else {
+                st.setLong(4, capacity);
             }
             
             // execute insertion
@@ -642,17 +695,40 @@ public class Database {
         }
     }
     
-    public String getUsername(Long userid) {
-        String ret = null;
+    public User getUser(Long userid) {
+        User ret = null;
         
         try {
-            PreparedStatement st = mConn.prepareStatement("SELECT name FROM users WHERE id = ?;");
+            PreparedStatement st = mConn.prepareStatement("SELECT id, name FROM users WHERE id = ?;");
             st.setLong(1, userid);
             
             ResultSet rs = st.executeQuery();
             
             if (rs.next()) {
-                ret = rs.getString(1);
+                ret = new User(rs.getLong(1));
+                ret.name = rs.getString(2);
+            }
+            
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return ret;
+    }
+    
+    public User getUser(String username) {
+        User ret = null;
+        
+        try {
+            PreparedStatement st = mConn.prepareStatement("SELECT id, name FROM users WHERE name = ?;");
+            st.setString(1, username);
+            
+            ResultSet rs = st.executeQuery();
+            
+            if (rs.next()) {
+                ret = new User(rs.getLong(1));
+                ret.name = rs.getString(2);
             }
             
             rs.close();

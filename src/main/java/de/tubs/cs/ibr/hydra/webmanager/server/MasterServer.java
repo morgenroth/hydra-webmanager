@@ -43,8 +43,7 @@ public class MasterServer implements ServletContextListener {
         
         if (slave == null) {
             // create a new slave entry
-            // TODO: add right owner
-            slave = Database.getInstance().createSlave(s.name, s.address, null);
+            slave = Database.getInstance().createSlave(s.name, s.address, s.owner, s.capacity);
         }
         
         // update slave object
@@ -56,15 +55,7 @@ public class MasterServer implements ServletContextListener {
         }
         
         // set slave to 'idle' state
-        slave.state = Slave.State.IDLE;
-        Database.getInstance().updateSlave(slave);
-        
-        List<EventExtra> entries = new ArrayList<EventExtra>();
-        entries.add(createEventExtra(EventType.EXTRA_SLAVE_ID, slave.id.toString()));
-        entries.add(createEventExtra(EventType.EXTRA_SLAVE_NAME, slave.name));
-        entries.add(createEventExtra(EventType.EXTRA_SLAVE_ADDRESS, slave.address));
-        
-        broadcast(EventType.SLAVE_STATE_CHANGED, entries);
+        Database.getInstance().updateSlave(slave, Slave.State.IDLE);
     }
 
     public static void unregister(Slave s) {
@@ -74,15 +65,7 @@ public class MasterServer implements ServletContextListener {
         }
         
         // set slave to 'disconnected' state
-        s.state = Slave.State.DISCONNECTED;
-        Database.getInstance().updateSlave(s);
-        
-        List<EventExtra> entries = new ArrayList<EventExtra>();
-        entries.add(createEventExtra(EventType.EXTRA_SLAVE_ID, s.id.toString()));
-        entries.add(createEventExtra(EventType.EXTRA_SLAVE_NAME, s.name));
-        entries.add(createEventExtra(EventType.EXTRA_SLAVE_ADDRESS, s.address));
-        
-        broadcast(EventType.SLAVE_STATE_CHANGED, entries);
+        Database.getInstance().updateSlave(s, Slave.State.DISCONNECTED);
     }
     
     private Thread mSocketLoop = new Thread() {
