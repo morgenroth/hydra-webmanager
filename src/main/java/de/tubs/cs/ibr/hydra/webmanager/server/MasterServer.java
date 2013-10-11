@@ -505,6 +505,9 @@ public class MasterServer implements ServletContextListener {
         // clear all assignments of this session
         Database.getInstance().clearAssignment(s);
         
+        // update views
+        MasterServer.fireNodeStateChanged(null);
+        
         synchronized(mControllers) {
             // remove the controller
             mControllers.remove(s.id);
