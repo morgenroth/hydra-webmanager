@@ -122,7 +122,7 @@ public class MasterServer implements ServletContextListener {
             ArrayList<Node> nodes = db.getNodes(session.id);
             
             // get allocations
-            List<SlaveAllocation> allocs = db.getAllocation();
+            List<SlaveAllocation> allocs = db.getSlaveAllocation();
             
             // get sum of free slots
             Long sum = 0L;

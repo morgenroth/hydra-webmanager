@@ -833,7 +833,7 @@ public class Database {
         }
     }
     
-    public List<SlaveAllocation> getAllocation() {
+    public List<SlaveAllocation> getSlaveAllocation() {
         final String query = "SELECT `slaves`.`id`, `slaves`.`capacity`, COUNT(`slaves`.`id`) as allocation, `nodes`.`assigned_slave` "+
                 "FROM `slaves` " +
                 "LEFT JOIN `nodes` ON (`slaves`.`id` = `nodes`.`assigned_slave`) " +
