@@ -18,7 +18,7 @@ public class NodeAddress {
     public NodeAddress(String address) {
         // split at '/'
         if (address.contains("/")) {
-            String[] data = address.split("/", 1);
+            String[] data = address.split("/", 2);
             this.address = toNumber(data[0]);
             this.netmask = toNumber(data[1]);
         }
