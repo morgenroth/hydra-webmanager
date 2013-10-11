@@ -1,12 +1,17 @@
 package de.tubs.cs.ibr.hydra.webmanager.server;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import de.tubs.cs.ibr.hydra.webmanager.server.SlaveConnection.SessionNotFoundException;
+import de.tubs.cs.ibr.hydra.webmanager.server.data.Configuration;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.MovementProvider;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
@@ -23,14 +28,13 @@ public class SessionController {
     // session object
     Session mSession = null;
     
-    // list of all nodes of this session
-    ArrayList<Node> mNodes = null;
-    
     // list of all slaves used for this session
     Set<Slave> mSlaves = null;
     
     // main executor
-    ScheduledExecutorService mExecutor = Executors.newScheduledThreadPool(5);
+    ScheduledExecutorService mMainExecutor = Executors.newSingleThreadScheduledExecutor();
+    ExecutorService mPooledExecutor = Executors.newCachedThreadPool();
+    
     ScheduledFuture<?> scheduledDistribution = null;
     
     public SessionController(Session s) {
@@ -48,7 +52,7 @@ public class SessionController {
                     scheduledDistribution.cancel(false);
                     
                     // try to distribute the session now
-                    mExecutor.execute(mRunnableDistribute);
+                    mMainExecutor.execute(mRunnableDistribute);
                 }
             }
         }
@@ -64,7 +68,7 @@ public class SessionController {
         MasterServer.registerEventListener(mEventListener);
         
         // try to distribute the session now
-        mExecutor.execute(mRunnableDistribute);
+        mMainExecutor.execute(mRunnableDistribute);
     }
     
     public void abort() {
@@ -88,6 +92,26 @@ public class SessionController {
         onDestroy();
     }
     
+    public void error() {
+        if (Session.State.RUNNING.equals(getSession().state)) {
+            // TODO: shutdown all nodes first
+        }
+        
+        // switch state to aborted
+        setSessionState(Session.State.ERROR);
+        
+        // shutdown and clean-up waste
+        onDestroy();
+    }
+    
+    public void finished() {
+        // switch state to aborted
+        setSessionState(Session.State.FINISHED);
+        
+        // shutdown and clean-up waste
+        onDestroy();
+    }
+    
     private void onDestroy() {
         // un-register event listener
         MasterServer.unregisterEventListener(mEventListener);
@@ -97,11 +121,13 @@ public class SessionController {
             scheduledDistribution.cancel(false);
         
         // shutdown main executor
-        mExecutor.shutdown();
+        mMainExecutor.shutdown();
+        mPooledExecutor.shutdown();
         
         // wait until all task are done
         try {
-            mExecutor.awaitTermination(5, TimeUnit.MINUTES);
+            mMainExecutor.awaitTermination(5, TimeUnit.MINUTES);
+            mPooledExecutor.awaitTermination(5, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -124,13 +150,13 @@ public class SessionController {
                 mSlaves = MasterServer.tryDistribution(mSession);
                 
                 // schedule a prepare task
-                mExecutor.execute(mRunablePrepare);
+                mMainExecutor.execute(mRunablePrepare);
             } catch (MasterServer.DistributionFailedException e) {
                 // distribution failed
                 System.err.println("Distribution of session " + mSession.id.toString() + " failed.");
                 
                 // check again in 2 minutes
-                scheduledDistribution = mExecutor.schedule(mRunnableDistribute, 2, TimeUnit.MINUTES);
+                scheduledDistribution = mMainExecutor.schedule(mRunnableDistribute, 2, TimeUnit.MINUTES);
             }
         }
     };
@@ -143,15 +169,77 @@ public class SessionController {
         public void run() {
             Database db = Database.getInstance();
             
+            // get all nodes of this session
+            List<Node> nodes = db.getNodes(mSession);
+            
+            // prepare a latch
+            CountDownLatch latch = new CountDownLatch(nodes.size());
+            
             // get all nodes on this slave
-            for (Slave s: mSlaves) {
-                ArrayList<Node> nodes = db.getNodes(mSession, s);
+            for (Slave s : mSlaves) {
+                // schedule prepare task for this slave
+                mPooledExecutor.execute( new PrepareTask(latch, s, nodes) );
             }
             
-            // TODO: schedule a run task
-            mExecutor.execute(mRunableBootup);
+            try {
+                // wait until all slaves are prepared
+                // maximum one minute per node
+                if (latch.await(nodes.size(), TimeUnit.MINUTES)) {
+                    // schedule a run task
+                    mMainExecutor.execute(mRunableBootup);
+                }
+                else {
+                    // timeout
+                    error();
+                }
+            } catch (InterruptedException e) {
+                // error
+                e.printStackTrace();
+            }
         }
     };
+    
+    private class PrepareTask implements Runnable {
+        
+        CountDownLatch mLatch = null;
+        Slave mSlave = null;
+        List<Node> mNodes = null;
+        
+        
+        public PrepareTask(CountDownLatch latch, Slave slave, List<Node> nodes) {
+            mLatch = latch;
+            mSlave = slave;
+            mNodes = nodes;
+        }
+
+        @Override
+        public void run() {
+            SlaveConnection conn = MasterServer.getSlaveConnection(mSlave);
+            
+            try {
+                // create the session on the slave
+                conn.createSession(mSession, Configuration.getWebLocation());
+                
+                // prepare the session
+                conn.prepareSession(mSession);
+                
+                // add all nodes
+                for (Node n : mNodes) {
+                    if (n.slaveId != mSlave.id) continue;
+                    
+                    // create the node on the slave
+                    conn.createNode(n);
+                    
+                    // decrement latch for each processed node
+                    mLatch.countDown();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (SessionNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     
     /**
      * This task boot-up all nodes
@@ -159,12 +247,78 @@ public class SessionController {
     private Runnable mRunableBootup = new Runnable() {
         @Override
         public void run() {
-            Database db = Database.getInstance();
-
             // switch state to running
             setSessionState(Session.State.RUNNING);
+            
+            // schedule a finish task
+            // TODO: add right time
+            mMainExecutor.schedule(mRunableFinish, 60, TimeUnit.SECONDS);
         }
     };
+    
+    /**
+     * This task finishes the session
+     */
+    private Runnable mRunableFinish = new Runnable() {
+        @Override
+        public void run() {
+            // prepare a latch
+            CountDownLatch latch = new CountDownLatch(mSlaves.size());
+            
+            // get all nodes on this slave
+            for (Slave s : mSlaves) {
+                // schedule prepare task for this slave
+                mPooledExecutor.execute( new FinishTask(latch, s) );
+            }
+            
+            try {
+                // wait until all slaves are prepared, maximum 5 minutes
+                if (latch.await(5, TimeUnit.MINUTES)) {
+                    // finish the session
+                    finished();
+                }
+                else {
+                    // timeout
+                    error();
+                }
+            } catch (InterruptedException e) {
+                // error
+                e.printStackTrace();
+                error();
+            }
+        }
+    };
+    
+    private class FinishTask implements Runnable {
+        
+        CountDownLatch mLatch = null;
+        Slave mSlave = null;
+
+        public FinishTask(CountDownLatch latch, Slave slave) {
+            mLatch = latch;
+            mSlave = slave;
+        }
+
+        @Override
+        public void run() {
+            SlaveConnection conn = MasterServer.getSlaveConnection(mSlave);
+            
+            try {
+                // stop all nodes
+                conn.stopSession(mSession);
+                
+                // destroy the session
+                conn.destroySession(mSession);
+                
+                // decrement the latch
+                mLatch.countDown();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (SessionNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     
     private Session getSession() {
         return Database.getInstance().getSession(mSession.id);
