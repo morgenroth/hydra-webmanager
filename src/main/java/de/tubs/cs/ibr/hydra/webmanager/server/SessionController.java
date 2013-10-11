@@ -38,6 +38,7 @@ public class SessionController {
     ExecutorService mPooledExecutor = Executors.newCachedThreadPool();
     
     ScheduledFuture<?> scheduledDistribution = null;
+    ScheduledFuture<?> scheduledFinish = null;
     
     public SessionController(Session s) {
         mSession = s;
@@ -110,6 +111,11 @@ public class SessionController {
         if (scheduledDistribution != null) {
             // we are in distribution phase
             scheduledDistribution.cancel(false);
+        }
+        
+        // cancel scheduled finish
+        if (scheduledFinish != null) {
+            scheduledFinish.cancel(false);
         }
         
         // shutdown main executor
@@ -282,7 +288,7 @@ public class SessionController {
             
             // schedule a finish task
             // TODO: add right time
-            mMainExecutor.schedule(mRunableFinish, 60, TimeUnit.SECONDS);
+            scheduledFinish = mMainExecutor.schedule(mRunableFinish, 60, TimeUnit.SECONDS);
         }
     };
     
@@ -292,6 +298,9 @@ public class SessionController {
     private Runnable mRunableFinish = new Runnable() {
         @Override
         public void run() {
+            // unset global variable
+            scheduledFinish = null;
+            
             // switch session state to finished
             finished();
         }
