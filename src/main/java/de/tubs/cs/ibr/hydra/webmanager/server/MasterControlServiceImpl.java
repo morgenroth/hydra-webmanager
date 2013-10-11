@@ -139,7 +139,12 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
 
     @Override
     public ArrayList<Node> getNodes(Long sessionId) {
-        return Database.getInstance().getNodes(new Session(sessionId));
+        Session s = null;
+        if (sessionId != null) {
+            s = new Session(sessionId);
+        }
+        
+        return Database.getInstance().getNodes(s);
     }
 
     @Override
