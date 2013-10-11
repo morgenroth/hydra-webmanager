@@ -129,7 +129,7 @@ public class MasterServer implements ServletContextListener {
             Database db = Database.getInstance();
             
             // get all nodes of this session
-            ArrayList<Node> nodes = db.getNodes(session.id);
+            ArrayList<Node> nodes = db.getNodes(session);
             
             // get allocations
             List<SlaveAllocation> allocs = db.getSlaveAllocation();

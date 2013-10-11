@@ -80,17 +80,29 @@ public class Database {
         }
     }
     
-    public ArrayList<Node> getNodes(Long sessionId) {
+    public ArrayList<Node> getNodes(Session session) {
+        return getNodes(session, null);
+    }
+    
+    public ArrayList<Node> getNodes(Session session, Slave slave) {
         ArrayList<Node> ret = new ArrayList<Node>();
+        
+        final String fields = "id, slave, session, name, state, address, assigned_slave";
         
         try {
             PreparedStatement st;
             
-            if (sessionId == null) {
-                st = mConn.prepareStatement("SELECT id, slave, session, name, state, address, assigned_slave FROM nodes;");
-            } else {
-                st = mConn.prepareStatement("SELECT id, slave, session, name, state, address, assigned_slave FROM nodes WHERE session = ?;");
-                st.setLong(1, sessionId);
+            if (session == null) {
+                st = mConn.prepareStatement("SELECT " + fields + " FROM nodes;");
+            }
+            else if (slave == null) {
+                st = mConn.prepareStatement("SELECT " + fields + " FROM nodes WHERE session = ?;");
+                st.setLong(1, session.id);
+            }
+            else {
+                st = mConn.prepareStatement("SELECT " + fields + " FROM nodes WHERE session = ? AND slave = ?;");
+                st.setLong(1, session.id);
+                st.setLong(2, slave.id);
             }
             
             ResultSet rs = st.executeQuery();
@@ -585,9 +597,8 @@ public class Database {
             ResultSet rs = st.executeQuery();
             
             while (rs.next()) {
-                Session s = new Session();
+                Session s = new Session(rs.getLong(1));
                 
-                s.id = rs.getLong(1);
                 s.userid = rs.getLong(2);
                 s.username = rs.getString(3);
                 
@@ -627,9 +638,8 @@ public class Database {
             Session s = null;
             
             if (rs.next()) {
-                s = new Session();
+                s = new Session(rs.getLong(1));
 
-                s.id = rs.getLong(1);
                 s.userid = rs.getLong(2);
                 s.username = rs.getString(3);
                 s.name = rs.getString(4);

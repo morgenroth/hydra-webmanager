@@ -168,8 +168,7 @@ public class SessionEditView extends View {
     
     private void setSession(Session result) {
         // reset changes
-        mChangedSession = new Session();
-        mChangedSession.id = result.id;
+        mChangedSession = new Session(result.id);
         
         // store data locally
         mSession = result;

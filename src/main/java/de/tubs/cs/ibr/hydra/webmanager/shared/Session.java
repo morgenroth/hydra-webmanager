@@ -126,6 +126,10 @@ public class Session implements Serializable {
     // movement settings
     public MobilityParameterSet mobility = null;
 
+    public Session(Long id) {
+        this.id = id;
+    }
+    
     public Session() {
     }
 }
