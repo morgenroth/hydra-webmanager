@@ -1,5 +1,7 @@
 package de.tubs.cs.ibr.hydra.webmanager.server.data;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -11,7 +13,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.InvalidParameterException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map.Entry;
+
+import org.xeustechnologies.jtar.TarEntry;
+import org.xeustechnologies.jtar.TarOutputStream;
 
 import com.nikhaldimann.inieditor.IniEditor;
 
@@ -338,6 +345,52 @@ public class SessionContainer {
         }
     }
     
+    public void deployArchive() throws IOException {
+        // we need a valid base path
+        if (mBasePath == null) return;
+        
+        // get the web-directory for this session
+        File downloadDir = new File(Configuration.getWebDirectory(), "dl");
+        File sessionDir = new File(downloadDir, mSessionKey);
+        if (!sessionDir.exists()) sessionDir.mkdirs();
+        
+        // this is the target tar file
+        File baseFile = new File(sessionDir, "base.tar.gz");
+        
+        // delete previous archive
+        if (baseFile.exists()) baseFile.delete();
+        
+        // output file stream
+        FileOutputStream dest = new FileOutputStream(baseFile);
+
+        // create a TarOutputStream
+        TarOutputStream out = new TarOutputStream( new BufferedOutputStream( dest ) );
+
+        // collect files to tar
+        List<File> list = new LinkedList<File>();
+        
+        // list all files in the base dir
+        listFiles(mBasePath, list);
+        
+        for (File f : list) {
+            String path = f.getCanonicalPath().replaceFirst(mBasePath.getCanonicalPath(), ".");
+            
+           out.putNextEntry(new TarEntry(f, path));
+           BufferedInputStream origin = new BufferedInputStream(new FileInputStream( f ));
+
+           int count;
+           byte data[] = new byte[2048];
+           while((count = origin.read(data)) != -1) {
+              out.write(data, 0, count);
+           }
+
+           out.flush();
+           origin.close();
+        }
+
+        out.close();
+    }
+    
     private static void copy(SessionContainer source, File targetPath) throws IOException {
         if ((source == null) || (targetPath == null)) {
             throw new InvalidParameterException("source or target is null");
@@ -361,6 +414,18 @@ public class SessionContainer {
         
         // copy the container
         copyFolder(sourcePath, targetPath);
+    }
+    
+    private static void listFiles(File dir, List<File> list) {
+        File[] files = dir.listFiles();
+        
+        for (File f : files) {
+            if (f.isDirectory()) {
+                listFiles(f, list);
+            } else {
+                list.add(f);
+            }
+        }
     }
     
     private static void copyFolder(File source, File target) throws IOException {

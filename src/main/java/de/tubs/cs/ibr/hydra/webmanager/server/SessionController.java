@@ -15,6 +15,7 @@ import de.tubs.cs.ibr.hydra.webmanager.server.SlaveConnection.SessionNotFoundExc
 import de.tubs.cs.ibr.hydra.webmanager.server.SlaveConnection.SessionRunTimeoutException;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Configuration;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
+import de.tubs.cs.ibr.hydra.webmanager.server.data.SessionContainer;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.MovementProvider;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
@@ -192,6 +193,22 @@ public class SessionController {
         public void run() {
             // abort process if state changed to aborted
             if (isAborted()) return;
+            
+            // reate an archive and deploy it to the webserver directory
+            try {
+                SessionContainer sc = SessionContainer.getContainer(mSession);
+                
+                // trigger initialization of the session
+                sc.initialize(null);
+
+                // deploy the web archive
+                sc.deployArchive();
+            } catch (IOException e) {
+                System.err.println("ERROR: " + e.toString());
+                // error
+                error();
+                return;
+            }
             
             // get the database object
             Database db = Database.getInstance();
