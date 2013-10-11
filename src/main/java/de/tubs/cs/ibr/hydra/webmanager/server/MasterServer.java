@@ -4,9 +4,14 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -108,13 +113,13 @@ public class MasterServer implements ServletContextListener {
         Database.getInstance().updateSlave(s, Slave.State.DISCONNECTED);
     }
     
-    public static void tryDistribution(Session s) throws DistributionFailedException {
+    public static Set<Slave> tryDistribution(Session session) throws DistributionFailedException {
         // distribute all nodes of the session over the available slaves
         synchronized(mDistributionLock) {
             Database db = Database.getInstance();
             
             // get all nodes of this session
-            ArrayList<Node> nodes = db.getNodes(s.id);
+            ArrayList<Node> nodes = db.getNodes(session.id);
             
             // get allocations
             List<SlaveAllocation> allocs = db.getAllocation();
@@ -134,14 +139,96 @@ public class MasterServer implements ServletContextListener {
             
             /**
              * we found enough free slots to start this session
-             * TODO: assign the nodes to available slaves
+             * assign the nodes to available slaves
              */
             
-            // sort allocation data by number of occupied slots
-            // prefer slaves without any node other node (SlaveAllocation.allocation == 0)
+            // return the slaves used for this session
+            Set<Slave> allocSlaves = new HashSet<Slave>();
             
-            // TODO: assign unique IP addresses
+            // put all nodes into a queue
+            LinkedList<Node> nodeQueue = new LinkedList<Node>(nodes);
+            
+            // first try to allocate pinned assignments
+            Iterator<Node> iter = nodeQueue.iterator();
+            while (iter.hasNext()) {
+                Node n = iter.next();
+                
+                // if this node has a pinned assignment
+                if (n.slaveId == null) continue;
+                
+                // search for the allocation of this slave
+                for (SlaveAllocation a : allocs) {
+                    if (n.slaveId != a.slaveId) continue;
+                    
+                    // if the pinned slave is exhausted, skip this allocation
+                    if (a.isExhausted()) break;
+                    
+                    // get the slave object
+                    Slave s = db.getSlave(a.slaveId);
+                    
+                    // assign the slave to the node
+                    db.assignNode(n, s);
+                    
+                    // assign unique IP addresses
+                    db.updateNode(n, allocateAddress());
+                    
+                    // add one element to the allocation of this slave
+                    a.allocation++;
+                    
+                    // remove this node
+                    iter.remove();
+                }
+            }
+            
+            // sort allocation data by number of occupied slots, but prefer large capacities
+            Collections.sort(allocs, new Comparator<SlaveAllocation>() {
+                @Override
+                public int compare(SlaveAllocation o1, SlaveAllocation o2) {
+                    int allocComp = o1.allocation.compareTo(o2.allocation);
+                    
+                    if (allocComp == 0) {
+                        return (o1.capacity.compareTo(o2.capacity) * -1);
+                    }
+                    
+                    return allocComp;
+                }
+            });
+            
+            // prefer slaves with a small number of running nodes
+            for (SlaveAllocation a : allocs) {
+                if (!a.isExhausted()) {
+                    // abort if all nodes are allocated
+                    if (nodeQueue.isEmpty()) break;
+                    
+                    // get the slave object
+                    Slave s = db.getSlave(a.slaveId);
+                    
+                    // add this slave to the allocated slaves
+                    allocSlaves.add(s);
+                 
+                    while (!nodeQueue.isEmpty() && !a.isExhausted()) {
+                        // get the next node object
+                        Node n = nodeQueue.poll();
+                        
+                        // assign the slave to the node
+                        db.assignNode(n, s);
+                        
+                        // assign unique IP addresses
+                        db.updateNode(n, allocateAddress());
+                        
+                        // add one element to the allocation of this slave
+                        a.allocation++;
+                    }
+                }
+            }
+            
+            return allocSlaves;
         }
+    }
+    
+    // TODO: implement address allocation function
+    private static String allocateAddress() {
+        return "0.0.0.0/255.255.0.0";
     }
     
     private Thread mSocketLoop = new Thread() {

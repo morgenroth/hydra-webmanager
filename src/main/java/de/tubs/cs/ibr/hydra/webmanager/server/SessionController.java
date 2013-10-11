@@ -1,6 +1,7 @@
 package de.tubs.cs.ibr.hydra.webmanager.server;
 
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -12,6 +13,7 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
 public class SessionController {
     
@@ -23,6 +25,9 @@ public class SessionController {
     
     // list of all nodes of this session
     ArrayList<Node> mNodes = null;
+    
+    // list of all slaves used for this session
+    Set<Slave> mSlaves = null;
     
     // main executor
     ScheduledExecutorService mExecutor = Executors.newScheduledThreadPool(5);
@@ -113,7 +118,7 @@ public class SessionController {
                 scheduledDistribution = null;
                 
                 // try to distribute the session to slaves
-                MasterServer.tryDistribution(mSession);
+                mSlaves = MasterServer.tryDistribution(mSession);
                 
                 // switch state to running
                 setSessionState(Session.State.RUNNING);
