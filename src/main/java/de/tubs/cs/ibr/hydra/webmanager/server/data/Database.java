@@ -282,10 +282,10 @@ public class Database {
             
             if (s == null) {
                 // clear all assignments
-                st = mConn.prepareStatement("UPDATE nodes SET `assigned_slave` = NULL, `address` = NULL;");
+                st = mConn.prepareStatement("UPDATE nodes SET `assigned_slave` = NULL, `address` = NULL, `state` = 'draft';");
             } else {
                 // clear all assignments of a session
-                st = mConn.prepareStatement("UPDATE nodes SET `assigned_slave` = NULL, `address` = NULL WHERE session = ?;");
+                st = mConn.prepareStatement("UPDATE nodes SET `assigned_slave` = NULL, `address` = NULL, `state` = 'draft' WHERE session = ?;");
                 
                 // set session id
                 st.setLong(1, s.id);
