@@ -123,6 +123,13 @@ public class MasterServer implements ServletContextListener {
         Database.getInstance().updateSlave(s, Slave.State.DISCONNECTED);
     }
     
+    
+    public static SlaveConnection getSlaveConnection(Slave slave) {
+        synchronized(mConnections) {
+            return mConnections.get(slave.id);
+        }
+    }
+    
     public static Set<Slave> tryDistribution(Session session) throws DistributionFailedException {
         // distribute all nodes of the session over the available slaves
         synchronized(mDistributionLock) {
