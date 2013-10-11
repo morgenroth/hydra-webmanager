@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.SlaveConnection.SessionNotFoundException;
 import de.tubs.cs.ibr.hydra.webmanager.server.SlaveConnection.SessionRunTimeoutException;
@@ -73,19 +74,11 @@ public class SessionController {
     }
     
     public void abort() {
-        if (Session.State.RUNNING.equals(getSession().state)) {
-            // TODO: shutdown all nodes first
-        }
-        
         // shutdown and clean-up waste
         onDestroy();
     }
     
     public void cancel() {
-        if (Session.State.RUNNING.equals(getSession().state)) {
-            // TODO: shutdown all nodes first
-        }
-        
         // switch state to aborted
         setSessionState(Session.State.ABORTED);
         
@@ -94,10 +87,6 @@ public class SessionController {
     }
     
     public void error() {
-        if (Session.State.RUNNING.equals(getSession().state)) {
-            // TODO: shutdown all nodes first
-        }
-        
         // switch state to aborted
         setSessionState(Session.State.ERROR);
         
@@ -118,16 +107,36 @@ public class SessionController {
         MasterServer.unregisterEventListener(mEventListener);
         
         // cancel scheduled distribution
-        if (scheduledDistribution != null)
+        if (scheduledDistribution != null) {
+            // we are in distribution phase
             scheduledDistribution.cancel(false);
+        }
         
         // shutdown main executor
         mMainExecutor.shutdown();
-        mPooledExecutor.shutdown();
         
         // wait until all task are done
         try {
             mMainExecutor.awaitTermination(5, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        
+        try {
+            // destroy the session on all slaves
+            destroySession();
+        } catch (InterruptedException e) {
+            // error
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            // timeout does not matter
+        }
+        
+        // shutdown pooled executor
+        mPooledExecutor.shutdown();
+        
+        // wait until all task are done
+        try {
             mPooledExecutor.awaitTermination(5, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -168,6 +177,10 @@ public class SessionController {
     private Runnable mRunablePrepare = new Runnable() {
         @Override
         public void run() {
+            // abort process if state changed to aborted
+            if (isAborted()) return;
+            
+            // get the database object
             Database db = Database.getInstance();
             
             // get all nodes of this session
@@ -228,19 +241,25 @@ public class SessionController {
                 for (Node n : mNodes) {
                     if (n.assignedSlaveId != mSlave.id) continue;
                     
+                    // abort process if state changed to aborted
+                    if (isAborted()) break;
+                    
                     // create the node on the slave
                     conn.createNode(n);
                 }
                 
-                // run the session on the slave
-                conn.runSession(mSession);
+                // abort process if state changed to aborted
+                if (!isAborted()) {
+                    // run the session on the slave
+                    conn.runSession(mSession);
+                }
                 
                 // decrement latch for each processed slave
                 mLatch.countDown();
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (SessionNotFoundException e) {
-                e.printStackTrace();
+                // session not found - might be caused by ABORT
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (SessionRunTimeoutException e) {
@@ -255,6 +274,9 @@ public class SessionController {
     private Runnable mRunableBootup = new Runnable() {
         @Override
         public void run() {
+            // abort process if state changed to aborted
+            if (isAborted()) return;
+            
             // switch state to running
             setSessionState(Session.State.RUNNING);
             
@@ -270,39 +292,17 @@ public class SessionController {
     private Runnable mRunableFinish = new Runnable() {
         @Override
         public void run() {
-            // prepare a latch
-            CountDownLatch latch = new CountDownLatch(mSlaves.size());
-            
-            // get all nodes on this slave
-            for (Slave s : mSlaves) {
-                // schedule prepare task for this slave
-                mPooledExecutor.execute( new FinishTask(latch, s) );
-            }
-            
-            try {
-                // wait until all slaves are prepared, maximum 5 minutes
-                if (latch.await(5, TimeUnit.MINUTES)) {
-                    // finish the session
-                    finished();
-                }
-                else {
-                    // timeout
-                    error();
-                }
-            } catch (InterruptedException e) {
-                // error
-                e.printStackTrace();
-                error();
-            }
+            // switch session state to finished
+            finished();
         }
     };
     
-    private class FinishTask implements Runnable {
+    private class CleanupTask implements Runnable {
         
         CountDownLatch mLatch = null;
         Slave mSlave = null;
 
-        public FinishTask(CountDownLatch latch, Slave slave) {
+        public CleanupTask(CountDownLatch latch, Slave slave) {
             mLatch = latch;
             mSlave = slave;
         }
@@ -323,10 +323,28 @@ public class SessionController {
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (SessionNotFoundException e) {
-                e.printStackTrace();
+                // ignore if session was not found
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+        }
+    }
+    
+    private void destroySession() throws InterruptedException, TimeoutException {
+        // prepare a latch
+        CountDownLatch latch = new CountDownLatch(mSlaves.size());
+        
+        // get all nodes on this slave
+        for (Slave s : mSlaves) {
+            // schedule prepare task for this slave
+            mPooledExecutor.execute( new CleanupTask(latch, s) );
+        }
+        
+        // wait until all slaves are prepared
+        // maximum one minute per node
+        if (!latch.await(mSlaves.size(), TimeUnit.MINUTES)) {
+            // timeout
+            throw new TimeoutException();
         }
     }
     
@@ -336,5 +354,9 @@ public class SessionController {
     
     private void setSessionState(Session.State s) {
         Database.getInstance().setState(mSession, s);
+    }
+    
+    private boolean isAborted() {
+        return Session.State.ABORTED.equals( getSession().state );
     }
 }
