@@ -110,6 +110,9 @@ public class SessionController {
         MasterServer.onSessionFinished(mSession);
     }
     
+    /**
+     * This task tries to distribute all nodes across the slaves
+     */
     private Runnable mRunnableDistribute = new Runnable() {
         @Override
         public void run() {
@@ -120,20 +123,46 @@ public class SessionController {
                 // try to distribute the session to slaves
                 mSlaves = MasterServer.tryDistribution(mSession);
                 
-                // switch state to running
-                setSessionState(Session.State.RUNNING);
-                
-                // get all nodes of this session
-                mNodes = Database.getInstance().getNodes(mSession.id);
-                
-                // TODO: PREPARE, RUN
+                // schedule a prepare task
+                mExecutor.execute(mRunablePrepare);
             } catch (MasterServer.DistributionFailedException e) {
                 // distribution failed
                 System.err.println("Distribution of session " + mSession.id.toString() + " failed.");
                 
-                // check again in 10 seconds
-                scheduledDistribution = mExecutor.schedule(mRunnableDistribute, 10, TimeUnit.SECONDS);
+                // check again in 2 minutes
+                scheduledDistribution = mExecutor.schedule(mRunnableDistribute, 2, TimeUnit.MINUTES);
             }
+        }
+    };
+    
+    /**
+     * This task prepares all nodes
+     */
+    private Runnable mRunablePrepare = new Runnable() {
+        @Override
+        public void run() {
+            Database db = Database.getInstance();
+            
+            // get all nodes on this slave
+            for (Slave s: mSlaves) {
+                ArrayList<Node> nodes = db.getNodes(mSession, s);
+            }
+            
+            // TODO: schedule a run task
+            mExecutor.execute(mRunableBootup);
+        }
+    };
+    
+    /**
+     * This task boot-up all nodes
+     */
+    private Runnable mRunableBootup = new Runnable() {
+        @Override
+        public void run() {
+            Database db = Database.getInstance();
+
+            // switch state to running
+            setSessionState(Session.State.RUNNING);
         }
     };
     
