@@ -310,10 +310,13 @@ public class MasterServer implements ServletContextListener {
         
         // get/create atmosphere broadcast channel
         BroadcasterFactory bf = DefaultBroadcasterFactory.getDefault();
-        Broadcaster channel = bf.lookup("events", true);
         
-        // broadcast the event to the clients
-        channel.broadcast(evt);
+        if (bf != null) {
+            Broadcaster channel = bf.lookup("events", true);
+            
+            // broadcast the event to the clients
+            channel.broadcast(evt);
+        }
     }
     
     public static void fireSessionDataUpdated(final Session s) {
