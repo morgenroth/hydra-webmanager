@@ -77,6 +77,13 @@ public class SessionController {
     public void abort() {
         // shutdown and clean-up waste
         onDestroy();
+        
+        // wait until all task are done
+        try {
+            mMainExecutor.awaitTermination(5, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
     
     public void cancel() {
@@ -85,6 +92,13 @@ public class SessionController {
         
         // shutdown and clean-up waste
         onDestroy();
+        
+        // wait until all task are done
+        try {
+            mMainExecutor.awaitTermination(5, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
     
     public void error() {
@@ -120,13 +134,6 @@ public class SessionController {
         
         // shutdown main executor
         mMainExecutor.shutdown();
-        
-        // wait until all task are done
-        try {
-            mMainExecutor.awaitTermination(5, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         
         try {
             // destroy the session on all slaves
