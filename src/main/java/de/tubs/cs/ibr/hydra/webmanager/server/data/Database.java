@@ -10,9 +10,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
 import de.tubs.cs.ibr.hydra.webmanager.server.Task;
@@ -831,6 +833,26 @@ public class Database {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+    
+    public Set<String> getAddressAllocation() {
+        Set<String> ret = new HashSet<String>();
+        
+        try {
+            PreparedStatement st = mConn.prepareStatement("SELECT DISTINCT `address` FROM nodes WHERE `address` != NULL ORDER BY `address`;");
+            
+            ResultSet rs = st.executeQuery();
+            
+            while (rs.next()) {
+                ret.add(rs.getString(1));
+            }
+            
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return ret;
     }
     
     public List<SlaveAllocation> getSlaveAllocation() {

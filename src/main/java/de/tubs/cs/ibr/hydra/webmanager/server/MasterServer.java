@@ -25,6 +25,7 @@ import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import com.google.web.bindery.autobean.vm.AutoBeanFactorySource;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
+import de.tubs.cs.ibr.hydra.webmanager.server.data.NodeAddress;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SlaveAllocation;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
@@ -42,6 +43,15 @@ public class MasterServer implements ServletContextListener {
          * serial ID
          */
         private static final long serialVersionUID = 2242070903678118836L;
+        
+    };
+    
+    private static class AddressPoolExhausedException extends DistributionFailedException {
+
+        /**
+         * serial ID
+         */
+        private static final long serialVersionUID = 6322066557716014141L;
         
     };
     
@@ -142,93 +152,123 @@ public class MasterServer implements ServletContextListener {
              * assign the nodes to available slaves
              */
             
-            // return the slaves used for this session
-            Set<Slave> allocSlaves = new HashSet<Slave>();
-            
-            // put all nodes into a queue
-            LinkedList<Node> nodeQueue = new LinkedList<Node>(nodes);
-            
-            // first try to allocate pinned assignments
-            Iterator<Node> iter = nodeQueue.iterator();
-            while (iter.hasNext()) {
-                Node n = iter.next();
+            try {
+                // return the slaves used for this session
+                Set<Slave> allocSlaves = new HashSet<Slave>();
                 
-                // if this node has a pinned assignment
-                if (n.slaveId == null) continue;
+                // put all nodes into a queue
+                LinkedList<Node> nodeQueue = new LinkedList<Node>(nodes);
                 
-                // search for the allocation of this slave
-                for (SlaveAllocation a : allocs) {
-                    if (n.slaveId != a.slaveId) continue;
+                // get all allocated addresses
+                Set<String> allocAddresses = db.getAddressAllocation();
+                
+                // first try to allocate pinned assignments
+                Iterator<Node> iter = nodeQueue.iterator();
+                while (iter.hasNext()) {
+                    Node n = iter.next();
                     
-                    // if the pinned slave is exhausted, skip this allocation
-                    if (a.isExhausted()) break;
+                    // if this node has a pinned assignment
+                    if (n.slaveId == null) continue;
                     
-                    // get the slave object
-                    Slave s = db.getSlave(a.slaveId);
-                    
-                    // assign the slave to the node
-                    db.assignNode(n, s);
-                    
-                    // assign unique IP addresses
-                    db.updateNode(n, allocateAddress());
-                    
-                    // add one element to the allocation of this slave
-                    a.allocation++;
-                    
-                    // remove this node
-                    iter.remove();
-                }
-            }
-            
-            // sort allocation data by number of occupied slots, but prefer large capacities
-            Collections.sort(allocs, new Comparator<SlaveAllocation>() {
-                @Override
-                public int compare(SlaveAllocation o1, SlaveAllocation o2) {
-                    int allocComp = o1.allocation.compareTo(o2.allocation);
-                    
-                    if (allocComp == 0) {
-                        return (o1.capacity.compareTo(o2.capacity) * -1);
-                    }
-                    
-                    return allocComp;
-                }
-            });
-            
-            // prefer slaves with a small number of running nodes
-            for (SlaveAllocation a : allocs) {
-                if (!a.isExhausted()) {
-                    // abort if all nodes are allocated
-                    if (nodeQueue.isEmpty()) break;
-                    
-                    // get the slave object
-                    Slave s = db.getSlave(a.slaveId);
-                    
-                    // add this slave to the allocated slaves
-                    allocSlaves.add(s);
-                 
-                    while (!nodeQueue.isEmpty() && !a.isExhausted()) {
-                        // get the next node object
-                        Node n = nodeQueue.poll();
+                    // search for the allocation of this slave
+                    for (SlaveAllocation a : allocs) {
+                        if (n.slaveId != a.slaveId) continue;
+                        
+                        // if the pinned slave is exhausted, skip this allocation
+                        if (a.isExhausted()) break;
+                        
+                        // get the slave object
+                        Slave s = db.getSlave(a.slaveId);
                         
                         // assign the slave to the node
                         db.assignNode(n, s);
                         
                         // assign unique IP addresses
-                        db.updateNode(n, allocateAddress());
+                        db.updateNode(n, findFreeAddress(allocAddresses));
                         
                         // add one element to the allocation of this slave
                         a.allocation++;
+                        
+                        // remove this node
+                        iter.remove();
                     }
                 }
+                
+                // sort allocation data by number of occupied slots, but prefer large capacities
+                Collections.sort(allocs, new Comparator<SlaveAllocation>() {
+                    @Override
+                    public int compare(SlaveAllocation o1, SlaveAllocation o2) {
+                        int allocComp = o1.allocation.compareTo(o2.allocation);
+                        
+                        if (allocComp == 0) {
+                            return (o1.capacity.compareTo(o2.capacity) * -1);
+                        }
+                        
+                        return allocComp;
+                    }
+                });
+                
+                // prefer slaves with a small number of running nodes
+                for (SlaveAllocation a : allocs) {
+                    if (!a.isExhausted()) {
+                        // abort if all nodes are allocated
+                        if (nodeQueue.isEmpty()) break;
+                        
+                        // get the slave object
+                        Slave s = db.getSlave(a.slaveId);
+                        
+                        // add this slave to the allocated slaves
+                        allocSlaves.add(s);
+                     
+                        while (!nodeQueue.isEmpty() && !a.isExhausted()) {
+                            // get the next node object
+                            Node n = nodeQueue.poll();
+                            
+                            // assign the slave to the node
+                            db.assignNode(n, s);
+                            
+                            // assign unique IP addresses
+                            db.updateNode(n, findFreeAddress(allocAddresses));
+                            
+                            // add one element to the allocation of this slave
+                            a.allocation++;
+                        }
+                    }
+                }
+                
+                return allocSlaves;
+            } catch (AddressPoolExhausedException e) {
+                // error - address pool exhausted
+                System.err.println("ERROR - address pool is exhausted");
+                
+                // clear made assignments
+                db.clearAssignment(session);
+                
+                // re-throw the exception
+                throw e;
             }
-            
-            return allocSlaves;
         }
     }
     
-    // TODO: implement address allocation function
-    private static String allocateAddress() {
-        return "0.0.0.0/255.255.0.0";
+    private static String findFreeAddress(Set<String> allocAddresses) throws AddressPoolExhausedException {
+        // TODO: make IP range configurable
+        final NodeAddress baseAddr = new NodeAddress("10.242.2.0", "255.255.0.0");
+        final NodeAddress maxAddr = new NodeAddress("10.242.255.254", "255.255.0.0");
+        
+        for (long n = baseAddr.getLongAddress() + 1; n < maxAddr.getLongAddress(); n++) {
+            NodeAddress newAddr = new NodeAddress(n, baseAddr.getLongNetmask());
+            String addr = newAddr.toString();
+            if (!allocAddresses.contains(addr)) {
+                // add new address to the set of allocated addresses
+                allocAddresses.add(addr);
+
+                // return the new address
+                return addr; 
+            }
+        }
+        
+        // no more addresses available
+        throw new AddressPoolExhausedException();
     }
     
     private Thread mSocketLoop = new Thread() {
