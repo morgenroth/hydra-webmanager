@@ -14,4 +14,8 @@ public class SlaveAllocation {
     public Long getAvailableSlots() {
         return capacity - allocation;
     }
+    
+    public boolean isExhausted() {
+        return capacity <= allocation;
+    }
 }
