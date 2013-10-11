@@ -11,6 +11,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.SlaveConnection.SessionNotFoundException;
+import de.tubs.cs.ibr.hydra.webmanager.server.SlaveConnection.SessionRunTimeoutException;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Configuration;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.MovementProvider;
@@ -173,7 +174,7 @@ public class SessionController {
             List<Node> nodes = db.getNodes(mSession);
             
             // prepare a latch
-            CountDownLatch latch = new CountDownLatch(nodes.size());
+            CountDownLatch latch = new CountDownLatch(mSlaves.size());
             
             // get all nodes on this slave
             for (Slave s : mSlaves) {
@@ -225,17 +226,24 @@ public class SessionController {
                 
                 // add all nodes
                 for (Node n : mNodes) {
-                    if (n.slaveId != mSlave.id) continue;
+                    if (n.assignedSlaveId != mSlave.id) continue;
                     
                     // create the node on the slave
                     conn.createNode(n);
-                    
-                    // decrement latch for each processed node
-                    mLatch.countDown();
                 }
+                
+                // run the session on the slave
+                conn.runSession(mSession);
+                
+                // decrement latch for each processed slave
+                mLatch.countDown();
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (SessionNotFoundException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (SessionRunTimeoutException e) {
                 e.printStackTrace();
             }
         }
@@ -315,6 +323,8 @@ public class SessionController {
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (SessionNotFoundException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
