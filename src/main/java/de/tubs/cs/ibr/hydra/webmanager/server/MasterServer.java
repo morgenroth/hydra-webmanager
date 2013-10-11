@@ -504,5 +504,11 @@ public class MasterServer implements ServletContextListener {
     public void contextInitialized(ServletContextEvent evt) {
         mSocketLoop.start();
         mTaskLoop = Executors.newSingleThreadExecutor();
+        
+        // reset all sessions
+        Database.getInstance().resetSessions();
+        
+        // clear all node assignments
+        Database.getInstance().clearAssignment(null);
     }
 }
