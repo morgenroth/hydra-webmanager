@@ -172,10 +172,10 @@ public class Database {
         try {
             PreparedStatement st = mConn.prepareStatement("UPDATE nodes SET `address` = ? WHERE id = ?;");
             
-            if (n.slaveId == null) {
-                st.setNull(1, Types.INTEGER);
+            if (address == null) {
+                st.setNull(1, Types.VARCHAR);
             } else {
-                st.setLong(1, n.slaveId);
+                st.setString(1, address);
             }
             
             st.setLong(2, n.id);
@@ -247,13 +247,16 @@ public class Database {
             if ((s == null) || (s.id == null)) {
                 st.setNull(1, Types.INTEGER);
             } else {
-                st.setLong(1, n.slaveId);
+                st.setLong(1, s.id);
             }
             
             st.setLong(2, n.id);
             
             // execute the query
             st.execute();
+            
+            // set the assigned slave id field in the node object
+            n.assignedSlaveId = s.id;
         } catch (SQLException e) {
             e.printStackTrace();
         }
