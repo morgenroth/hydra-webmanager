@@ -252,12 +252,22 @@ public class SessionController {
                     
                     // create the node on the slave
                     conn.createNode(n);
+                    
+                    // set new node state
+                    Database.getInstance().updateNode(n, Node.State.CREATED);
                 }
                 
                 // abort process if state changed to aborted
                 if (!isAborted()) {
                     // run the session on the slave
                     conn.runSession(mSession);
+                    
+                    for (Node n : mNodes) {
+                        if (n.assignedSlaveId != mSlave.id) continue;
+                        
+                        // set new node state
+                        Database.getInstance().updateNode(n, Node.State.CONNECTED);
+                    }
                 }
                 
                 // decrement latch for each processed slave

@@ -193,6 +193,9 @@ public class MasterServer implements ServletContextListener {
                         // assign unique IP addresses
                         db.updateNode(n, findFreeAddress(allocAddresses));
                         
+                        // set the new node state
+                        db.updateNode(n, Node.State.SCHEDULED);
+                        
                         // add one element to the allocation of this slave
                         a.allocation++;
                         
@@ -237,6 +240,9 @@ public class MasterServer implements ServletContextListener {
                             // assign unique IP addresses
                             db.updateNode(n, findFreeAddress(allocAddresses));
                             
+                            // set the new node state
+                            db.updateNode(n, Node.State.SCHEDULED);
+                            
                             // add one element to the allocation of this slave
                             a.allocation++;
                         }
@@ -250,6 +256,9 @@ public class MasterServer implements ServletContextListener {
                 
                 // clear made assignments
                 db.clearAssignment(session);
+                
+                // update views
+                MasterServer.fireNodeStateChanged(null);
                 
                 // re-throw the exception
                 throw e;
