@@ -107,10 +107,13 @@ public class SlaveConnection extends Thread {
                 System.out.println(data);
                 
                 // put the 'response' into the queue
-                mResponseQueue.offer(data);
+                mResponseQueue.put(data);
             }
         } catch (IOException e) {
             // error while processing slave connection
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            // interrupted while processing slave connection
             e.printStackTrace();
         } finally {
             // unregister this slave
@@ -129,15 +132,19 @@ public class SlaveConnection extends Thread {
         mWriter.write("quit\n");
         mWriter.flush();
         
-        // wait for a response
-        if (receiveResponse() != 200) {
-            // something went wrong!
+        try {
+            // wait for a response
+            if (receiveResponse() != 200) {
+                // something went wrong!
+            }
+            
+            mRunning = false;
+            mSocket.close();
+            mReader.close();
+            mWriter.close();
+        } catch (InterruptedException e) {
+            // interrupted
         }
-        
-        mRunning = false;
-        mSocket.close();
-        mReader.close();
-        mWriter.close();
     }
     
     public class SessionRunTimeoutException extends Exception {
@@ -158,10 +165,10 @@ public class SlaveConnection extends Thread {
         
     };
     
-    private synchronized Long receiveResponse() {
-        String data = mResponseQueue.poll();
+    private synchronized Long receiveResponse() throws InterruptedException {
+        String data = mResponseQueue.take();
         
-        String[] data_pair = data.split(" ", 1);
+        String[] data_pair = data.split(" ", 2);
         
         Long code = Long.valueOf(data_pair[0]);
         String message = data_pair[1];
@@ -171,7 +178,7 @@ public class SlaveConnection extends Thread {
         return code;
     }
     
-    public synchronized void createSession(Session s, String url) throws IOException {
+    public synchronized void createSession(Session s, String url) throws IOException, InterruptedException {
         // session create <session-id> <hydra-url>
         mWriter.write("session create " + s.id.toString() + " " + url +"\n");
         mWriter.flush();
@@ -182,7 +189,7 @@ public class SlaveConnection extends Thread {
         }
     }
     
-    public synchronized void destroySession(Session s) throws IOException, SessionNotFoundException {
+    public synchronized void destroySession(Session s) throws IOException, SessionNotFoundException, InterruptedException {
         // session destroy <session-id>
         mWriter.write("session destroy " + s.id.toString() + "\n");
         mWriter.flush();
@@ -194,7 +201,7 @@ public class SlaveConnection extends Thread {
         }
     }
     
-    public synchronized void prepareSession(Session s) throws IOException, SessionNotFoundException {
+    public synchronized void prepareSession(Session s) throws IOException, SessionNotFoundException, InterruptedException {
         // session prepare <session-id>
         mWriter.write("session prepare " + s.id.toString() + "\n");
         mWriter.flush();
@@ -206,7 +213,7 @@ public class SlaveConnection extends Thread {
         }
     }
     
-    public synchronized void runSession(Session s) throws IOException, SessionNotFoundException, SessionRunTimeoutException {
+    public synchronized void runSession(Session s) throws IOException, SessionNotFoundException, SessionRunTimeoutException, InterruptedException {
         // session run <session-id>
         mWriter.write("session run " + s.id.toString() + "\n");
         mWriter.flush();
@@ -224,7 +231,7 @@ public class SlaveConnection extends Thread {
         }
     }
     
-    public synchronized void stopSession(Session s) throws IOException, SessionNotFoundException {
+    public synchronized void stopSession(Session s) throws IOException, SessionNotFoundException, InterruptedException {
         // session stop <session-id>
         mWriter.write("session stop " + s.id.toString() + "\n");
         mWriter.flush();
@@ -236,7 +243,7 @@ public class SlaveConnection extends Thread {
         }
     }
     
-    public synchronized void createNode(Node n) throws IOException, SessionNotFoundException {
+    public synchronized void createNode(Node n) throws IOException, SessionNotFoundException, InterruptedException {
         // node create <session-id> <node-id> <ip-address> <node-name>
         mWriter.write("node create " + n.sessionId.toString() + " " + n.id.toString() + " " + n.address + " " + n.name + "\n");
         mWriter.flush();
@@ -248,7 +255,7 @@ public class SlaveConnection extends Thread {
         }
     }
     
-    public synchronized void destroyNode(Node n) throws IOException, SessionNotFoundException {
+    public synchronized void destroyNode(Node n) throws IOException, SessionNotFoundException, InterruptedException {
         // node destroy <session-id> <node-id>
         mWriter.write("node create " + n.sessionId.toString() + " " + n.id.toString() + "\n");
         mWriter.flush();
@@ -260,7 +267,7 @@ public class SlaveConnection extends Thread {
         }
     }
     
-    public ArrayList<Node> getNodes(Session s) throws IOException, SessionNotFoundException {
+    public ArrayList<Node> getNodes(Session s) throws IOException, SessionNotFoundException, InterruptedException {
         ArrayList<Node> ret = new ArrayList<Node>();
         String data = doAction(s.id, "list nodes");
         
@@ -279,11 +286,11 @@ public class SlaveConnection extends Thread {
         return ret;
     }
     
-    public String execute(Node n, String command) throws IOException, SessionNotFoundException {
+    public String execute(Node n, String command) throws IOException, SessionNotFoundException, InterruptedException {
         return doAction(n.sessionId, "script " + n.id.toString() + " " + command);
     }
     
-    public void setClock(Node n, Long offset, Long frequency, Long sec, Long usec) throws IOException, SessionNotFoundException {
+    public void setClock(Node n, Long offset, Long frequency, Long sec, Long usec) throws IOException, SessionNotFoundException, InterruptedException {
         String action = "clock " + n.id.toString() + " ";
         
         action += (offset == null) ? "*" : offset.toString();
@@ -300,7 +307,7 @@ public class SlaveConnection extends Thread {
         doAction(n.sessionId, action);
     }
     
-    public void setPosition(Node n, Double x, Double y, Double z) throws IOException, SessionNotFoundException {
+    public void setPosition(Node n, Double x, Double y, Double z) throws IOException, SessionNotFoundException, InterruptedException {
         String action = "position " + n.id.toString() + " ";
         
         action += (x == null) ? "0.0" : x.toString();
@@ -314,22 +321,22 @@ public class SlaveConnection extends Thread {
         doAction(n.sessionId, action);
     }
     
-    public String getStats(Node n) throws IOException, SessionNotFoundException {
+    public String getStats(Node n) throws IOException, SessionNotFoundException, InterruptedException {
         return doAction(n.sessionId, "stats " + n.id.toString());
     }
     
-    public String executeDtndCommand(Node n, String command) throws IOException, SessionNotFoundException {
+    public String executeDtndCommand(Node n, String command) throws IOException, SessionNotFoundException, InterruptedException {
         return doAction(n.sessionId, "dtnd " + n.id.toString() + " " + command);
     }
     
-    public void connectionUp(Node n, Node r) throws IOException, SessionNotFoundException {
+    public void connectionUp(Node n, Node r) throws IOException, SessionNotFoundException, InterruptedException {
         // split address into netmask and ip-address
         String[] addr = r.address.split("/");
         
         doAction(n.sessionId, "up " + n.id.toString() + " " + addr[0]);
     }
     
-    public void connectionDown(Node n, Node r) throws IOException, SessionNotFoundException {
+    public void connectionDown(Node n, Node r) throws IOException, SessionNotFoundException, InterruptedException {
         // split address into netmask and ip-address
         String[] addr = r.address.split("/");
         
@@ -359,8 +366,9 @@ public class SlaveConnection extends Thread {
      * up <node-id> <ip-address>
      * 
      * down <node-id> <ip-address>
+     * @throws InterruptedException 
      */
-    private synchronized String doAction(Long session_id, String action) throws IOException, SessionNotFoundException {
+    private synchronized String doAction(Long session_id, String action) throws IOException, SessionNotFoundException, InterruptedException {
         // action <session-id> <action-to-execute>
         mWriter.write("action " + session_id.toString() + " " + action + "\n");
         mWriter.flush();
@@ -374,10 +382,10 @@ public class SlaveConnection extends Thread {
         }
         else if (code == 212) {
             String ret = "";
-            String data = mResponseQueue.poll();
+            String data = mResponseQueue.take();
             while (!".".equals(data)) {
                 ret += data;
-                data = mResponseQueue.poll();
+                data = mResponseQueue.take();
             }
             return ret;
         }
