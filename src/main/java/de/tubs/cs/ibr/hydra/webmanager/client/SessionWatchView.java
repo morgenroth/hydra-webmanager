@@ -1,6 +1,7 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.github.gwtbootstrap.client.ui.Button;
@@ -11,11 +12,13 @@ import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -87,15 +90,103 @@ public class SessionWatchView extends View {
         textStatsState.setText(s.state.toString());
         textStatsDesc.setText(s.name);
         
-        // set progress bar to inifite if state is pending
-        if (Session.State.PENDING.equals(s.state)) {
-            progressStats.setPercent(100);
-        } else {
-            progressStats.setPercent(0);
-        }
+        // update the progress bar and clock
+        updateProgress(s);
         
         // load nodes
         refreshNodeTable(s);
+        
+        // schedule / cancel progress update timer
+        if (Session.State.RUNNING.equals(s.state)) {
+            mRefreshProgressTimer.scheduleRepeating(100);
+        } else {
+            mRefreshProgressTimer.cancel();
+        }
+    }
+    
+    private void updateProgress(Session s) {
+        Long duration = null;
+        
+        switch (s.mobility.model) {
+            case RANDOM_WALK:
+                if (s.mobility.parameters.containsKey("duration")) {
+                    duration = Long.valueOf(s.mobility.parameters.get("duration"));
+                }
+                break;
+            case STATIC:
+                break;
+            case THE_ONE:
+                break;
+            default:
+                duration = null;
+                break;
+        }
+        
+        Long elapsedSeconds = null;
+        
+        if (s.started != null) {
+            Date now = null;
+            
+            if (s.finished != null) {
+                now = s.finished;
+            }
+            else if (s.aborted != null) {
+                now = s.aborted;
+            }
+            else {
+                now = new Date();
+            }
+            
+            // calculate the number of seconds since the progress has been started
+            elapsedSeconds = (now.getTime() - s.started.getTime()) / 1000;
+        }
+        
+        if (Session.State.RUNNING.equals(s.state)) {
+            // animate the progress bar in RUNNING state
+            progressStats.setType(ProgressBar.Style.ANIMATED);
+        } else if (Session.State.PENDING.equals(s.state)) {
+            // animate the progress bar in PENDING state
+            progressStats.setType(ProgressBar.Style.ANIMATED);
+        } else if (Session.State.DRAFT.equals(s.state)) {
+            // set progress bar to zero in DRAFT state
+            progressStats.setPercent(0);
+        } else {
+            // do not animate the progress bar in other states
+            progressStats.setType(ProgressBar.Style.STRIPED);
+        }
+        
+        if (duration == null) {
+            progressStats.setPercent(100);
+            if (elapsedSeconds == null) {
+                textStatsElapsedTime.setText(getDurationString(0));
+            } else {
+                textStatsElapsedTime.setText(getDurationString(elapsedSeconds));
+            }
+        } else {
+            if (elapsedSeconds == null) {
+                progressStats.setPercent(100);
+                textStatsElapsedTime.setText(getDurationString(0) + " / " + getDurationString(duration));
+            } else {
+                progressStats.setPercent(Long.valueOf((elapsedSeconds * 100) / duration).intValue());
+                textStatsElapsedTime.setText(getDurationString(elapsedSeconds) + " / " + getDurationString(duration));
+            }
+        }
+    }
+    
+    private Timer mRefreshProgressTimer = new Timer() {
+        @Override
+        public void run() {
+            updateProgress(mSession);
+        }
+    };
+    
+    private String getDurationString(long duration) {
+        long hours = duration / 3600;
+        long minutes = (duration % 3600) / 60;
+        long seconds = duration % 60;
+        
+        NumberFormat f = NumberFormat.getFormat("#00");
+        return f.format(hours) + ":" + f.format(minutes) + ":" + f.format(seconds);
     }
     
     private Slave getSlave(Long id) {

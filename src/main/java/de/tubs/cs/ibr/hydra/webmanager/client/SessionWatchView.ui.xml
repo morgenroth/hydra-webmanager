@@ -43,7 +43,7 @@
 							<b:ControlGroup>
 								<b:ControlLabel for="progressStats">Progress</b:ControlLabel>
 								<b:Controls>
-									<b:ProgressBar type="ANIMATED" percent="100" ui:field="progressStats" />
+									<b:ProgressBar type="ANIMATED" percent="0" ui:field="progressStats" />
 								</b:Controls>
 							</b:ControlGroup>
 						</b:Form>
