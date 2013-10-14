@@ -17,6 +17,8 @@ import de.tubs.cs.ibr.hydra.webmanager.server.data.Configuration;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SessionContainer;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.MovementProvider;
+import de.tubs.cs.ibr.hydra.webmanager.server.movement.NullMovement;
+import de.tubs.cs.ibr.hydra.webmanager.server.movement.RandomWalkMovement;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
@@ -30,6 +32,9 @@ public class SessionController {
     
     // session object
     Session mSession = null;
+    
+    // session container (configuration)
+    SessionContainer mContainer = null;
     
     // list of all slaves used for this session
     Set<Slave> mSlaves = null;
@@ -71,8 +76,23 @@ public class SessionController {
         // register event listener
         MasterServer.registerEventListener(mEventListener);
         
-        // try to distribute the session now
-        mMainExecutor.execute(mRunnableDistribute);
+        // create an archive and deploy it to the webserver directory
+        try {
+            mContainer = SessionContainer.getContainer(mSession);
+            
+            // trigger initialization of the session
+            mContainer.initialize(null);
+
+            // inject container parameters
+            mContainer.inject(mSession);
+            
+            // try to distribute the session now
+            mMainExecutor.execute(mRunnableDistribute);
+        } catch (IOException e) {
+            System.err.println("ERROR: " + e.toString());
+            // error
+            error();
+        }
     }
     
     public void abort() {
@@ -194,15 +214,10 @@ public class SessionController {
             // abort process if state changed to aborted
             if (isAborted()) return;
             
-            // reate an archive and deploy it to the webserver directory
+            // create an archive and deploy it to the webserver directory
             try {
-                SessionContainer sc = SessionContainer.getContainer(mSession);
-                
-                // trigger initialization of the session
-                sc.initialize(null);
-
                 // deploy the web archive
-                sc.deployArchive();
+                mContainer.deployArchive();
             } catch (IOException e) {
                 System.err.println("ERROR: " + e.toString());
                 // error
@@ -317,12 +332,20 @@ public class SessionController {
             // abort process if state changed to aborted
             if (isAborted()) return;
             
+            // prepare movement provider
+            prepareMovement();
+            
             // switch state to running
             setSessionState(Session.State.RUNNING);
             
-            // schedule a finish task
-            // TODO: add right time
-            scheduledFinish = mMainExecutor.schedule(mRunableFinish, 60, TimeUnit.SECONDS);
+            // schedule stats collection every 60 seconds
+            scheduledStatsCollector = mMainExecutor.scheduleAtFixedRate(mStatsCollector, 30, 60, TimeUnit.SECONDS);
+            
+            // schedule a finish task - if duration is specified
+            Long duration = mMovement.getDuration();
+            if (duration != null) {
+                scheduledFinish = mMainExecutor.schedule(mRunableFinish, duration, TimeUnit.SECONDS);
+            }
         }
     };
     
@@ -401,5 +424,22 @@ public class SessionController {
     
     private boolean isAborted() {
         return Session.State.ABORTED.equals( getSession().state );
+    }
+    
+    private void prepareMovement() {
+        switch (mSession.mobility.model) {
+            case RANDOM_WALK:
+                // random walk selected
+                mMovement = new RandomWalkMovement(mSession.mobility);
+                break;
+//            case STATIC:
+//                break;
+//            case THE_ONE:
+//                break;
+            default:
+                mMovement = new NullMovement();
+                break;
+            
+        }
     }
 }
