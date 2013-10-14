@@ -152,9 +152,22 @@ public class SessionContainer {
         IniEditor sessionConf = new IniEditor();
         
         try {
-            // load configuration of 'base'
+            // load session configuration
             sessionConf.load(new File(mPath, "config.properties"));
             
+            // load network configuration
+            s.minaddr = sessionConf.get("network", "min_address");
+            s.maxaddr = sessionConf.get("network", "max_address");
+            s.netmask = sessionConf.get("network", "netmask");
+            
+            // set network 'default' parameters
+            if ((s.minaddr == null) || (s.maxaddr == null) || (s.netmask == null)) {
+                s.minaddr = "10.242.2.0";
+                s.maxaddr = "10.242.255.254";
+                s.netmask = "255.255.0.0";
+            }
+            
+            // load mobility configuration
             MobilityParameterSet m = new MobilityParameterSet();
             if (sessionConf.hasOption("mobility", "model")) {
                 m.model = MobilityModel.fromString(sessionConf.get("mobility", "model"));
@@ -283,19 +296,48 @@ public class SessionContainer {
             e.printStackTrace();
         }
         
-        // apply movement parameters
-        if (s.mobility != null) {
-            IniEditor sessionConf = new IniEditor();
+        // save session properties
+        IniEditor sessionConf = new IniEditor();
+        File sessionFile = new File(mPath, "config.properties");
+        
+        try {
+            // load configuration of 'base'
+            sessionConf.load(sessionFile);
             
-            File sessionFile = new File(mPath, "config.properties");
+            // apply network configuration
+            if (!sessionConf.hasSection("network")) sessionConf.addSection("network");
             
-            try {
-                // load configuration of 'base'
-                sessionConf.load(sessionFile);
-                
+            if (s.minaddr != null) {
+                if (s.minaddr.length() == 0) {
+                    sessionConf.remove("network", "min_address");
+                } else {
+                    sessionConf.set("network", "min_address", s.minaddr.toString());
+                }
+            }
+            
+            if (s.maxaddr != null) {
+                if (s.maxaddr.length() == 0) {
+                    sessionConf.remove("network", "max_address");
+                } else {
+                    sessionConf.set("network", "max_address", s.maxaddr.toString());
+                }
+            }
+            
+            if (s.netmask != null) {
+                if (s.netmask.length() == 0) {
+                    sessionConf.remove("network", "netmask");
+                } else {
+                    sessionConf.set("network", "netmask", s.netmask.toString());
+                }
+            }
+            
+            // apply movement parameters
+            if (s.mobility != null) {
                 String section = null;
                 
                 // set mobility mode
+                if (!sessionConf.hasSection("mobility")) sessionConf.addSection("mobility");
+                
                 sessionConf.set("mobility", "model", s.mobility.model.toString());
                 
                 switch (s.mobility.model) {
@@ -321,6 +363,8 @@ public class SessionContainer {
                 }
                 
                 if (section != null) {
+                    if (!sessionConf.hasSection(section)) sessionConf.addSection(section);
+                    
                     for (Entry<String, String> e : s.mobility.parameters.entrySet()) {
                         // exclude 'connections'
                         if ("connections".equals(e.getKey()))
@@ -334,14 +378,14 @@ public class SessionContainer {
                             sessionConf.set(section, e.getKey(), e.getValue());
                         }
                     }
-                    
-                    // store the configuration
-                    sessionConf.save(sessionFile);
                 }
-            } catch (IOException e) {
-                // can not load / save configuration
-                e.printStackTrace();
             }
+            
+            // store the configuration
+            sessionConf.save(sessionFile);
+        } catch (IOException e) {
+            // can not load / save configuration
+            e.printStackTrace();
         }
     }
     

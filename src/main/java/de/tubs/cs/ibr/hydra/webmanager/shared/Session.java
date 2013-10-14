@@ -123,6 +123,11 @@ public class Session implements Serializable {
     public String qemu_template = null;
     public String vbox_template = null;
     
+    // network settings
+    public String minaddr = null;
+    public String maxaddr = null;
+    public String netmask = null;
+    
     // movement settings
     public MobilityParameterSet mobility = null;
 

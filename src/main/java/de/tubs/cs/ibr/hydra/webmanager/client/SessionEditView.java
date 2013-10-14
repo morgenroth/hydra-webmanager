@@ -58,9 +58,14 @@ public class SessionEditView extends View {
     @UiField ListBox listBaseImage;
     @UiField TextBox textBaseRepository;
     @UiField TextArea textBasePackages;
-    @UiField TextArea textBaseMonitorNodes;
+    
     @UiField TextArea textBaseQemuTemplate;
     @UiField TextArea textBaseVboxTemplate;
+    
+    @UiField TextBox textNetworkNodeAddressMin;
+    @UiField TextBox textNetworkNodeAddressMax;
+    @UiField TextBox textNetworkNodeNetmask;
+    @UiField TextArea textNetworkMonitorNodes;
     
     @UiField ListBox listMovementAlgorithm;
     @UiField DeckPanel panelMovement;
@@ -182,9 +187,14 @@ public class SessionEditView extends View {
         // load base
         textBaseRepository.setText(result.repository);
         textBasePackages.setText(result.packages);
-        textBaseMonitorNodes.setText(result.monitor_nodes);
         textBaseQemuTemplate.setText(result.qemu_template);
         textBaseVboxTemplate.setText(result.vbox_template);
+        
+        // load network
+        textNetworkNodeAddressMax.setText(result.maxaddr);
+        textNetworkNodeAddressMin.setText(result.minaddr);
+        textNetworkNodeNetmask.setText(result.netmask);
+        textNetworkMonitorNodes.setText(result.monitor_nodes);
         
         // load session images
         refreshSessionImages(result.image);
@@ -291,7 +301,7 @@ public class SessionEditView extends View {
                     mAlert.removeFromParent();
                 
                 mAlert.setType(AlertType.SUCCESS);
-                mAlert.setText("Successful removed!");
+                mAlert.setText("Successfully removed!");
                 mAlert.setClose(true);
                 mAlert.setAnimation(true);
                 alertColumn.add(mAlert);
@@ -324,7 +334,7 @@ public class SessionEditView extends View {
             public void onSuccess(Void result) {
                 alertColumn.clear();
                 mAlert.setType(AlertType.SUCCESS);
-                mAlert.setText("Successful saved!");
+                mAlert.setText("Successfully saved!");
                 mAlert.setClose(true);
                 mAlert.setAnimation(true);
                 alertColumn.add(mAlert);
@@ -371,9 +381,26 @@ public class SessionEditView extends View {
         mChangedSession.packages = textBasePackages.getText();
     }
     
-    @UiHandler("textBaseMonitorNodes")
-    void onBaseMonitorNodesChanged(ChangeEvent evt) {
-        mChangedSession.monitor_nodes = textBaseMonitorNodes.getText();
+    @UiHandler("textNetworkNodeAddressMax")
+    void onNetworkAddressChanged(ChangeEvent evt) {
+        mChangedSession.maxaddr = textNetworkNodeAddressMax.getText();
+        mChangedSession.minaddr = textNetworkNodeAddressMin.getText();
+        mChangedSession.netmask = textNetworkNodeNetmask.getText();
+    }
+    
+    @UiHandler("textNetworkNodeAddressMin")
+    void onNetworkMinAddressChanged(ChangeEvent evt) {
+        onNetworkAddressChanged(evt);
+    }
+    
+    @UiHandler("textNetworkNodeNetmask")
+    void onNetworkNetmaskChanged(ChangeEvent evt) {
+        onNetworkAddressChanged(evt);
+    }
+
+    @UiHandler("textNetworkMonitorNodes")
+    void onNetworkMonitorNodesChanged(ChangeEvent evt) {
+        mChangedSession.monitor_nodes = textNetworkMonitorNodes.getText();
     }
     
     @UiHandler("textBaseQemuTemplate")

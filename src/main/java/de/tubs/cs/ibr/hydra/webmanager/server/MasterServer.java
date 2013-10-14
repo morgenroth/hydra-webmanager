@@ -159,6 +159,10 @@ public class MasterServer implements ServletContextListener {
              * assign the nodes to available slaves
              */
             
+            // get IP range of this session
+            final NodeAddress baseAddr = new NodeAddress(session.minaddr, session.netmask);
+            final NodeAddress maxAddr = new NodeAddress(session.maxaddr, session.netmask);
+            
             try {
                 // return the slaves used for this session
                 Set<Slave> allocSlaves = new HashSet<Slave>();
@@ -191,7 +195,7 @@ public class MasterServer implements ServletContextListener {
                         db.assignNode(n, s);
                         
                         // assign unique IP addresses
-                        db.updateNode(n, findFreeAddress(allocAddresses));
+                        db.updateNode(n, findFreeAddress(allocAddresses, baseAddr, maxAddr));
                         
                         // set the new node state
                         db.updateNode(n, Node.State.SCHEDULED);
@@ -238,7 +242,7 @@ public class MasterServer implements ServletContextListener {
                             db.assignNode(n, s);
                             
                             // assign unique IP addresses
-                            db.updateNode(n, findFreeAddress(allocAddresses));
+                            db.updateNode(n, findFreeAddress(allocAddresses, baseAddr, maxAddr));
                             
                             // set the new node state
                             db.updateNode(n, Node.State.SCHEDULED);
@@ -266,11 +270,7 @@ public class MasterServer implements ServletContextListener {
         }
     }
     
-    private static String findFreeAddress(Set<String> allocAddresses) throws AddressPoolExhausedException {
-        // TODO: make IP range configurable
-        final NodeAddress baseAddr = new NodeAddress("10.242.2.0", "255.255.0.0");
-        final NodeAddress maxAddr = new NodeAddress("10.242.255.254", "255.255.0.0");
-        
+    private static String findFreeAddress(Set<String> allocAddresses, final NodeAddress baseAddr, final NodeAddress maxAddr) throws AddressPoolExhausedException {
         for (long n = baseAddr.getLongAddress() + 1; n < maxAddr.getLongAddress(); n++) {
             NodeAddress newAddr = new NodeAddress(n, baseAddr.getLongNetmask());
             String addr = newAddr.toString();

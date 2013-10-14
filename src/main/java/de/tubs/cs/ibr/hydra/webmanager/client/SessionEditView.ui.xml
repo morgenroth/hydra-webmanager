@@ -106,18 +106,6 @@
 
 							<!-- TODO: additional packages (GwtUpload) -->
 
-							<!-- Monitor Nodes -->
-							<b:ControlGroup>
-								<b:ControlLabel for="textMonitorNodes">Monitor nodes</b:ControlLabel>
-								<b:Controls>
-									<b:TextArea alternateSize="XLARGE" b:id="textMonitorNodes"
-										ui:field="textBaseMonitorNodes"></b:TextArea>
-									<b:HelpBlock>These hosts can communicate to all the nodes and
-										never gets blocked. Put each IP address (IPv4 only) into a
-										separate line.</b:HelpBlock>
-								</b:Controls>
-							</b:ControlGroup>
-
 							<!-- Node Template (qemu) -->
 							<b:ControlGroup>
 								<b:ControlLabel for="textQemuTemplate">Template (QEMU)</b:ControlLabel>
@@ -143,6 +131,49 @@
 					</b:Row>
 				</b:Form>
 		</b:Tab>
+			<!-- Network -->
+			<b:Tab heading="Network">
+				<b:Form type="HORIZONTAL">
+					<b:Row>
+						<b:Column size="12">
+							<!-- Address -->
+							<b:ControlGroup>
+								<b:ControlLabel for="textNodeAddressMin">Node's address</b:ControlLabel>
+								<b:Controls>
+									<b:InputAddOn prependText="Range" appendText=" ">
+										<b:TextBox alternateSize="MEDIUM" b:id="textNodeAddressMin"
+											ui:field="textNetworkNodeAddressMin" b:placeholder="10.242.2.0" />
+										<base:AddOn text="-" />
+										<b:TextBox alternateSize="MEDIUM" b:id="textNodeAddressMax"
+											ui:field="textNetworkNodeAddressMax" b:placeholder="10.242.255.254" />
+									</b:InputAddOn>
+								</b:Controls>
+							</b:ControlGroup>
+							<b:ControlGroup>
+								<b:ControlLabel for="textMonitorNodes">Node's netmask</b:ControlLabel>
+								<b:Controls>
+									<b:InputAddOn>
+										<b:TextBox alternateSize="XLARGE" b:id="textNodeNetmask"
+											ui:field="textNetworkNodeNetmask" b:placeholder="10.242.255.255"></b:TextBox>
+									</b:InputAddOn>
+								</b:Controls>
+							</b:ControlGroup>
+							
+							<!-- Monitor Nodes -->
+							<b:ControlGroup>
+								<b:ControlLabel for="textMonitorNodes">Monitor nodes</b:ControlLabel>
+								<b:Controls>
+									<b:TextArea alternateSize="XLARGE" b:id="textMonitorNodes"
+										ui:field="textNetworkMonitorNodes"></b:TextArea>
+									<b:HelpBlock>These hosts can communicate to all the nodes and
+										never gets blocked. Put each IP address (IPv4 only) into a
+										separate line.</b:HelpBlock>
+								</b:Controls>
+							</b:ControlGroup>
+						</b:Column>
+					</b:Row>
+				</b:Form>
+			</b:Tab>
 			<!-- Movement -->
 			<b:Tab heading="Movement">
 				<b:Form type="HORIZONTAL">
