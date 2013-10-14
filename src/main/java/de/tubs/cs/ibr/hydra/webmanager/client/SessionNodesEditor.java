@@ -414,7 +414,7 @@ public class SessionNodesEditor extends Composite {
             public void onSuccess(Void result) {
                 alertColumn.clear();
                 mAlert.setType(AlertType.SUCCESS);
-                mAlert.setText("Successful created!");
+                mAlert.setText("Successfully created!");
                 mAlert.setClose(true);
                 mAlert.setAnimation(true);
                 alertColumn.add(mAlert);
@@ -475,7 +475,7 @@ public class SessionNodesEditor extends Composite {
             public void onSuccess(Void result) {
                 alertColumn.clear();
                 mAlert.setType(AlertType.SUCCESS);
-                mAlert.setText("Successful changed!");
+                mAlert.setText("Successfully changed!");
                 mAlert.setClose(true);
                 mAlert.setAnimation(true);
                 alertColumn.add(mAlert);
@@ -527,7 +527,7 @@ public class SessionNodesEditor extends Composite {
             public void onSuccess(Void result) {
                 alertColumn.clear();
                 mAlert.setType(AlertType.SUCCESS);
-                mAlert.setText("Successful removed!");
+                mAlert.setText("Successfully removed!");
                 mAlert.setClose(true);
                 mAlert.setAnimation(true);
                 alertColumn.add(mAlert);
