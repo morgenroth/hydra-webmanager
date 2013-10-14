@@ -167,6 +167,10 @@ public class SessionContainer {
                 s.netmask = "255.255.0.0";
             }
             
+            // load stats configuration
+            String si = sessionConf.get("stats", "collect_interval");
+            s.stats_interval = (si == null) ? null : Long.valueOf(si);
+            
             // load mobility configuration
             MobilityParameterSet m = new MobilityParameterSet();
             if (sessionConf.hasOption("mobility", "model")) {
@@ -328,6 +332,17 @@ public class SessionContainer {
                     sessionConf.remove("network", "netmask");
                 } else {
                     sessionConf.set("network", "netmask", s.netmask.toString());
+                }
+            }
+            
+            // apply stats configuration
+            if (!sessionConf.hasSection("stats")) sessionConf.addSection("stats");
+            
+            if (s.stats_interval != null) {
+                if (s.stats_interval <= 0) {
+                    sessionConf.remove("stats", "collect_interval");
+                } else {
+                    sessionConf.set("stats", "collect_interval", s.stats_interval.toString());
                 }
             }
             

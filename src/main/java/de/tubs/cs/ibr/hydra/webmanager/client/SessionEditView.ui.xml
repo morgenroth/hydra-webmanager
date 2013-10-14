@@ -322,7 +322,26 @@
 						</b:Column>
 					</b:Row>
 				</b:Form>
-		</b:Tab>
+			</b:Tab>
+			<!-- Network -->
+			<b:Tab heading="Statistical data">
+				<b:Form type="HORIZONTAL">
+					<b:Row>
+						<b:Column size="12">
+							<!-- Address -->
+							<b:ControlGroup>
+								<b:ControlLabel for="textInterval">Collect interval</b:ControlLabel>
+								<b:Controls>
+									<b:InputAddOn prependIcon="TIME" appendText="s">
+										<b:TextBox alternateSize="SMALL" b:id="textInterval"
+											ui:field="textStatsInterval" b:placeholder="disabled" />
+									</b:InputAddOn>
+								</b:Controls>
+							</b:ControlGroup>
+						</b:Column>
+					</b:Row>
+				</b:Form>
+			</b:Tab>
 			<!-- Nodes -->
 			<b:Tab heading="Nodes" ui:field="tabNodes">
 				<hydra:SessionNodesEditor ui:field="nodesEditor" />

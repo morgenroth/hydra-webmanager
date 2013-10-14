@@ -128,6 +128,9 @@ public class Session implements Serializable {
     public String maxaddr = null;
     public String netmask = null;
     
+    // stats
+    public Long stats_interval = null;
+    
     // movement settings
     public MobilityParameterSet mobility = null;
 

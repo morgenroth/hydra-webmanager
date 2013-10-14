@@ -2,6 +2,7 @@
 package de.tubs.cs.ibr.hydra.webmanager.server.data;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -10,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -908,5 +910,75 @@ public class Database {
         }
         
         return ret;
+    }
+    
+    public void putStats(Node n, String data) {
+        try {
+            PreparedStatement st = mConn.prepareStatement("INSERT INTO stats (`session`, `node`, `data`) VALUES (?, ?, ?);");
+            
+            // set session id
+            st.setLong(1, n.sessionId);
+            
+            // set node id
+            st.setLong(2, n.id);
+            
+            // set data
+            st.setString(3, data);
+            
+            // execute insertion
+            st.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void dumpStats(Session session, OutputStream out) throws IOException {
+        try {
+            PreparedStatement st = mConn.prepareStatement("SELECT `timestamp`, `data` FROM stats WHERE session = ?;");
+            
+            // set session id
+            st.setLong(1, session.id);
+            
+            // execute query
+            ResultSet rs = st.executeQuery();
+            
+            while (rs.next()) {
+                String line = String.valueOf(rs.getLong(1)) + " " + rs.getString(2) + "\n";
+                out.write(line.getBytes());
+            }
+            
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void getStats(Session s, Node n, Date begin, Date end) {
+        try {
+            PreparedStatement st = null;
+            
+            if (n == null) {
+                st = mConn.prepareStatement("SELECT `timestamp`, `data` FROM stats WHERE session = ?;");
+            } else {
+                st = mConn.prepareStatement("SELECT `timestamp`, `data` FROM stats WHERE session = ? AND node = ?;");
+                
+                // set session id
+                st.setLong(2, n.id);
+            }
+            
+            // set session id
+            st.setLong(1, s.id);
+            
+            // execute query
+            ResultSet rs = st.executeQuery();
+            
+            while (rs.next()) {
+                // TODO: convert data
+            }
+            
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

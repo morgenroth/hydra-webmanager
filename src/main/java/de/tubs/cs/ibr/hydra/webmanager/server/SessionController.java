@@ -45,6 +45,7 @@ public class SessionController {
     
     ScheduledFuture<?> scheduledDistribution = null;
     ScheduledFuture<?> scheduledFinish = null;
+    ScheduledFuture<?> scheduledStatsCollector = null;
     
     public SessionController(Session s) {
         mSession = s;
@@ -141,6 +142,11 @@ public class SessionController {
     private void onDestroy() {
         // un-register event listener
         MasterServer.unregisterEventListener(mEventListener);
+        
+        // cancel stats collection
+        if (scheduledStatsCollector != null) {
+            scheduledStatsCollector.cancel(false);
+        }
         
         // cancel scheduled distribution
         if (scheduledDistribution != null) {
@@ -338,8 +344,10 @@ public class SessionController {
             // switch state to running
             setSessionState(Session.State.RUNNING);
             
-            // schedule stats collection every 60 seconds
-            scheduledStatsCollector = mMainExecutor.scheduleAtFixedRate(mStatsCollector, 30, 60, TimeUnit.SECONDS);
+            // schedule stats collection
+            if (mSession.stats_interval != null) {
+                scheduledStatsCollector = mMainExecutor.scheduleAtFixedRate(mStatsCollector, 0, mSession.stats_interval, TimeUnit.SECONDS);
+            }
             
             // schedule a finish task - if duration is specified
             Long duration = mMovement.getDuration();
@@ -440,6 +448,82 @@ public class SessionController {
                 mMovement = new NullMovement();
                 break;
             
+        }
+    }
+    
+    private Runnable mStatsCollector = new Runnable() {
+        @Override
+        public void run() {
+            // abort process if state changed to aborted
+            if (isAborted()) return;
+            
+            // get the database object
+            Database db = Database.getInstance();
+            
+            // get all nodes of this session
+            List<Node> nodes = db.getNodes(mSession);
+            
+            // prepare a latch
+            CountDownLatch latch = new CountDownLatch(mSlaves.size());
+            
+            // get all nodes on this slave
+            for (Slave s : mSlaves) {
+                // schedule prepare task for this slave
+                mPooledExecutor.execute( new StatsCollectTask(latch, s, nodes) );
+            }
+            
+            try {
+                // wait until all slaves are prepared
+                // maximum 10 seconds per node
+                if (!latch.await(10 * nodes.size(), TimeUnit.SECONDS)) {
+                    // timeout
+                    error();
+                }
+            } catch (InterruptedException e) {
+                // error
+                e.printStackTrace();
+            }
+        }
+    };
+    
+    private class StatsCollectTask implements Runnable {
+        
+        CountDownLatch mLatch = null;
+        Slave mSlave = null;
+        List<Node> mNodes = null;
+        
+        
+        public StatsCollectTask(CountDownLatch latch, Slave slave, List<Node> nodes) {
+            mLatch = latch;
+            mSlave = slave;
+            mNodes = nodes;
+        }
+
+        @Override
+        public void run() {
+            SlaveConnection conn = MasterServer.getSlaveConnection(mSlave);
+            
+            try {
+                // iterate over all nodes
+                for (Node n : mNodes) {
+                    if (n.assignedSlaveId != mSlave.id) continue;
+                    
+                    // collect stats of this node
+                    String stats = conn.getStats(n);
+                    
+                    // store the statistic data in the database
+                    Database.getInstance().putStats(n, stats);
+                }
+                
+                // decrement latch for each processed slave
+                mLatch.countDown();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (SessionNotFoundException e) {
+                // session not found - might be caused by ABORT
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

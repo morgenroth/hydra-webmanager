@@ -67,6 +67,8 @@ public class SessionEditView extends View {
     @UiField TextBox textNetworkNodeNetmask;
     @UiField TextArea textNetworkMonitorNodes;
     
+    @UiField TextBox textStatsInterval;
+    
     @UiField ListBox listMovementAlgorithm;
     @UiField DeckPanel panelMovement;
     
@@ -195,6 +197,13 @@ public class SessionEditView extends View {
         textNetworkNodeAddressMin.setText(result.minaddr);
         textNetworkNodeNetmask.setText(result.netmask);
         textNetworkMonitorNodes.setText(result.monitor_nodes);
+        
+        // load stats
+        if (result.stats_interval != null) {
+            textStatsInterval.setText(result.stats_interval.toString());
+        } else {
+            textStatsInterval.setText("");
+        }
         
         // load session images
         refreshSessionImages(result.image);
@@ -411,6 +420,12 @@ public class SessionEditView extends View {
     @UiHandler("textBaseVboxTemplate")
     void onBaseVboxTemplateChanged(ChangeEvent evt) {
         mChangedSession.vbox_template = textBaseVboxTemplate.getText();
+    }
+    
+    @UiHandler("textStatsInterval")
+    void onStatsIntervalChanged(ChangeEvent evt) {
+        String value = textStatsInterval.getText();
+        mChangedSession.stats_interval = (value.length() == 0) ? 0 : Long.valueOf(value);
     }
     
     @UiHandler("listMovementAlgorithm")
