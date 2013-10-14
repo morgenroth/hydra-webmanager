@@ -605,15 +605,15 @@ public class Database {
                 s.name = rs.getString(4);
                 if (rs.wasNull()) s.name = null;
                 
-                s.created = rs.getDate(5);
+                s.created = rs.getTimestamp(5);
                 
-                s.started = rs.getDate(6);
+                s.started = rs.getTimestamp(6);
                 if (rs.wasNull()) s.started = null;
                 
-                s.aborted = rs.getDate(7);
+                s.aborted = rs.getTimestamp(7);
                 if (rs.wasNull()) s.aborted = null;
                 
-                s.finished = rs.getDate(8);
+                s.finished = rs.getTimestamp(8);
                 if (rs.wasNull()) s.finished = null;
                 
                 s.state = Session.State.fromString(rs.getString(9));
@@ -645,15 +645,15 @@ public class Database {
                 s.name = rs.getString(4);
                 if (rs.wasNull()) s.name = null;
                 
-                s.created = rs.getDate(5);
+                s.created = rs.getTimestamp(5);
                 
-                s.started = rs.getDate(6);
+                s.started = rs.getTimestamp(6);
                 if (rs.wasNull()) s.started = null;
                 
-                s.aborted = rs.getDate(7);
+                s.aborted = rs.getTimestamp(7);
                 if (rs.wasNull()) s.aborted = null;
                 
-                s.finished = rs.getDate(8);
+                s.finished = rs.getTimestamp(8);
                 if (rs.wasNull()) s.finished = null;
                 
                 s.state = Session.State.fromString(rs.getString(9));
@@ -821,11 +821,14 @@ public class Database {
             if (Session.State.ABORTED.equals(state)) {
                 st = mConn.prepareStatement("UPDATE sessions SET `state` = ?, aborted = NOW() WHERE id = ?;");
             }
-            else if (Session.State.PENDING.equals(state)) {
+            else if (Session.State.RUNNING.equals(state)) {
                 st = mConn.prepareStatement("UPDATE sessions SET `state` = ?, started = NOW() WHERE id = ?;");
             }
             else if (Session.State.FINISHED.equals(state)) {
                 st = mConn.prepareStatement("UPDATE sessions SET `state` = ?, finished = NOW() WHERE id = ?;");
+            }
+            else if (Session.State.DRAFT.equals(state)) {
+                st = mConn.prepareStatement("UPDATE sessions SET `state` = ?, started = NULL, aborted = NULL, finished = NULL WHERE id = ?;");
             }
             else {
                 st = mConn.prepareStatement("UPDATE sessions SET `state` = ? WHERE id = ?;");
