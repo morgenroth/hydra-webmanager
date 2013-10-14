@@ -303,7 +303,7 @@ public class Database {
     public void resetSessions() {
         try {
             // reset all sessions to 'draft' state
-            PreparedStatement st = mConn.prepareStatement("UPDATE sessions SET `state` = 'draft'");
+            PreparedStatement st = mConn.prepareStatement("UPDATE sessions SET `state` = 'draft', `started` = NULL, `aborted` = NULL, `finished` = NULL");
             
             // execute the query
             st.execute();
