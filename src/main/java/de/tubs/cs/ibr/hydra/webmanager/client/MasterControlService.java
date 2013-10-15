@@ -1,6 +1,8 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
@@ -79,4 +81,21 @@ public interface MasterControlService extends RemoteService {
      * @return
      */
     public ArrayList<String> getAvailableImages();
+    
+    /**
+     * Get statistical data
+     * @param s The session the data belong to.
+     * @param n The node the data belong to. May be null.
+     * @param begin The begin of the selection range. May be null.
+     * @param end The end of the selection range. May be null.
+     * @return An hash-map of the JSON encoded data indexed by the node-id and timestamp.
+     */
+    public HashMap<Long, HashMap<Long, String>> getStatsData(Session s, Node n, Date begin, Date end);
+    
+    /**
+     * Get the latest data records
+     * @param The session the data belong to.
+     * @return An hash-map of the JSON encoded data indexed by the node-id.
+     */
+    public HashMap<Long, String> getStatsLatest(Session s);
 }

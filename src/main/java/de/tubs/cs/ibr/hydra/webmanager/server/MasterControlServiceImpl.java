@@ -2,6 +2,8 @@ package de.tubs.cs.ibr.hydra.webmanager.server;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -242,4 +244,15 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         MasterServer.fireNodeStateChanged(null);
     }
 
+    @Override
+    public HashMap<Long, HashMap<Long, String>> getStatsData(Session s, Node n, Date begin, Date end) {
+        Database db = Database.getInstance();
+        return db.getStats(s, n, begin, end);
+    }
+
+    @Override
+    public HashMap<Long, String> getStatsLatest(Session s) {
+        Database db = Database.getInstance();
+        return db.getStatsLatest(s);
+    }
 }

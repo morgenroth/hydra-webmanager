@@ -9,9 +9,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -303,7 +305,7 @@ public class Database {
     public void resetSessions() {
         try {
             // reset all sessions to 'draft' state
-            PreparedStatement st = mConn.prepareStatement("UPDATE sessions SET `state` = 'draft', `started` = NULL, `aborted` = NULL, `finished` = NULL");
+            PreparedStatement st = mConn.prepareStatement("UPDATE sessions SET `state` = 'draft', `started` = NULL, `aborted` = NULL, `finished` = NULL WHERE `state` != 'finished' AND `state` != 'error' AND `state` != 'aborted'");
             
             // execute the query
             st.execute();
@@ -953,32 +955,120 @@ public class Database {
         }
     }
     
-    public void getStats(Session s, Node n, Date begin, Date end) {
+    /**
+     * Get statistical data
+     * @param s The session the data belong to.
+     * @param n The node the data belong to. May be null.
+     * @param begin The begin of the selection range. May be null.
+     * @param end The end of the selection range. May be null.
+     * @return An hash-map of the JSON encoded data indexed by the node-id and timestamp.
+     */
+    public HashMap<Long, HashMap<Long, String>> getStats(Session s, Node n, Date begin, Date end) {
+        HashMap<Long, HashMap<Long, String>> ret = new HashMap<Long, HashMap<Long, String>>();
+        
         try {
             PreparedStatement st = null;
             
+            String range = "";
+            
+            if (begin != null)  range += " AND (`timestamp` >= ?)";
+            if (end != null)    range += " AND (`timestamp` <= ?)";
+            
+            int param_offset = 2;
+            
             if (n == null) {
-                st = mConn.prepareStatement("SELECT `timestamp`, `data` FROM stats WHERE session = ?;");
+                st = mConn.prepareStatement("SELECT `node`, `timestamp`, `data` FROM stats WHERE session = ?" + range + " ORDER BY timestamp;");
             } else {
-                st = mConn.prepareStatement("SELECT `timestamp`, `data` FROM stats WHERE session = ? AND node = ?;");
+                st = mConn.prepareStatement("SELECT `node`, `timestamp`, `data` FROM stats WHERE session = ? AND node = ?" + range + " ORDER BY timestamp, node;");
                 
                 // set session id
-                st.setLong(2, n.id);
+                st.setLong(param_offset, n.id);
+                param_offset++;
             }
             
             // set session id
             st.setLong(1, s.id);
             
+            if (begin != null) {
+                st.setTimestamp(param_offset, new Timestamp(begin.getTime()));
+                param_offset++;
+            }
+            if (end != null) {
+                st.setTimestamp(param_offset, new Timestamp(end.getTime()));
+                param_offset++;
+            }
+            
             // execute query
             ResultSet rs = st.executeQuery();
             
+            Long currentTimestamp = null;
+            HashMap<Long, String> dataset = null;
+            
             while (rs.next()) {
-                // TODO: convert data
+                Long nodeId = rs.getLong(1);
+                Long timestamp = rs.getTimestamp(2).getTime();
+                
+                if (currentTimestamp != timestamp) {
+                    dataset = new HashMap<Long, String>();
+                    ret.put(timestamp, dataset);
+                }
+                
+                // put data into the data-set
+                dataset.put(nodeId, rs.getString(3));
             }
             
             rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        
+        return ret;
+    }
+    
+    /**
+     * Get the latest data records
+     * @param The session the data belong to.
+     * @return An hash-map of the JSON encoded data indexed by the node-id.
+     */
+    public HashMap<Long, String> getStatsLatest(Session s) {
+        HashMap<Long, String> ret = new HashMap<Long, String>();
+        
+        try {
+            PreparedStatement count_st = mConn.prepareStatement("SELECT COUNT(*) FROM (SELECT DISTINCT `node` FROM stats WHERE session = ?) as nodes;");
+            
+            // set session id
+            count_st.setLong(1, s.id);
+            
+            ResultSet count_rs = count_st.executeQuery();
+            Long node_count = 0L;
+            if (count_rs.next()) {
+                node_count = count_rs.getLong(1);
+            }
+            count_rs.close();
+            
+            PreparedStatement st = mConn.prepareStatement("SELECT `node`, `data` FROM stats WHERE session = ? ORDER BY timestamp DESC, node LIMIT ?;");
+            
+            // set session id
+            st.setLong(1, s.id);
+
+            // limit the number of returned records
+            st.setLong(2, node_count);
+            
+            // execute query
+            ResultSet rs = st.executeQuery();
+
+            while (rs.next()) {
+                Long nodeId = rs.getLong(1);
+
+                // put data into the data-set
+                ret.put(nodeId, rs.getString(2));
+            }
+            
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return ret;
     }
 }
