@@ -1,7 +1,8 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
-	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
+	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui"
+	xmlns:viz="urn:import:com.google.gwt.visualization.client.visualizations">
 	<ui:style type='de.tubs.cs.ibr.hydra.webmanager.client.SessionWatchView.Style'>
 		.activated { color:green; }
 		.enabled { color:black; }
@@ -17,33 +18,33 @@
 		<b:Row>
 			<b:Column size="12">
 				<b:TabPanel>
-					<b:Tab heading="Stats" active="true">
+					<b:Tab heading="Details" active="true">
 						<b:Form type="HORIZONTAL">
 							<b:ControlGroup>
 								<b:ControlLabel for="textDescription">Description</b:ControlLabel>
 								<b:Controls>
-									<b:TextBox alternateSize="XLARGE" b:id="textDescription" b:readOnly="true" ui:field="textStatsDesc" />
+									<b:TextBox alternateSize="XLARGE" b:id="textDescription" b:readOnly="true" ui:field="textDetailsDesc" />
 								</b:Controls>
 							</b:ControlGroup>
 							<b:ControlGroup>
 								<b:ControlLabel for="textState">State</b:ControlLabel>
 								<b:Controls>
 									<b:TextBox alternateSize="XLARGE" b:id="textState"
-										ui:field="textStatsState" b:readOnly="true" text="initial"></b:TextBox>
+										ui:field="textDetailsState" b:readOnly="true" text="initial"></b:TextBox>
 								</b:Controls>
 							</b:ControlGroup>
 							<b:ControlGroup>
 								<b:ControlLabel for="textElapsedTime">Elapsed Time</b:ControlLabel>
 								<b:Controls>
 									<b:InputAddOn prependIcon="TIME">
-										<b:TextBox b:id="textElapsedTime" ui:field="textStatsElapsedTime" b:readOnly="true" text="00:00:00 / 00:00:00" />
+										<b:TextBox b:id="textElapsedTime" ui:field="textDetailsElapsedTime" b:readOnly="true" text="00:00:00 / 00:00:00" />
 									</b:InputAddOn>
 								</b:Controls>
 							</b:ControlGroup>
 							<b:ControlGroup>
-								<b:ControlLabel for="progressStats">Progress</b:ControlLabel>
+								<b:ControlLabel for="progressDetails">Progress</b:ControlLabel>
 								<b:Controls>
-									<b:ProgressBar type="ANIMATED" percent="0" ui:field="progressStats" />
+									<b:ProgressBar type="ANIMATED" percent="0" ui:field="progressDetails" />
 								</b:Controls>
 							</b:ControlGroup>
 						</b:Form>
@@ -53,6 +54,30 @@
 							<!-- table of nodes -->
 							<b:Column size="12">
 								<b:CellTable ui:field="tableNodes" />
+							</b:Column>
+						</b:Row>
+					</b:Tab>
+					<b:Tab heading="Stats">
+						<b:Row>
+							<b:Column size="6">
+								<b:Heading size="3">Traffic</b:Heading>
+								<g:SimplePanel ui:field="panelStatsTraffic" />
+							</b:Column>
+							<b:Column size="6">
+								<b:Heading size="3">Bundles</b:Heading>
+								<g:SimplePanel ui:field="panelStatsBundles" />
+							</b:Column>
+							<b:Column size="4">
+								<b:Heading size="3" ui:field="headingStatsTrafficNode">Traffic</b:Heading>
+								<g:SimplePanel ui:field="panelStatsTrafficNode" />
+							</b:Column>
+							<b:Column size="4">
+								<b:Heading size="3" ui:field="headingStatsBundlesNode">Bundles</b:Heading>
+								<g:SimplePanel ui:field="panelStatsBundlesNode" />
+							</b:Column>
+							<b:Column size="4">
+								<b:Heading size="3" ui:field="headingStatsClockNode">Clock</b:Heading>
+								<g:SimplePanel ui:field="panelStatsClockNode" />
 							</b:Column>
 						</b:Row>
 					</b:Tab>
