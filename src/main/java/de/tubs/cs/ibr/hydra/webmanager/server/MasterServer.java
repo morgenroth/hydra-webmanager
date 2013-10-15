@@ -383,6 +383,14 @@ public class MasterServer implements ServletContextListener {
         MasterServer.broadcast(EventType.SESSION_DATA_UPDATED, entries);
     }
     
+    public static void fireSessionStatsUpdated(final Session s) {
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+        
+        // broadcast session change
+        MasterServer.broadcast(EventType.SESSION_STATS_UPDATED, entries);
+    }
+    
     public static void fireNodeStateChanged(final Node n) {
         List<EventExtra> entries = null;
         

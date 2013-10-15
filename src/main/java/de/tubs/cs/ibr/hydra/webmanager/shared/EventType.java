@@ -7,6 +7,7 @@ public enum EventType {
     SESSION_STATE_CHANGED("session_state_changed"),
     SESSION_ADDED("session_added"),
     SESSION_REMOVED("session_removed"),
+    SESSION_STATS_UPDATED("session_data_updated"),
     SLAVE_STATE_CHANGED("slave_state_changed"),
     NODE_STATE_CHANGED("node_state_changed");
     
@@ -57,6 +58,9 @@ public enum EventType {
         }
         else if (SESSION_DATA_UPDATED.getCode().equals(data)) {
             return SESSION_DATA_UPDATED;
+        }
+        else if (SESSION_STATS_UPDATED.getCode().equals(data)) {
+            return SESSION_STATS_UPDATED;
         }
         
         return NONE;

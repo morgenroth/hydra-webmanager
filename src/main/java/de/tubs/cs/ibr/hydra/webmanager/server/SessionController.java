@@ -479,6 +479,9 @@ public class SessionController {
                     // timeout
                     error();
                 }
+                
+                // notify visualizations
+                MasterServer.fireSessionStatsUpdated(mSession);
             } catch (InterruptedException e) {
                 // error
                 e.printStackTrace();
