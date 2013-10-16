@@ -42,6 +42,9 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     DataTable mDataChartTraffic = null;
     DataTable mDataChartBundles = null;
     
+    // interface mapping
+    HashMap<String, Integer> mInterfaceMap = new HashMap<String, Integer>();
+    
     // is true if all charts are initialized
     boolean initialized = false;
 
@@ -71,10 +74,10 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
             Double height = Double.valueOf(width) * Double.valueOf(9.0 / 16.0);
             mOptionsChart.setSize(width, height.intValue());
             
-            if (mDataChartTraffic != null)
+            if ((mDataChartTraffic != null) && (mDataChartTraffic.getNumberOfRows() > 0))
                 mChartTraffic.draw(mDataChartTraffic, mOptionsChart);
             
-            if (mDataChartBundles != null)
+            if ((mDataChartBundles != null) && (mDataChartBundles.getNumberOfRows() > 0))
                 mChartBundles.draw(mDataChartBundles, mOptionsChart);
         }
         
@@ -188,7 +191,9 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
             mDataChartBundles.addColumn(ColumnType.NUMBER, "Generated");
             mDataChartBundles.addRows(result.size());
             
-            mDataChartTraffic = null;
+            mDataChartTraffic = DataTable.create();
+            mDataChartTraffic.addColumn(ColumnType.STRING, "Nodes");
+            mDataChartTraffic.addRows(result.size());
         }
 
         Integer row = 0;
@@ -196,36 +201,28 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
             Long nodeId = e.getKey();
             DataPoint data = e.getValue();
             
-            // generate the traffic columns
-            if (mDataChartTraffic == null) {
-                mDataChartTraffic = DataTable.create();
-                
-                mDataChartTraffic.addColumn(ColumnType.STRING, "Nodes");
-                
-                for (DataPoint.InterfaceStats iface : data.ifaces.values()) {
-                    // skip "lo" and "eth1" interface
-                    if (iface.name.equals("lo") || iface.name.equals("eth1")) continue;
-                    
-                    mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (rx)");
-                    mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (tx)");
-                }
-                
-                mDataChartTraffic.addRows(result.size());
-            }
-            
             if (rebuild)
                 mDataChartTraffic.setValue(row, 0, mNodes.get(nodeId).name);
-            
-            Integer index = 1;
             
             for (DataPoint.InterfaceStats iface : data.ifaces.values()) {
                 // skip "lo" and "eth1" interface
                 if (iface.name.equals("lo") || iface.name.equals("eth1")) continue;
-
-                mDataChartTraffic.setValue(row, index, iface.rx);
-                mDataChartTraffic.setValue(row, index + 1, iface.tx);
                 
-                index += 2;
+                // add new columns if necessary
+                int rx_index = 0, tx_index = 1;
+                
+                if (mInterfaceMap.containsKey(iface.name + "_rx")) {
+                    rx_index = mInterfaceMap.get(iface.name + "_rx");
+                    tx_index = mInterfaceMap.get(iface.name + "_tx");
+                } else {
+                    rx_index = mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (rx)");
+                    tx_index = mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (rx)");
+                    mInterfaceMap.put(iface.name + "_rx", rx_index);
+                    mInterfaceMap.put(iface.name + "_tx", tx_index);
+                }
+
+                mDataChartTraffic.setValue(row, rx_index, iface.rx);
+                mDataChartTraffic.setValue(row, tx_index, iface.tx);
             }
             
             if (rebuild)
