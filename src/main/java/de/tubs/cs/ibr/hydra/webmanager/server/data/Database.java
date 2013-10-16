@@ -23,13 +23,10 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import org.mortbay.util.ajax.JSON;
-
 import com.google.gwt.dev.json.JsonException;
 import com.google.gwt.dev.json.JsonObject;
 import com.google.gwt.dev.json.JsonValue;
 import com.google.gwt.dev.json.Pair;
-import com.google.gwt.json.client.JSONValue;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
 import de.tubs.cs.ibr.hydra.webmanager.server.Task;
@@ -930,10 +927,6 @@ public class Database {
     public void putStats(Node n, String data) {
         // do not store 'null' data
         if (data == null) return;
-        
-        // convert number-strings to json numbers
-        JSONValue json = (JSONValue)JSON.parse(data);
-        
         
         try {
             PreparedStatement st = mConn.prepareStatement("INSERT INTO stats (`session`, `node`, `data`) VALUES (?, ?, ?);");
