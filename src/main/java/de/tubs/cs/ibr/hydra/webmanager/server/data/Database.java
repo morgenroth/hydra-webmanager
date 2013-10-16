@@ -3,6 +3,7 @@ package de.tubs.cs.ibr.hydra.webmanager.server.data;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -12,16 +13,28 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import org.mortbay.util.ajax.JSON;
+
+import com.google.gwt.dev.json.JsonException;
+import com.google.gwt.dev.json.JsonObject;
+import com.google.gwt.dev.json.JsonValue;
+import com.google.gwt.dev.json.Pair;
+import com.google.gwt.json.client.JSONValue;
+
 import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
 import de.tubs.cs.ibr.hydra.webmanager.server.Task;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
+import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
@@ -915,6 +928,13 @@ public class Database {
     }
     
     public void putStats(Node n, String data) {
+        // do not store 'null' data
+        if (data == null) return;
+        
+        // convert number-strings to json numbers
+        JSONValue json = (JSONValue)JSON.parse(data);
+        
+        
         try {
             PreparedStatement st = mConn.prepareStatement("INSERT INTO stats (`session`, `node`, `data`) VALUES (?, ?, ?);");
             
@@ -955,6 +975,14 @@ public class Database {
         }
     }
     
+    private ArrayList<DataPoint> getAverageStats(Session s, Date begin, Date end) {
+        ArrayList<DataPoint> ret = new ArrayList<DataPoint>();
+        
+        // TODO: calculate average stats
+        
+        return ret;
+    }
+    
     /**
      * Get statistical data
      * @param s The session the data belong to.
@@ -963,28 +991,23 @@ public class Database {
      * @param end The end of the selection range. May be null.
      * @return An hash-map of the JSON encoded data indexed by the node-id and timestamp.
      */
-    public HashMap<Long, HashMap<Long, String>> getStats(Session s, Node n, Date begin, Date end) {
-        HashMap<Long, HashMap<Long, String>> ret = new HashMap<Long, HashMap<Long, String>>();
+    public ArrayList<DataPoint> getStats(Session s, Node n, Date begin, Date end) {
+        // return average stats if no node is given
+        if (n == null) return getAverageStats(s, begin, end);
+        
+        ArrayList<DataPoint> ret = new ArrayList<DataPoint>();
         
         try {
-            PreparedStatement st = null;
-            
             String range = "";
-            
-            if (begin != null)  range += " AND (`timestamp` >= ?)";
+            if (begin != null)  range += " AND (`timestamp` > ?)";
             if (end != null)    range += " AND (`timestamp` <= ?)";
-            
             int param_offset = 2;
             
-            if (n == null) {
-                st = mConn.prepareStatement("SELECT `node`, `timestamp`, `data` FROM stats WHERE session = ?" + range + " ORDER BY timestamp;");
-            } else {
-                st = mConn.prepareStatement("SELECT `node`, `timestamp`, `data` FROM stats WHERE session = ? AND node = ?" + range + " ORDER BY timestamp, node;");
-                
-                // set session id
-                st.setLong(param_offset, n.id);
-                param_offset++;
-            }
+            PreparedStatement st = mConn.prepareStatement("SELECT `timestamp`, `data` FROM stats WHERE session = ? AND node = ?" + range + " ORDER BY timestamp DESC LIMIT 0,100;");
+            
+            // set session id
+            st.setLong(param_offset, n.id);
+            param_offset++;
             
             // set session id
             st.setLong(1, s.id);
@@ -1001,26 +1024,20 @@ public class Database {
             // execute query
             ResultSet rs = st.executeQuery();
             
-            Long currentTimestamp = null;
-            HashMap<Long, String> dataset = null;
-            
             while (rs.next()) {
-                Long nodeId = rs.getLong(1);
-                Long timestamp = rs.getTimestamp(2).getTime();
-                
-                if (currentTimestamp != timestamp) {
-                    dataset = new HashMap<Long, String>();
-                    ret.put(timestamp, dataset);
-                }
-                
+                DataPoint data = transformJsonData(rs.getTimestamp(1), rs.getString(2));
+
                 // put data into the data-set
-                dataset.put(nodeId, rs.getString(3));
+                ret.add(data);
             }
             
             rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        
+        // reverse ordering of data
+        Collections.reverse(ret);
         
         return ret;
     }
@@ -1030,8 +1047,11 @@ public class Database {
      * @param The session the data belong to.
      * @return An hash-map of the JSON encoded data indexed by the node-id.
      */
-    public HashMap<Long, String> getStatsLatest(Session s) {
-        HashMap<Long, String> ret = new HashMap<Long, String>();
+    public HashMap<Long, DataPoint> getStatsLatest(Session s) {
+        HashMap<Long, DataPoint> ret = new HashMap<Long, DataPoint>();
+        
+        // return an empty hash-map if session is not set
+        if (s == null) return ret;
         
         try {
             PreparedStatement count_st = mConn.prepareStatement("SELECT COUNT(*) FROM (SELECT DISTINCT `node` FROM stats WHERE session = ?) as nodes;");
@@ -1046,7 +1066,7 @@ public class Database {
             }
             count_rs.close();
             
-            PreparedStatement st = mConn.prepareStatement("SELECT `node`, `data` FROM stats WHERE session = ? ORDER BY timestamp DESC, node LIMIT ?;");
+            PreparedStatement st = mConn.prepareStatement("SELECT `timestamp`, `node`, `data` FROM stats WHERE session = ? ORDER BY timestamp DESC, node LIMIT ?;");
             
             // set session id
             st.setLong(1, s.id);
@@ -1058,14 +1078,107 @@ public class Database {
             ResultSet rs = st.executeQuery();
 
             while (rs.next()) {
-                Long nodeId = rs.getLong(1);
+                Long nodeId = rs.getLong(2);
+                
+                DataPoint data = transformJsonData(rs.getTimestamp(1), rs.getString(3));
 
                 // put data into the data-set
-                ret.put(nodeId, rs.getString(2));
+                ret.put(nodeId, data);
             }
             
             rs.close();
         } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return ret;
+    }
+    
+    private DataPoint transformJsonData(Timestamp ts, String jsonData) {
+        /**
+         * Data example
+         * {
+         * "position": {"y": "0", "x": "0", "state": "0", "z": "0"}, 
+         * "dtnd": {
+         *   "info": {"Neighbors": "0", "Uptime": "38", "Storage-size": "0"}, 
+         *   "bundles": {"Received": "0", "Generated": "0", "Stored": "0", "Transmitted": "0", "Aborted": "0", "Requeued": "0", "Expired": "0", "Queued": "0"}
+         * }, 
+         * "iface": {"lo": {"rx": "0", "tx": "0"}, "eth1": {"rx": "0", "tx": "2846"}, "eth0": {"rx": "7330", "tx": "2784"}}, 
+         * "clock": {"Delay": "0.02614", "Timex-tick": "10000", "Timex-offset": "0", "Timex-freq": "0", "Offset": "1.07629"}
+         * }
+         */
+        
+        DataPoint ret = new DataPoint();
+        
+        ret.time = ts;
+        
+        // translate JSON to Object
+        try {
+            JsonObject obj = JsonObject.parse(new StringReader(jsonData));
+            
+            Iterator<Pair<String, JsonValue>> it = obj.iterator();
+            
+            while (it.hasNext()) {
+                Pair<String, JsonValue> p = it.next();
+                String key = p.getA();
+                JsonObject data = p.getB().asObject();
+                
+                if ("position".equals(key)) {
+                    double x = Double.valueOf(data.get("x").asString().getString());
+                    double y = Double.valueOf(data.get("y").asString().getString());
+                    double z = Double.valueOf(data.get("z").asString().getString());
+                    ret.coord = new Coordinates(x, y, z);
+                }
+                else if ("dtnd".equals(key)) {
+                    Iterator<Pair<String, JsonValue>> dtnd_it = data.iterator();
+                    while (dtnd_it.hasNext()) {
+                        Pair<String, JsonValue> dtnd_p = dtnd_it.next();
+                        String dtnd_key = dtnd_p.getA();
+                        JsonObject dtnd_data = dtnd_p.getB().asObject();
+                        
+                        if ("info".equals(dtnd_key)) {
+                            ret.dtninfo.neighbors = Long.valueOf(dtnd_data.get("Neighbors").asString().getString());
+                            ret.dtninfo.uptime = Long.valueOf(dtnd_data.get("Uptime").asString().getString());
+                            ret.dtninfo.storage_size = Long.valueOf(dtnd_data.get("Storage-size").asString().getString());
+                        }
+                        else if ("bundles".equals(dtnd_key)) {
+                            ret.bundlestats.aborted = Long.valueOf(dtnd_data.get("Aborted").asString().getString());
+                            ret.bundlestats.expired = Long.valueOf(dtnd_data.get("Expired").asString().getString());
+                            ret.bundlestats.generated = Long.valueOf(dtnd_data.get("Generated").asString().getString());
+                            ret.bundlestats.queued = Long.valueOf(dtnd_data.get("Queued").asString().getString());
+                            ret.bundlestats.received = Long.valueOf(dtnd_data.get("Received").asString().getString());
+                            ret.bundlestats.requeued = Long.valueOf(dtnd_data.get("Requeued").asString().getString());
+                            ret.bundlestats.transmitted = Long.valueOf(dtnd_data.get("Transmitted").asString().getString());
+                            ret.bundlestats.stored = Long.valueOf(dtnd_data.get("Stored").asString().getString());
+                        }
+                    }
+                }
+                else if ("iface".equals(key)) {
+                    Iterator<Pair<String, JsonValue>> iface_it = data.iterator();
+                    while (iface_it.hasNext()) {
+                        Pair<String, JsonValue> iface_p = iface_it.next();
+                        
+                        DataPoint.IfaceStats iface = new DataPoint.IfaceStats();
+                        iface.name = iface_p.getA();
+                        
+                        JsonObject iface_data = iface_p.getB().asObject();
+                        iface.rx = Long.valueOf(iface_data.get("rx").asString().getString());
+                        iface.tx = Long.valueOf(iface_data.get("tx").asString().getString());
+                        
+                        ret.ifaces.put(iface.name, iface);
+                    }
+                }
+                else if ("clock".equals(key)) {
+                    ret.clock.delay = Double.valueOf(data.get("Delay").asString().getString());
+                    ret.clock.offset = Double.valueOf(data.get("Offset").asString().getString());
+                    ret.clock.timex_tick = Long.valueOf(data.get("Timex-tick").asString().getString());
+                    ret.clock.timex_offset = Long.valueOf(data.get("Timex-offset").asString().getString());
+                    ret.clock.timex_freq = Long.valueOf(data.get("Timex-freq").asString().getString());
+                }
+            }
+        } catch (JsonException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
         

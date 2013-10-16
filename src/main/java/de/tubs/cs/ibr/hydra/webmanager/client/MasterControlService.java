@@ -7,6 +7,7 @@ import java.util.HashMap;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
@@ -85,17 +86,17 @@ public interface MasterControlService extends RemoteService {
     /**
      * Get statistical data
      * @param s The session the data belong to.
-     * @param n The node the data belong to. May be null.
+     * @param n The node the data belong to.
      * @param begin The begin of the selection range. May be null.
      * @param end The end of the selection range. May be null.
-     * @return An hash-map of the JSON encoded data indexed by the node-id and timestamp.
+     * @return An array-list of the data-points
      */
-    public HashMap<Long, HashMap<Long, String>> getStatsData(Session s, Node n, Date begin, Date end);
+    public ArrayList<DataPoint> getStatsData(Session s, Node n, Date begin, Date end);
     
     /**
      * Get the latest data records
      * @param The session the data belong to.
-     * @return An hash-map of the JSON encoded data indexed by the node-id.
+     * @return An hash-map of the data points indexed by the node-id.
      */
-    public HashMap<Long, String> getStatsLatest(Session s);
+    public HashMap<Long, DataPoint> getStatsLatest(Session s);
 }
