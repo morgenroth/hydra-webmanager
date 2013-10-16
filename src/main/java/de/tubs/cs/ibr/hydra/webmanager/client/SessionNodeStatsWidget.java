@@ -8,6 +8,7 @@ import com.github.gwtbootstrap.client.ui.Heading;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.logical.shared.ResizeHandler;
+import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -177,6 +178,15 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         if (initialized) updateStatsData(false);
     }
     
+    private String getDurationString(long duration) {
+        long hours = duration / 3600;
+        long minutes = (duration % 3600) / 60;
+        long seconds = duration % 60;
+        
+        NumberFormat f = NumberFormat.getFormat("#00");
+        return f.format(hours) + ":" + f.format(minutes) + ":" + f.format(seconds);
+    }
+    
     private void transformStatsData(ArrayList<DataPoint> result) {
         // get the current number of rows
         if (mDataChartTraffic != null) {
@@ -189,6 +199,14 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         // iterate through all the data
         for (DataPoint data : result)
         {
+            // elapsed time
+            Long elapsedSeconds = 0L;
+            
+            if (mSession.started != null) {
+                // calculate the number of seconds since the progress has been started
+                elapsedSeconds = (data.time.getTime() - mSession.started.getTime()) / 1000;
+            }
+            
             /**
              * process traffic stats
              */
@@ -197,7 +215,7 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
             {
                 mDataChartTraffic = DataTable.create();
                 
-                mDataChartTraffic.addColumn(ColumnType.DATETIME, "Time");
+                mDataChartTraffic.addColumn(ColumnType.STRING, "Time");
                 
                 // columns are added dynamically based on the available interfaces
                 for (DataPoint.InterfaceStats iface : data.ifaces.values()) {
@@ -215,7 +233,7 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
             else
             {
                 // set timestamp
-                mDataChartTraffic.setValue(mLastRow, 0, data.time);
+                mDataChartTraffic.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
                 
                 // index for the row data
                 Integer index = 1;
@@ -244,6 +262,7 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
             if (mDataChartBundles == null)
             {
                 mDataChartBundles = DataTable.create();
+                mDataChartBundles.addColumn(ColumnType.STRING, "Time");
                 mDataChartBundles.addColumn(ColumnType.NUMBER, "Received");
                 mDataChartBundles.addColumn(ColumnType.NUMBER, "Transmitted");
                 mDataChartBundles.addColumn(ColumnType.NUMBER, "Generated");
@@ -251,9 +270,10 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
             }
             else
             {
-                mDataChartBundles.setValue(mLastRow, 0, data.bundlestats.received - mLastObj.bundlestats.received);
-                mDataChartBundles.setValue(mLastRow, 1, data.bundlestats.transmitted - mLastObj.bundlestats.transmitted);
-                mDataChartBundles.setValue(mLastRow, 2, data.bundlestats.generated - mLastObj.bundlestats.generated);
+                mDataChartBundles.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
+                mDataChartBundles.setValue(mLastRow, 1, data.bundlestats.received - mLastObj.bundlestats.received);
+                mDataChartBundles.setValue(mLastRow, 2, data.bundlestats.transmitted - mLastObj.bundlestats.transmitted);
+                mDataChartBundles.setValue(mLastRow, 3, data.bundlestats.generated - mLastObj.bundlestats.generated);
             }
             
             /**
@@ -263,12 +283,14 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
             if (mDataChartClock == null)
             {
                 mDataChartClock = DataTable.create();
+                mDataChartClock.addColumn(ColumnType.STRING, "Time");
                 mDataChartClock.addColumn(ColumnType.NUMBER, "Offset");
                 mDataChartClock.addRows(result.size() - 1);
             }
             else
             {
-                mDataChartClock.setValue(mLastRow, 0, data.clock.offset);
+                mDataChartClock.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
+                mDataChartClock.setValue(mLastRow, 1, data.clock.offset);
             }
             
             // store data of the last item for incremental processing
@@ -283,7 +305,7 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     public void onResize(ResizeEvent event) {
         if (initialized) {
             Integer width = panelTraffic.getOffsetWidth();
-            Double height = Double.valueOf(width) * Double.valueOf(9.0 / 16.0);
+            Double height = Double.valueOf(width) * Double.valueOf(11.0 / 16.0);
             mOptionsChart.setSize(width, height.intValue());
             
             if (mDataChartTraffic != null)
