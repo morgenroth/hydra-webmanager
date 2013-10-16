@@ -13,15 +13,15 @@
 			</b:Column>
 		</b:Row>
 		<b:Row>
-			<b:Column size="4">
+			<b:Column size="6">
 				<b:Heading size="4" ui:field="headingTraffic">Traffic</b:Heading>
 				<g:SimplePanel ui:field="panelTraffic" />
 			</b:Column>
-			<b:Column size="4">
+			<b:Column size="6">
 				<b:Heading size="4" ui:field="headingBundles">Bundles</b:Heading>
 				<g:SimplePanel ui:field="panelBundles" />
 			</b:Column>
-			<b:Column size="4">
+			<b:Column size="6">
 				<b:Heading size="4" ui:field="headingClock">Clock</b:Heading>
 				<g:SimplePanel ui:field="panelClock" />
 			</b:Column>

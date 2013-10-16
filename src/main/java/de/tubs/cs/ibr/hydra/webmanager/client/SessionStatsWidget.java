@@ -6,8 +6,11 @@ import java.util.Map.Entry;
 
 import com.github.gwtbootstrap.client.ui.Container;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.logical.shared.ResizeEvent;
+import com.google.gwt.event.logical.shared.ResizeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -22,7 +25,7 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
-public class SessionStatsWidget extends Composite {
+public class SessionStatsWidget extends Composite implements ResizeHandler {
 
     private static SessionStatsViewUiBinder uiBinder = GWT.create(SessionStatsViewUiBinder.class);
     
@@ -61,9 +64,32 @@ public class SessionStatsWidget extends Composite {
         return mNodes;
     }
     
+    @Override
+    public void onResize(ResizeEvent event) {
+        if (initialized) {
+            Integer width = panelTraffic.getOffsetWidth();
+            Double height = Double.valueOf(width) * Double.valueOf(9.0 / 16.0);
+            mOptionsChart.setSize(width, height.intValue());
+            
+            if (mDataChartTraffic != null)
+                mChartTraffic.draw(mDataChartTraffic, mOptionsChart);
+            
+            if (mDataChartBundles != null)
+                mChartBundles.draw(mDataChartBundles, mOptionsChart);
+        }
+        
+        // reload stats of nodes
+        for (SessionNodeStatsWidget w : mNodeStats) {
+            w.onResize(event);
+        }
+    }
+    
     public void initialize(final Session session) {
         // load chart library
         initializeChart();
+        
+        // add resize handler
+        Window.addResizeHandler(this);
 
         // load the list of nodes
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
@@ -97,8 +123,8 @@ public class SessionStatsWidget extends Composite {
         // create chart options
         mOptionsChart = ColumnChart.Options.create();
         mOptionsChart.setLegend(LegendPosition.BOTTOM);
-        mOptionsChart.setWidth(500);
-        mOptionsChart.setHeight(320);
+        mOptionsChart.setWidth(640);
+        mOptionsChart.setHeight(480);
         
         Runnable onLoadCallbackColumn = new Runnable() {
             @Override

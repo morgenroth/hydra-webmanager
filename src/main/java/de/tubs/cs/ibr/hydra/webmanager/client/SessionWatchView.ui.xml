@@ -18,7 +18,7 @@
 		</b:Row>
 		<b:Row>
 			<b:Column size="12">
-				<b:TabPanel>
+				<b:TabPanel ui:field="panelTabs">
 					<b:Tab heading="Details" active="true">
 						<b:Form type="HORIZONTAL">
 							<b:ControlGroup>

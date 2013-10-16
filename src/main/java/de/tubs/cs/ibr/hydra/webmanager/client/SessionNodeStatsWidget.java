@@ -6,6 +6,8 @@ import java.util.Map;
 
 import com.github.gwtbootstrap.client.ui.Heading;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.logical.shared.ResizeEvent;
+import com.google.gwt.event.logical.shared.ResizeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -22,7 +24,7 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
-public class SessionNodeStatsWidget extends Composite {
+public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     
     @UiField SimplePanel panelTraffic;
     @UiField SimplePanel panelBundles;
@@ -87,7 +89,7 @@ public class SessionNodeStatsWidget extends Composite {
         mOptionsChart = LineChart.Options.create();
         mOptionsChart.setLegend(LegendPosition.BOTTOM);
         mOptionsChart.setWidth(360);
-        mOptionsChart.setHeight(320);
+        mOptionsChart.setHeight(480);
         
         Runnable onLoadCallbackLine = new Runnable() {
             @Override
@@ -274,6 +276,24 @@ public class SessionNodeStatsWidget extends Composite {
             
             // increment row number
             mLastRow++;
+        }
+    }
+
+    @Override
+    public void onResize(ResizeEvent event) {
+        if (initialized) {
+            Integer width = panelTraffic.getOffsetWidth();
+            Double height = Double.valueOf(width) * Double.valueOf(9.0 / 16.0);
+            mOptionsChart.setSize(width, height.intValue());
+            
+            if (mDataChartTraffic != null)
+                mChartTraffic.draw(mDataChartTraffic, mOptionsChart);
+            
+            if (mDataChartBundles != null)
+                mChartBundles.draw(mDataChartBundles, mOptionsChart);
+            
+            if (mDataChartClock != null)
+                mChartClock.draw(mDataChartClock, mOptionsChart);
         }
     }
 }

@@ -8,6 +8,7 @@ import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CellTable;
 import com.github.gwtbootstrap.client.ui.ProgressBar;
 import com.github.gwtbootstrap.client.ui.TextBox;
+import com.github.gwtbootstrap.client.ui.TabPanel.ShownEvent;
 import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
@@ -448,5 +449,10 @@ public class SessionWatchView extends View {
     void onClick(ClickEvent e) {
         // switch back to session view
         resetView();
+    }
+    
+    @UiHandler("panelTabs")
+    void onTabChange(ShownEvent event) {
+        statsView.onResize(null);
     }
 }
