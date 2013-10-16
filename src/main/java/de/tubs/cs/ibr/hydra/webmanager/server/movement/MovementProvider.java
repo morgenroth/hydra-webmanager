@@ -1,5 +1,6 @@
 package de.tubs.cs.ibr.hydra.webmanager.server.movement;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 
 public abstract class MovementProvider {

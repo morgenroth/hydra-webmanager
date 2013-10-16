@@ -1,4 +1,4 @@
-package de.tubs.cs.ibr.hydra.webmanager.server.movement;
+package de.tubs.cs.ibr.hydra.webmanager.shared;
 
 public class Coordinates implements Comparable<Coordinates> {
     private Double x;
@@ -71,9 +71,9 @@ public class Coordinates implements Comparable<Coordinates> {
     @Override
     public String toString() {
         if (z == null)
-            return String.format("(%.2f,%.2f)", x,y);
+            return "(" + x.toString() + ", " + y.toString() + ")";
         else
-            return String.format("(%.2f,%.2f,%.2f)", x,y,z);
+            return "(" + x.toString() + ", " + y.toString() + ", " + z.toString() + ")";
     }
     
     @Override
