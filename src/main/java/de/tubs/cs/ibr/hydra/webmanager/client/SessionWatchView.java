@@ -1,25 +1,18 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
 
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CellTable;
-import com.github.gwtbootstrap.client.ui.Heading;
 import com.github.gwtbootstrap.client.ui.ProgressBar;
 import com.github.gwtbootstrap.client.ui.TextBox;
 import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.JsArray;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.i18n.client.NumberFormat;
-import com.google.gwt.json.client.JSONObject;
-import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -29,17 +22,8 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
-import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
-import com.google.gwt.visualization.client.AbstractDataTable.ColumnType;
-import com.google.gwt.visualization.client.DataTable;
-import com.google.gwt.visualization.client.LegendPosition;
-import com.google.gwt.visualization.client.Selection;
-import com.google.gwt.visualization.client.VisualizationUtils;
-import com.google.gwt.visualization.client.events.SelectHandler;
-import com.google.gwt.visualization.client.visualizations.ColumnChart;
-import com.google.gwt.visualization.client.visualizations.LineChart;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
@@ -60,15 +44,7 @@ public class SessionWatchView extends View {
     @UiField TextBox textDetailsElapsedTime;
     @UiField TextBox textDetailsDesc;
     
-    @UiField SimplePanel panelStatsTraffic;
-    @UiField SimplePanel panelStatsBundles;
-    @UiField SimplePanel panelStatsTrafficNode;
-    @UiField SimplePanel panelStatsBundlesNode;
-    @UiField SimplePanel panelStatsClockNode;
-    
-    @UiField Heading headingStatsTrafficNode;
-    @UiField Heading headingStatsBundlesNode;
-    @UiField Heading headingStatsClockNode;
+    @UiField SessionStatsWidget statsView;
     
     interface Style extends CssResource {
         String activated();
@@ -81,27 +57,6 @@ public class SessionWatchView extends View {
     
     // data provider for the node table
     ListDataProvider<Node> mDataProvider = new ListDataProvider<Node>();
-    
-    // chart objects
-    ColumnChart mChartTraffic = null;
-    ColumnChart mChartBundles = null;
-    LineChart mChartTrafficNode = null;
-    LineChart mChartBundlesNode = null;
-    LineChart mChartClockNode = null;
-    
-    // chart data
-    DataTable mDataChartTraffic = null;
-    DataTable mDataChartBundles = null;
-    DataTable mDataChartTrafficNode = null;
-    DataTable mDataChartBundlesNode = null;
-    DataTable mDataChartClockNode = null;
-    
-    // chart options
-    ColumnChart.Options mOptionsChart = null;
-    LineChart.Options mOptionsChartNode = null;
-    
-    // selection stats node
-    Node mSelectedNode = null;
     
     // currently viewed session
     Session mSession = null;
@@ -123,254 +78,10 @@ public class SessionWatchView extends View {
         refreshSlaves();
         refreshSession(s);
         
-        // initialize statistic visualization
-        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.getNodes(s.id, new AsyncCallback<ArrayList<Node>>() {
-            
-            @Override
-            public void onSuccess(ArrayList<Node> result) {
-                if (!result.isEmpty()) {
-                    initializeStats(result.get(0));
-                }
-            }
-            
-            @Override
-            public void onFailure(Throwable caught) {
-                // failed to load node list
-            }
-        });
+        // initialize stats view
+        statsView.initialize(s);
     }
     
-    private void initializeStats(final Node defaultNode) {
-        Runnable onLoadCallbackColumn = new Runnable() {
-            @Override
-            public void run() {
-                mOptionsChart = ColumnChart.Options.create();
-                mOptionsChart.setLegend(LegendPosition.BOTTOM);
-                mOptionsChart.setWidth(500);
-                mOptionsChart.setHeight(320);
-                
-                updateStats(new Runnable() {
-                    @Override
-                    public void run() {
-                        mChartTraffic = new ColumnChart(mDataChartTraffic, mOptionsChart);
-                        mChartTraffic.addSelectHandler(createSelectHandler(mChartTraffic));
-                        panelStatsTraffic.add(mChartTraffic);
-                        
-                        mChartBundles = new ColumnChart(mDataChartBundles, mOptionsChart);
-                        mChartBundles.addSelectHandler(createSelectHandler(mChartBundles));
-                        panelStatsBundles.add(mChartBundles);
-                    }
-                }, true);
-            }
-        };
-        
-        Runnable onLoadCallbackLine = new Runnable() {
-            @Override
-            public void run() {
-                mOptionsChartNode = LineChart.Options.create();
-                mOptionsChartNode.setLegend(LegendPosition.BOTTOM);
-                mOptionsChartNode.setWidth(360);
-                mOptionsChartNode.setHeight(320);
-                
-                updateStats(defaultNode, new Runnable() {
-                    @Override
-                    public void run() {
-                        mChartTrafficNode = new LineChart(mDataChartTrafficNode, mOptionsChartNode);
-                        panelStatsTrafficNode.add(mChartTrafficNode);
-                        
-                        mChartBundlesNode = new LineChart(mDataChartBundlesNode, mOptionsChartNode);
-                        panelStatsBundlesNode.add(mChartBundlesNode);
-                        
-                        mChartClockNode = new LineChart(mDataChartClockNode, mOptionsChartNode);
-                        panelStatsClockNode.add(mChartClockNode);
-                    }
-                }, true);
-            }
-        };
-        
-        // Load the visualization api, passing the onLoadCallback to be called
-        // when loading is done.
-        VisualizationUtils.loadVisualizationApi(onLoadCallbackColumn, ColumnChart.PACKAGE);
-        
-        // Load the visualization api, passing the onLoadCallback to be called
-        // when loading is done.
-        VisualizationUtils.loadVisualizationApi(onLoadCallbackLine, LineChart.PACKAGE);
-    }
-    
-    public void updateStats(final Runnable callback, final boolean rebuild) {
-        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.getStatsLatest(mSession, new AsyncCallback<HashMap<Long,String>>() {
-            
-            @Override
-            public void onSuccess(HashMap<Long, String> result) {
-                refreshStats(result, rebuild);
-                callback.run();
-            }
-            
-            @Override
-            public void onFailure(Throwable caught) {
-                // failed
-            }
-        });
-    }
-    
-    public void updateStats(final Node n, final Runnable callback, final boolean rebuild) {
-        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        
-        mcs.getStatsData(mSession, n, mSession.started, null, new AsyncCallback<HashMap<Long,HashMap<Long,String>>>() {
-            
-            @Override
-            public void onSuccess(HashMap<Long,HashMap<Long,String>> result) {
-                refreshStats(n, result, rebuild);
-                
-                // store selected node locally
-                mSelectedNode = n;
-                
-                callback.run();
-            }
-            
-            @Override
-            public void onFailure(Throwable caught) {
-                // failed
-            }
-        });
-    }
-    
-    private void refreshStats() {
-        updateStats(new Runnable() {
-            @Override
-            public void run() {
-                mChartTraffic.draw(mDataChartTraffic, mOptionsChart);
-                mChartBundles.draw(mDataChartBundles, mOptionsChart);
-            }
-        }, false);
-        
-        if (mSelectedNode != null) {
-            updateStats(mSelectedNode, new Runnable() {
-                @Override
-                public void run() {
-                    mChartTrafficNode.draw(mDataChartTrafficNode, mOptionsChartNode);
-                    mChartBundlesNode.draw(mDataChartBundlesNode, mOptionsChartNode);
-                    mChartClockNode.draw(mDataChartClockNode, mOptionsChartNode);
-                }
-            }, false);
-        }
-    }
-    
-    private void refreshStats(Node n, HashMap<Long, HashMap<Long,String>> result, boolean rebuild) {
-        if (rebuild) {
-            mDataChartTrafficNode = DataTable.create();
-            mDataChartTrafficNode.addColumn(ColumnType.NUMBER, "Traffic");
-            
-            mDataChartBundlesNode = DataTable.create();
-            mDataChartBundlesNode.addColumn(ColumnType.NUMBER, "Received");
-            mDataChartBundlesNode.addColumn(ColumnType.NUMBER, "Transmitted");
-            mDataChartBundlesNode.addColumn(ColumnType.NUMBER, "Generated");
-            
-            mDataChartClockNode = DataTable.create();
-            mDataChartClockNode.addColumn(ColumnType.NUMBER, "Offset");
-        }
-        
-        // iterate through all the data
-        for (Entry<Long,HashMap<Long,String>> e : result.entrySet()) {
-            Long timestamp = e.getKey();
-            HashMap<Long,String> nodes_data = e.getValue();
-            
-            // get node data
-            JSONObject obj = JSONParser.parseStrict(nodes_data.get(n.id)).isObject();
-            
-            if (obj != null) {
-                System.out.println("JSON node data @ " + timestamp + ": " + obj);
-            }
-        }
-    }
-    
-    private void refreshStats(HashMap<Long, String> result, boolean rebuild) {
-        if (rebuild) {
-            mDataChartBundles = DataTable.create();
-            mDataChartBundles.addColumn(ColumnType.STRING, "Nodes");
-            mDataChartBundles.addColumn(ColumnType.NUMBER, "Received");
-            mDataChartBundles.addColumn(ColumnType.NUMBER, "Transmitted");
-            mDataChartBundles.addColumn(ColumnType.NUMBER, "Generated");
-            mDataChartBundles.addRows(result.size());
-            
-            mDataChartTraffic = null;
-        }
-
-        Integer row = 0;
-        for (Entry<Long,String> e : result.entrySet()) {
-            Long nodeId = e.getKey();
-            String data = e.getValue();
-            
-            JSONObject obj = JSONParser.parseStrict(data).isObject();
-            
-            if (obj != null) {
-                //System.out.println("JSON data: " + obj);
-                
-                if (obj.containsKey("iface")) {
-                    // get json object for 'iface'
-                    JSONObject iface_data = obj.get("iface").isObject();
-                    
-                    // generate the traffic columns
-                    if (mDataChartTraffic == null) {
-                        mDataChartTraffic = DataTable.create();
-                        
-                        mDataChartTraffic.addColumn(ColumnType.STRING, "Nodes");
-                        
-                        for (String key : iface_data.keySet()) {
-                            // skip "lo" and "eth1" interface
-                            if (key.equals("lo") || key.equals("eth1")) continue;
-                            
-                            mDataChartTraffic.addColumn(ColumnType.NUMBER, key + " (rx)");
-                            mDataChartTraffic.addColumn(ColumnType.NUMBER, key + " (tx)");
-                        }
-                        
-                        mDataChartTraffic.addRows(result.size());
-                    }
-                    
-                    mDataChartTraffic.setValue(row, 0, nodeId.toString());
-                    Integer index = 1;
-                    
-                    for (String key : iface_data.keySet()) {
-                        // skip "lo" and "eth1" interface
-                        if (key.equals("lo") || key.equals("eth1")) continue;
-                        
-                        JSONObject if_data = iface_data.get(key).isObject();
-                        
-                        Long rx = Long.valueOf(if_data.get("rx").isString().stringValue());
-                        Long tx = Long.valueOf(if_data.get("tx").isString().stringValue());
-                        
-                        mDataChartTraffic.setValue(row, index, rx);
-                        mDataChartTraffic.setValue(row, index + 1, tx);
-                        
-                        index += 2;
-                    }
-                }
-                
-                if (obj.containsKey("dtnd")) {
-                    // get json object for 'dtnd'
-                    JSONObject dtn_data = obj.get("dtnd").isObject();
-                    
-                    if (dtn_data.containsKey("bundles")) {
-                        // get json object for 'bundles'
-                        JSONObject bundle_data = dtn_data.get("bundles").isObject();
-                        
-                        Long received = Long.valueOf(bundle_data.get("Received").isString().stringValue());
-                        Long transmitted = Long.valueOf(bundle_data.get("Transmitted").isString().stringValue());
-                        Long generated = Long.valueOf(bundle_data.get("Generated").isString().stringValue());
-                        
-                        mDataChartBundles.setValue(row, 0, nodeId.toString());
-                        mDataChartBundles.setValue(row, 1, received);
-                        mDataChartBundles.setValue(row, 2, transmitted);
-                        mDataChartBundles.setValue(row, 3, generated);
-                    }
-                }
-                
-                row++;
-            }
-        }
-    }
     
     private void refresh() {
         if (mSession == null) return;
@@ -714,7 +425,7 @@ public class SessionWatchView extends View {
         }
         else if (EventType.SESSION_STATS_UPDATED.equals(evt)) {
             if (isRelated(evt)) {
-                refreshStats();
+                statsView.refresh();
             }
         }
     }
@@ -738,46 +449,4 @@ public class SessionWatchView extends View {
         // switch back to session view
         resetView();
     }
-    
-    /*** CHART DEMO CODE ***/
-      private SelectHandler createSelectHandler(final ColumnChart chart) {
-        return new SelectHandler() {
-          @Override
-          public void onSelect(SelectEvent event) {
-            String message = "";
-            
-            // May be multiple selections.
-            JsArray<Selection> selections = chart.getSelections();
-
-            for (int i = 0; i < selections.length(); i++) {
-              // add a new line for each selection
-              message += i == 0 ? "" : "\n";
-              
-              Selection selection = selections.get(i);
-
-              if (selection.isCell()) {
-                // isCell() returns true if a cell has been selected.
-                
-                // getRow() returns the row number of the selected cell.
-                int row = selection.getRow();
-                // getColumn() returns the column number of the selected cell.
-                int column = selection.getColumn();
-                message += "cell " + row + ":" + column + " selected";
-              } else if (selection.isRow()) {
-                // isRow() returns true if an entire row has been selected.
-                
-                // getRow() returns the row number of the selected row.
-                int row = selection.getRow();
-                message += "row " + row + " selected";
-              } else {
-                // unreachable
-                message += "Pie chart selections should be either row selections or cell selections.";
-                message += "  Other visualizations support column selections as well.";
-              }
-            }
-            
-            Window.alert(message);
-          }
-        };
-      }
 }

@@ -2,7 +2,8 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui"
-	xmlns:viz="urn:import:com.google.gwt.visualization.client.visualizations">
+	xmlns:viz="urn:import:com.google.gwt.visualization.client.visualizations"
+	xmlns:client="urn:import:de.tubs.cs.ibr.hydra.webmanager.client">
 	<ui:style type='de.tubs.cs.ibr.hydra.webmanager.client.SessionWatchView.Style'>
 		.activated { color:green; }
 		.enabled { color:black; }
@@ -50,36 +51,11 @@
 						</b:Form>
 					</b:Tab>
 					<b:Tab heading="Nodes">
-						<b:Row>
-							<!-- table of nodes -->
-							<b:Column size="12">
-								<b:CellTable ui:field="tableNodes" />
-							</b:Column>
-						</b:Row>
+						<!-- table of nodes -->
+						<b:CellTable ui:field="tableNodes" />
 					</b:Tab>
 					<b:Tab heading="Stats">
-						<b:Row>
-							<b:Column size="6">
-								<b:Heading size="3">Traffic</b:Heading>
-								<g:SimplePanel ui:field="panelStatsTraffic" />
-							</b:Column>
-							<b:Column size="6">
-								<b:Heading size="3">Bundles</b:Heading>
-								<g:SimplePanel ui:field="panelStatsBundles" />
-							</b:Column>
-							<b:Column size="4">
-								<b:Heading size="3" ui:field="headingStatsTrafficNode">Traffic</b:Heading>
-								<g:SimplePanel ui:field="panelStatsTrafficNode" />
-							</b:Column>
-							<b:Column size="4">
-								<b:Heading size="3" ui:field="headingStatsBundlesNode">Bundles</b:Heading>
-								<g:SimplePanel ui:field="panelStatsBundlesNode" />
-							</b:Column>
-							<b:Column size="4">
-								<b:Heading size="3" ui:field="headingStatsClockNode">Clock</b:Heading>
-								<g:SimplePanel ui:field="panelStatsClockNode" />
-							</b:Column>
-						</b:Row>
+						<client:SessionStatsWidget ui:field="statsView" />
 					</b:Tab>
 					<b:Tab heading="Map"></b:Tab>
 				</b:TabPanel>

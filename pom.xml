@@ -135,6 +135,11 @@
 		<artifactId>jtar</artifactId>
 		<version>1.1</version>
 	</dependency>
+	<dependency>
+		<groupId>com.google.gwt.google-apis</groupId>
+		<artifactId>gwt-visualization</artifactId>
+		<version>1.0.2</version>
+	</dependency>
   </dependencies>
 
   <build>
