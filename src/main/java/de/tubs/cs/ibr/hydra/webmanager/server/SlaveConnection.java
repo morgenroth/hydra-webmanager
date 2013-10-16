@@ -103,9 +103,6 @@ public class SlaveConnection extends Thread {
                 // if readline returns null the connection is down
                 if (data == null) break;
                 
-                // print out received data
-                System.out.println(data);
-                
                 // put the 'response' into the queue
                 mResponseQueue.put(data);
             }
@@ -172,8 +169,6 @@ public class SlaveConnection extends Thread {
         
         Long code = Long.valueOf(data_pair[0]);
         String message = data_pair[1];
-        
-        System.out.println(message);
         
         return code;
     }

@@ -147,8 +147,6 @@ public class MasterServer implements ServletContextListener {
                 sum += a.getAvailableSlots();
             }
             
-            System.out.println("Available slots for nodes: " + sum.toString());
-
             // check if distribution is possible without changing any assignment
             if (sum < nodes.size()) {
                 throw new DistributionFailedException();

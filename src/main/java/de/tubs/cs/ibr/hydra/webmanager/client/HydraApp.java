@@ -107,7 +107,7 @@ public class HydraApp extends Composite {
                 }
                 
                 try {
-                    WebManager.logger.info("message received: " + message.toString());
+                    //WebManager.logger.info("message received: " + message.toString());
                     AutoBean<Event> bean = AutoBeanCodex.decode(factory, Event.class, message);
                     return bean.as();
                 } catch (java.lang.RuntimeException e) {
