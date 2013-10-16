@@ -1,13 +1,8 @@
 package de.tubs.cs.ibr.hydra.webmanager.shared;
 
-import java.io.Serializable;
+import com.google.gwt.user.client.rpc.IsSerializable;
 
-public class Node implements Serializable {
-
-    /**
-     * Serial ID
-     */
-    private static final long serialVersionUID = 2954357776414155391L;
+public class Node implements IsSerializable {
 
     public enum State {
         DRAFT("draft"),

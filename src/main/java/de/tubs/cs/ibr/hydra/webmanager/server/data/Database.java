@@ -1158,7 +1158,7 @@ public class Database {
                     while (iface_it.hasNext()) {
                         Pair<String, JsonValue> iface_p = iface_it.next();
                         
-                        DataPoint.IfaceStats iface = new DataPoint.IfaceStats();
+                        DataPoint.InterfaceStats iface = new DataPoint.InterfaceStats();
                         iface.name = iface_p.getA();
                         
                         JsonObject iface_data = iface_p.getB().asObject();

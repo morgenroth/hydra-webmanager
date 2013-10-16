@@ -1,15 +1,11 @@
 package de.tubs.cs.ibr.hydra.webmanager.shared;
 
-import java.io.Serializable;
 import java.util.HashMap;
 
+import com.google.gwt.user.client.rpc.IsSerializable;
 
-public class MobilityParameterSet implements Serializable {
 
-    /**
-     * serial ID
-     */
-    private static final long serialVersionUID = 4299944841566525510L;
+public class MobilityParameterSet implements IsSerializable {
     
     public enum MobilityModel {
         RANDOM_WALK("randomwalk"),

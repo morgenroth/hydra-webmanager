@@ -1,9 +1,15 @@
 package de.tubs.cs.ibr.hydra.webmanager.shared;
 
-public class Coordinates implements Comparable<Coordinates> {
+import com.google.gwt.user.client.rpc.IsSerializable;
+
+public class Coordinates implements Comparable<Coordinates>, IsSerializable {
     private Double x;
     private Double y;
     private Double z;
+    
+    public Coordinates() {
+        this(0.0, 0.0, null);
+    }
     
     public Coordinates(Double x, Double y) {
         this(x, y, null);

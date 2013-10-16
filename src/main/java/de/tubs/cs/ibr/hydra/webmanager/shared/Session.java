@@ -1,14 +1,10 @@
 package de.tubs.cs.ibr.hydra.webmanager.shared;
 
-import java.io.Serializable;
 import java.util.Date;
 
-public class Session implements Serializable {
-    
-    /**
-     * Serial ID
-     */
-    private static final long serialVersionUID = -3798279065466924743L;
+import com.google.gwt.user.client.rpc.IsSerializable;
+
+public class Session implements IsSerializable {
     
     public enum Action {
         ABORT("Abort"),

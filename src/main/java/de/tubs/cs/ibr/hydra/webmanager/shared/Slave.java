@@ -1,13 +1,8 @@
 package de.tubs.cs.ibr.hydra.webmanager.shared;
 
-import java.io.Serializable;
+import com.google.gwt.user.client.rpc.IsSerializable;
 
-public class Slave implements Serializable {
-
-    /**
-     * Serial ID
-     */
-    private static final long serialVersionUID = 1090658748223324674L;
+public class Slave implements IsSerializable {
     
     public enum State {
         DISCONNECTED("disconnected"),
@@ -91,6 +86,4 @@ public class Slave implements Serializable {
         }
         return super.equals(obj);
     }
-    
-    
 }
