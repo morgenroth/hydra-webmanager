@@ -383,14 +383,16 @@ public class SessionController {
 
         @Override
         public void run() {
-            SlaveConnection conn = MasterServer.getSlaveConnection(mSlave);
-            
             try {
-                // stop all nodes
-                conn.stopSession(mSession);
-                
-                // destroy the session
-                conn.destroySession(mSession);
+                if (mSession != null) {
+                    SlaveConnection conn = MasterServer.getSlaveConnection(mSlave);
+                    
+                    // stop all nodes
+                    conn.stopSession(mSession);
+                    
+                    // destroy the session
+                    conn.destroySession(mSession);
+                }
                 
                 // decrement the latch
                 mLatch.countDown();
