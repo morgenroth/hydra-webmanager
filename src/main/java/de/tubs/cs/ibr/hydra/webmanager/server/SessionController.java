@@ -232,6 +232,14 @@ public class SessionController {
             if (isAborted()) {
                 throw new OperationFailedException("prepare aborted due to aborted session");
             }
+            
+            // create an archive and deploy it to the webserver directory
+            try {
+                // deploy the web archive
+                mContainer.deployArchive();
+            } catch (IOException e) {
+                throw new OperationFailedException(e);
+            }
         }
         
         @Override
@@ -270,14 +278,6 @@ public class SessionController {
             // check if not aborted
             if (isAborted()) {
                 throw new OperationFailedException("node creation aborted due to aborted session");
-            }
-            
-            // create an archive and deploy it to the webserver directory
-            try {
-                // deploy the web archive
-                mContainer.deployArchive();
-            } catch (IOException e) {
-                throw new OperationFailedException(e);
             }
         }
         
