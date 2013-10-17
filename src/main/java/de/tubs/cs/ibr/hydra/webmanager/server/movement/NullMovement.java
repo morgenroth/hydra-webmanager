@@ -7,4 +7,9 @@ public class NullMovement extends MovementProvider {
         return null;
     }
 
+    @Override
+    public void step(Double interval) {
+        // nobody moves!
+    }
+
 }

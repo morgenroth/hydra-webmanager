@@ -18,4 +18,10 @@ public class RandomWalkMovement extends MovementProvider {
         return null;
     }
 
+    @Override
+    public void step(Double interval) {
+        // TODO Auto-generated method stub
+        
+    }
+
 }

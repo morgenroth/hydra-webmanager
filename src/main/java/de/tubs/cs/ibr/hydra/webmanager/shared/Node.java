@@ -58,4 +58,15 @@ public class Node implements IsSerializable {
     public String name = null;
     public State state = null;
     public String address = null;
+    
+    /**
+     * Contains the coordinates of this node.
+     */
+    public Coordinates position = null;
+    
+    /**
+     * This holds the unidirectional communication range
+     * which depends on the transmitter power.
+     */
+    public double range = 0.0;
 }
