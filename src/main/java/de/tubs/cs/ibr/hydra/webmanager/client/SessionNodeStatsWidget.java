@@ -6,12 +6,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.github.gwtbootstrap.client.ui.Heading;
+import com.github.gwtbootstrap.client.ui.base.IconAnchor;
+import com.github.gwtbootstrap.client.ui.constants.IconSize;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.logical.shared.ResizeHandler;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -36,6 +40,8 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     @UiField Heading headingTraffic;
     @UiField Heading headingBundles;
     @UiField Heading headingClock;
+    
+    @UiField IconAnchor buttonRemove;
     
     private Session mSession = null;
     private Node mNode = null;
@@ -62,15 +68,23 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     
     // is true if all charts are initialized
     boolean initialized = false;
+    
+    // removed listener
+    private OnStatsRemovedListener mRemovedListener = null;
 
     private static SessionNodeStatsWidgetUiBinder uiBinder = GWT
             .create(SessionNodeStatsWidgetUiBinder.class);
 
     interface SessionNodeStatsWidgetUiBinder extends UiBinder<Widget, SessionNodeStatsWidget> {
     }
+    
+    public interface OnStatsRemovedListener {
+        public void onStatsRemoved(Node n);
+    }
 
-    public SessionNodeStatsWidget(Session session, Node node) {
+    public SessionNodeStatsWidget(OnStatsRemovedListener listener, Session session, Node node) {
         initWidget(uiBinder.createAndBindUi(this));
+        mRemovedListener = listener;
         mSession = session;
         mNode = node;
         
@@ -85,11 +99,17 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         } else {
             headingNode.setText("Node '" + mNode.name + "'");
         }
+        
+        // set remove button size
+        buttonRemove.setIconSize(IconSize.LARGE);
     }
     
     @Override
     protected void onAttach() {
         super.onAttach();
+        
+        // invoke resize
+        onResize(null);
 
         // load chart library
         initializeChart();
@@ -285,5 +305,12 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         
         // redraw clock chart
         mChartClock.draw(mDataChartClock, mOptionsChart);
+    }
+    
+    @UiHandler("buttonRemove")
+    public void onClickRemove(ClickEvent e) {
+        this.removeFromParent();
+        if (mRemovedListener != null)
+            mRemovedListener.onStatsRemoved(mNode);
     }
 }

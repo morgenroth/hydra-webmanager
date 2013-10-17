@@ -2,14 +2,18 @@ package de.tubs.cs.ibr.hydra.webmanager.client;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
 
 import com.github.gwtbootstrap.client.ui.Container;
+import com.github.gwtbootstrap.client.ui.ListBox;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.logical.shared.ResizeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
@@ -34,6 +38,8 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     
     @UiField Container containerNodeStats;
     
+    @UiField ListBox listNodes;
+    
     // chart objects
     ColumnChart mChartTraffic = null;
     ColumnChart mChartBundles = null;
@@ -44,6 +50,9 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     
     // interface mapping
     HashMap<String, Integer> mInterfaceMap = new HashMap<String, Integer>();
+    
+    // list of visible node stats
+    HashSet<Long> mVisibleNodes = new HashSet<Long>();
     
     // is true if all charts are initialized
     boolean initialized = false;
@@ -111,6 +120,9 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     }
     
     public void initialize(final Session session) {
+        // store session globally
+        mSession = session;
+        
         // load chart library
         initializeChart();
         
@@ -120,19 +132,16 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
             
             @Override
             public void onSuccess(ArrayList<Node> result) {
+                // clear the nodes list box
+                listNodes.clear();
+                listNodes.addItem("- select a node to add -", "-");
+                
                 // store the list of nodes
                 for (Node n : result) {
                     mNodes.put(n.id, n);
                 }
                 
-                // store session globally
-                mSession = session;
-                
-                // create average node stats
-                // TODO: replace by 'null' if average is working
-                SessionNodeStatsWidget ns = new SessionNodeStatsWidget(session, result.get(0));
-                mNodeStats.add(ns);
-                containerNodeStats.add(ns);
+                rebuildNodeList();
             }
             
             @Override
@@ -140,6 +149,21 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
                 // failed to load node list
             }
         });
+    }
+    
+    private void rebuildNodeList() {
+        // clear the nodes list box
+        listNodes.clear();
+        listNodes.addItem("- select a node to add -", "-");
+        
+        // store the list of nodes
+        for (Node n : mNodes.values()) {
+            if (!mVisibleNodes.contains(n.id)) {
+                listNodes.addItem(n.name, n.id.toString());
+            }
+        }
+        
+        listNodes.setSelectedIndex(0);
     }
 
     private void initializeChart() {
@@ -248,4 +272,31 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
             row++;
         }
     }
+    
+    @UiHandler("listNodes")
+    void onNodeSelected(ChangeEvent e) {
+        // create individual node stats
+        int index = listNodes.getSelectedIndex();
+        String value = listNodes.getValue(index);
+        listNodes.removeItem(index);
+        listNodes.setSelectedIndex(0);
+        
+        Node n = mNodes.get(Long.valueOf(value));
+        
+        if (n != null) {
+            mVisibleNodes.add(n.id);
+            
+            SessionNodeStatsWidget ns = new SessionNodeStatsWidget(mRemoveListener, mSession, n);
+            mNodeStats.add(ns);
+            containerNodeStats.add(ns);
+        }
+    }
+    
+    private SessionNodeStatsWidget.OnStatsRemovedListener mRemoveListener = new SessionNodeStatsWidget.OnStatsRemovedListener() {
+        @Override
+        public void onStatsRemoved(Node n) {
+            mVisibleNodes.remove(n.id);
+            rebuildNodeList();
+        }
+    };
 }

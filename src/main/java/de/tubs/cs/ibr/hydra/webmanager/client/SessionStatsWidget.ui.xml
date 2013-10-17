@@ -4,7 +4,10 @@
 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui"
 	xmlns:viz="urn:import:com.google.gwt.visualization.client.visualizations">
 	<ui:style>
-		
+		.formButton {
+			margin-left: 6px;
+			margin-right: 6px;
+		}
 	</ui:style>
 	<g:HTMLPanel>
 		<b:Row>
@@ -17,6 +20,20 @@
 				<g:SimplePanel ui:field="panelBundles" />
 			</b:Column>
 		</b:Row>
+    	<b:Row>
+	    	<b:Column size="12">
+	    	    <g:HTMLPanel><hr /></g:HTMLPanel>
+	    	</b:Column>
+    	</b:Row>
 		<b:Container ui:field="containerNodeStats" />
+		<b:Row>
+			<b:Column size="6">
+				<b:InputAddOn prependText="Node" appendIcon="PLUS" addStyleNames="{style.formButton}">
+				    <b:ListBox ui:field="listNodes">
+				        <g:item value="-">- select a node -</g:item>
+				    </b:ListBox>
+				</b:InputAddOn>
+			</b:Column>
+		</b:Row>
 	</g:HTMLPanel>
 </ui:UiBinder> 
