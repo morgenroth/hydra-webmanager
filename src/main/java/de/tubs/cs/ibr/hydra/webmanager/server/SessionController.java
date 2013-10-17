@@ -1,26 +1,27 @@
 package de.tubs.cs.ibr.hydra.webmanager.server;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-import de.tubs.cs.ibr.hydra.webmanager.server.SlaveConnection.SessionNotFoundException;
-import de.tubs.cs.ibr.hydra.webmanager.server.SlaveConnection.SessionRunTimeoutException;
+import de.tubs.cs.ibr.hydra.webmanager.server.SlaveExecutor.OperationFailedException;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Configuration;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SessionContainer;
+import de.tubs.cs.ibr.hydra.webmanager.server.movement.ContactProvider;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.MovementProvider;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.NullMovement;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.RandomWalkMovement;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
@@ -29,6 +30,9 @@ public class SessionController {
     
     // movement model / controller
     MovementProvider mMovement = null;
+    
+    // contact provider
+    ContactProvider mContactProvider = null;
     
     // session object
     Session mSession = null;
@@ -40,8 +44,10 @@ public class SessionController {
     Set<Slave> mSlaves = null;
     
     // main executor
-    ScheduledExecutorService mMainExecutor = Executors.newSingleThreadScheduledExecutor();
-    ExecutorService mPooledExecutor = Executors.newCachedThreadPool();
+    ScheduledExecutorService mExecutor = Executors.newSingleThreadScheduledExecutor();
+    
+    // executor for distribution of slave tasks
+    SlaveExecutor mSlaveExecutor = new SlaveExecutor(mExecutor);
     
     ScheduledFuture<?> scheduledDistribution = null;
     ScheduledFuture<?> scheduledFinish = null;
@@ -62,7 +68,7 @@ public class SessionController {
                     scheduledDistribution.cancel(false);
                     
                     // try to distribute the session now
-                    mMainExecutor.execute(mRunnableDistribute);
+                    mExecutor.execute(mRunnableDistribute);
                 }
             }
         }
@@ -88,7 +94,7 @@ public class SessionController {
             mContainer.inject(mSession);
             
             // try to distribute the session now
-            mMainExecutor.execute(mRunnableDistribute);
+            mExecutor.execute(mRunnableDistribute);
         } catch (IOException e) {
             System.err.println("ERROR: " + e.toString());
             // error
@@ -102,9 +108,9 @@ public class SessionController {
         
         // wait until all task are done
         try {
-            mMainExecutor.awaitTermination(5, TimeUnit.MINUTES);
+            mExecutor.awaitTermination(5, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            System.err.println("Interrupted during abort()");
         }
     }
     
@@ -117,13 +123,15 @@ public class SessionController {
         
         // wait until all task are done
         try {
-            mMainExecutor.awaitTermination(5, TimeUnit.MINUTES);
+            mExecutor.awaitTermination(5, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            System.err.println("Interrupted during cancel()");
         }
     }
     
     public void error() {
+        if (isAborted()) return;
+        
         // switch state to aborted
         setSessionState(Session.State.ERROR);
         
@@ -159,32 +167,187 @@ public class SessionController {
             scheduledFinish.cancel(false);
         }
         
-        // shutdown main executor
-        mMainExecutor.shutdown();
-        
         try {
-            // destroy the session on all slaves
-            destroySession();
+            // schedule destroy task to clean-up all slaves
+            // timeout: 30 seconds per slave
+            Future<Integer> destroy = mSlaveExecutor.submit(mSlaves, mDestroyTask, 30 * mSlaves.size());
+            
+            // wait until the destroy task has been completed
+            destroy.get();
+            
+            // shutdown main executor
+            mExecutor.shutdown();
+            
+            // shutdown slave executor
+            mSlaveExecutor.awaitShutdown();
         } catch (InterruptedException e) {
-            // error
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            // timeout does not matter
-        }
-        
-        // shutdown pooled executor
-        mPooledExecutor.shutdown();
-        
-        // wait until all task are done
-        try {
-            mPooledExecutor.awaitTermination(5, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            System.err.println("Interrupted during onDestroy(): " + e.toString());
+        } catch (ExecutionException e) {
+            System.err.println("Execution failed during onDestroy(): " + e.toString());
         }
         
         // clean-up from MasterServer
         MasterServer.onSessionFinished(mSession);
     }
+    
+    /**
+     * This task prepares the sessions on the slaves
+     */
+    private SlaveExecutor.SlaveRunnable mPrepareTask = new SlaveExecutor.SlaveRunnable() {
+        
+        @Override
+        public void run(SlaveConnection c, Slave s) throws OperationFailedException {
+            try {
+                // create the session on the slave
+                c.createSession(mSession, Configuration.getWebLocation());
+                
+                // prepare the session
+                c.prepareSession(mSession);
+            } catch (Exception e) {
+                throw new OperationFailedException(e);
+            }
+        }
+        
+        @Override
+        public void onTimeout() {
+            System.err.println("ERROR: preparation timed out");
+            error();
+        }
+        
+        @Override
+        public void onPrepare() throws OperationFailedException {
+            // check if not aborted
+            if (isAborted()) {
+                throw new OperationFailedException("prepare aborted due to aborted session");
+            }
+        }
+        
+        @Override
+        public void onFinish() {
+            // get the database object
+            Database db = Database.getInstance();
+            
+            // get all nodes of this session
+            List<Node> nodes = db.getNodes(mSession);
+            
+            // schedule a preparation
+            // timeout: 30 seconds per node
+            mSlaveExecutor.execute(mSlaves, nodes, mCreateNodesTask, 10 * nodes.size());
+        }
+
+        @Override
+        public void onError(Exception e) {
+            System.err.println("ERROR: preparation failed " + e.toString());
+            error();
+        }
+    };
+    
+    /**
+     * This task creates the nodes on each slave
+     */
+    private SlaveExecutor.NodeRunnable mCreateNodesTask = new SlaveExecutor.NodeRunnable() {
+        
+        @Override
+        public void onTimeout() {
+            System.err.println("ERROR: session timed out");
+            error();
+        }
+        
+        @Override
+        public void onPrepare() throws OperationFailedException {
+            // check if not aborted
+            if (isAborted()) {
+                throw new OperationFailedException("node creation aborted due to aborted session");
+            }
+            
+            // create an archive and deploy it to the webserver directory
+            try {
+                // deploy the web archive
+                mContainer.deployArchive();
+            } catch (IOException e) {
+                throw new OperationFailedException(e);
+            }
+        }
+        
+        @Override
+        public void onFinish() {
+            // schedule a preparation
+            // timeout: 180 seconds
+            mSlaveExecutor.execute(mSlaves, mBootUpTask, 180);
+        }
+        
+        @Override
+        public void onError(Exception e) {
+            System.err.println("ERROR: " + e.toString());
+            error();
+        }
+
+        @Override
+        public void run(SlaveConnection c, Node n) throws OperationFailedException {
+            try {
+                // create the node on the slave
+                c.createNode(n);
+                
+                // set new node state
+                Database.getInstance().updateNode(n, Node.State.CREATED);
+            } catch (Exception e) {
+                throw new OperationFailedException(e);
+            }
+        }
+    };
+    
+    /**
+     * This task boot the nodes and wait until they are up
+     */
+    private SlaveExecutor.SlaveRunnable mBootUpTask = new SlaveExecutor.SlaveRunnable() {
+        
+        @Override
+        public void run(SlaveConnection c, Slave s) throws OperationFailedException {
+            try {
+                // run the session on the slave
+                c.runSession(mSession);
+            } catch (Exception e) {
+                throw new OperationFailedException(e);
+            }
+            
+            // get all nodes of this session
+            List<Node> nodes = Database.getInstance().getNodes(mSession);
+            
+            // mark nodes as up
+            for (Node n : nodes) {
+                if (n.assignedSlaveId != s.id) continue;
+                
+                // set new node state
+                Database.getInstance().updateNode(n, Node.State.CONNECTED);
+            }
+        }
+        
+        @Override
+        public void onTimeout() {
+            System.err.println("ERROR: boot-up timed out");
+            error();
+        }
+        
+        @Override
+        public void onPrepare() throws OperationFailedException {
+            // check if not aborted
+            if (isAborted()) {
+                throw new OperationFailedException("boot-up aborted due to aborted session");
+            }
+        }
+        
+        @Override
+        public void onFinish() {
+            // schedule a run task
+            mExecutor.execute(mRunableBootup);
+        }
+
+        @Override
+        public void onError(Exception e) {
+            System.err.println("ERROR: boot-up failed " + e.toString());
+            error();
+        }
+    };
     
     /**
      * This task tries to distribute all nodes across the slaves
@@ -199,135 +362,64 @@ public class SessionController {
                 // try to distribute the session to slaves
                 mSlaves = MasterServer.tryDistribution(mSession);
                 
-                // schedule a prepare task
-                mMainExecutor.execute(mRunablePrepare);
+                // schedule a preparation
+                // timeout: 120 seconds per slave
+                mSlaveExecutor.execute(mSlaves, mPrepareTask, 120 * mSlaves.size());
             } catch (MasterServer.DistributionFailedException e) {
                 // distribution failed
                 System.err.println("Distribution of session " + mSession.id.toString() + " failed.");
                 
                 // check again in 2 minutes
-                scheduledDistribution = mMainExecutor.schedule(mRunnableDistribute, 2, TimeUnit.MINUTES);
+                scheduledDistribution = mExecutor.schedule(mRunnableDistribute, 2, TimeUnit.MINUTES);
             }
         }
     };
     
     /**
-     * This task prepares all nodes
+     * This task collects all the statistic data from all nodes
      */
-    private Runnable mRunablePrepare = new Runnable() {
+    private SlaveExecutor.NodeRunnable mCollectStatsTask = new SlaveExecutor.NodeRunnable() {
+
         @Override
-        public void run() {
-            // abort process if state changed to aborted
-            if (isAborted()) return;
-            
-            // create an archive and deploy it to the webserver directory
+        public void run(SlaveConnection c, Node n) throws OperationFailedException {
             try {
-                // deploy the web archive
-                mContainer.deployArchive();
-            } catch (IOException e) {
-                System.err.println("ERROR: " + e.toString());
-                // error
-                error();
-                return;
+                // collect stats of this node
+                String stats = c.getStats(n);
+                  
+                // store the statistic data in the database
+                Database.getInstance().putStats(n, stats);
+            } catch (Exception e) {
+                throw new OperationFailedException(e);
             }
-            
-            // get the database object
-            Database db = Database.getInstance();
-            
-            // get all nodes of this session
-            List<Node> nodes = db.getNodes(mSession);
-            
-            // prepare a latch
-            CountDownLatch latch = new CountDownLatch(mSlaves.size());
-            
-            // get all nodes on this slave
-            for (Slave s : mSlaves) {
-                // schedule prepare task for this slave
-                mPooledExecutor.execute( new PrepareTask(latch, s, nodes) );
-            }
-            
-            try {
-                // wait until all slaves are prepared
-                // maximum one minute per node
-                if (latch.await(nodes.size(), TimeUnit.MINUTES)) {
-                    // schedule a run task
-                    mMainExecutor.execute(mRunableBootup);
-                }
-                else {
-                    // timeout
-                    error();
-                }
-            } catch (InterruptedException e) {
-                // error
-                e.printStackTrace();
-            }
-        }
-    };
-    
-    private class PrepareTask implements Runnable {
-        
-        CountDownLatch mLatch = null;
-        Slave mSlave = null;
-        List<Node> mNodes = null;
-        
-        
-        public PrepareTask(CountDownLatch latch, Slave slave, List<Node> nodes) {
-            mLatch = latch;
-            mSlave = slave;
-            mNodes = nodes;
         }
 
         @Override
-        public void run() {
-            SlaveConnection conn = MasterServer.getSlaveConnection(mSlave);
-            
-            try {
-                // create the session on the slave
-                conn.createSession(mSession, Configuration.getWebLocation());
-                
-                // prepare the session
-                conn.prepareSession(mSession);
-                
-                // add all nodes
-                for (Node n : mNodes) {
-                    if (n.assignedSlaveId != mSlave.id) continue;
-                    
-                    // abort process if state changed to aborted
-                    if (isAborted()) break;
-                    
-                    // create the node on the slave
-                    conn.createNode(n);
-                    
-                    // set new node state
-                    Database.getInstance().updateNode(n, Node.State.CREATED);
-                }
-                
-                // abort process if state changed to aborted
-                if (!isAborted()) {
-                    // run the session on the slave
-                    conn.runSession(mSession);
-                    
-                    for (Node n : mNodes) {
-                        if (n.assignedSlaveId != mSlave.id) continue;
-                        
-                        // set new node state
-                        Database.getInstance().updateNode(n, Node.State.CONNECTED);
-                    }
-                }
-                
-                // decrement latch for each processed slave
-                mLatch.countDown();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (SessionNotFoundException e) {
-                // session not found - might be caused by ABORT
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (SessionRunTimeoutException e) {
-                e.printStackTrace();
+        public void onPrepare() throws OperationFailedException {
+            // check if not aborted
+            if (isAborted()) {
+                throw new OperationFailedException("stats collection aborted due to aborted session");
             }
         }
-    }
+
+        @Override
+        public void onFinish() {
+            // notify visualizations
+            MasterServer.fireSessionStatsUpdated(mSession);
+        }
+
+        @Override
+        public void onTimeout() {
+            System.err.println("ERROR: stats collection timed out");
+            error();
+        }
+
+        @Override
+        public void onError(Exception e) {
+            System.err.println("ERROR: stats collection failed " + e.toString());
+            error();
+        }
+        
+    };
     
     /**
      * This task boot-up all nodes
@@ -338,21 +430,36 @@ public class SessionController {
             // abort process if state changed to aborted
             if (isAborted()) return;
             
-            // prepare movement provider
-            prepareMovement();
+            // prepare movement, nodes initial position, and other parameters
+            prepareSetup();
             
             // switch state to running
             setSessionState(Session.State.RUNNING);
             
             // schedule stats collection
             if (mSession.stats_interval != null) {
-                scheduledStatsCollector = mMainExecutor.scheduleAtFixedRate(mStatsCollector, 0, mSession.stats_interval, TimeUnit.SECONDS);
+                scheduledStatsCollector = mExecutor.scheduleAtFixedRate(new Runnable() {
+                    @Override
+                    public void run() {
+                        // get all nodes of this session
+                        List<Node> nodes = Database.getInstance().getNodes(mSession);
+                        
+                        // schedule stats collection
+                        // timeout: 10 seconds per node
+                        mSlaveExecutor.execute(mSlaves, nodes, mCollectStatsTask, 10 * nodes.size());
+                    }
+                }, 0, mSession.stats_interval, TimeUnit.SECONDS);
             }
+            
+            // TODO: schedule traffic generation
+            
+            // TODO: schedule movement updates
+            
             
             // schedule a finish task - if duration is specified
             Long duration = mMovement.getDuration();
             if (duration != null) {
-                scheduledFinish = mMainExecutor.schedule(mRunableFinish, duration, TimeUnit.SECONDS);
+                scheduledFinish = mExecutor.schedule(mRunableFinish, duration, TimeUnit.SECONDS);
             }
         }
     };
@@ -371,58 +478,38 @@ public class SessionController {
         }
     };
     
-    private class CleanupTask implements Runnable {
-        
-        CountDownLatch mLatch = null;
-        Slave mSlave = null;
-
-        public CleanupTask(CountDownLatch latch, Slave slave) {
-            mLatch = latch;
-            mSlave = slave;
-        }
-
+    private SlaveExecutor.SlaveRunnable mDestroyTask = new SlaveExecutor.SlaveRunnable() {
         @Override
-        public void run() {
+        public void run(SlaveConnection c, Slave s) throws OperationFailedException {
             try {
-                if (mSession != null) {
-                    SlaveConnection conn = MasterServer.getSlaveConnection(mSlave);
-                    
-                    // stop all nodes
-                    conn.stopSession(mSession);
-                    
-                    // destroy the session
-                    conn.destroySession(mSession);
-                }
+                // stop all nodes
+                c.stopSession(mSession);
                 
-                // decrement the latch
-                mLatch.countDown();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (SessionNotFoundException e) {
-                // ignore if session was not found
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                // destroy the session
+                c.destroySession(mSession);
+            } catch (Exception e) {
+                throw new OperationFailedException(e);
             }
         }
-    }
-    
-    private void destroySession() throws InterruptedException, TimeoutException {
-        // prepare a latch
-        CountDownLatch latch = new CountDownLatch(mSlaves.size());
         
-        // get all nodes on this slave
-        for (Slave s : mSlaves) {
-            // schedule prepare task for this slave
-            mPooledExecutor.execute( new CleanupTask(latch, s) );
+        @Override
+        public void onTimeout() {
+            System.err.println("ERROR: destroy timed out");
         }
         
-        // wait until all slaves are prepared
-        // maximum one minute per node
-        if (!latch.await(mSlaves.size(), TimeUnit.MINUTES)) {
-            // timeout
-            throw new TimeoutException();
+        @Override
+        public void onPrepare() throws OperationFailedException {
         }
-    }
+        
+        @Override
+        public void onFinish() {
+        }
+        
+        @Override
+        public void onError(Exception e) {
+            System.err.println("ERROR: destroy failed " + e.toString());
+        }
+    };
     
     private Session getSession() {
         return Database.getInstance().getSession(mSession.id);
@@ -436,7 +523,11 @@ public class SessionController {
         return Session.State.ABORTED.equals( getSession().state );
     }
     
-    private void prepareMovement() {
+    private void prepareSetup() {
+        // create a contact provider
+        mContactProvider = new ContactProvider();
+        
+        // create the right movement model
         switch (mSession.mobility.model) {
             case RANDOM_WALK:
                 // random walk selected
@@ -449,86 +540,113 @@ public class SessionController {
             default:
                 mMovement = new NullMovement();
                 break;
+        }
+        
+        // assign contact provider as movement handler
+        mMovement.addMovementHandler(mContactProvider);
+        
+        // assign local object as contact handler
+        mContactProvider.addContactHandler(mContactHandler);
+        
+        Database db = Database.getInstance();
+        List<Node> nodes = db.getNodes(mSession);
+        
+        // mobility parameters
+        HashMap<String, String> parameters = mSession.mobility.parameters;
+        
+        for (Node n : nodes) {
+            // set initial communication range
+            if (parameters.containsKey("range")) {
+                n.range = Double.valueOf(parameters.get("range"));
+            }
             
+            // add node to the movement model
+            mMovement.add(n);
+            
+            // add node to the contact provider
+            mContactProvider.add(n);
         }
     }
     
-    private Runnable mStatsCollector = new Runnable() {
+    private ContactProvider.ContactHandler mContactHandler = new ContactProvider.ContactHandler() {
         @Override
-        public void run() {
-            // abort process if state changed to aborted
-            if (isAborted()) return;
-            
-            // get the database object
-            Database db = Database.getInstance();
-            
-            // get all nodes of this session
-            List<Node> nodes = db.getNodes(mSession);
-            
-            // prepare a latch
-            CountDownLatch latch = new CountDownLatch(mSlaves.size());
-            
-            // get all nodes on this slave
-            for (Slave s : mSlaves) {
-                // schedule prepare task for this slave
-                mPooledExecutor.execute( new StatsCollectTask(latch, s, nodes) );
-            }
-            
-            try {
-                // wait until all slaves are prepared
-                // maximum 10 seconds per node
-                if (!latch.await(10 * nodes.size(), TimeUnit.SECONDS)) {
-                    // timeout
+        public void onContact(final Link link) {
+            mSlaveExecutor.execute(link.source, new SlaveExecutor.NodeRunnable() {
+
+                @Override
+                public void run(SlaveConnection c, Node n) throws OperationFailedException {
+                    try {
+                        c.connectionUp(n, link.target);
+                    } catch (Exception e) {
+                        throw new OperationFailedException(e);
+                    }
+                }
+
+                @Override
+                public void onTimeout() {
+                    // timeouts won't happen here
+                }
+                
+                @Override
+                public void onPrepare() throws OperationFailedException {
+                    // check if not aborted
+                    if (isAborted()) {
+                        throw new OperationFailedException("link operation aborted due to aborted session");
+                    }
+                }
+                
+                @Override
+                public void onFinish() {
+                    // TODO: announce link-up to GUI
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    System.err.println("ERROR: link-up " + link.toString() + " failed");
                     error();
                 }
                 
-                // notify visualizations
-                MasterServer.fireSessionStatsUpdated(mSession);
-            } catch (InterruptedException e) {
-                // error
-                e.printStackTrace();
-            }
-        }
-    };
-    
-    private class StatsCollectTask implements Runnable {
-        
-        CountDownLatch mLatch = null;
-        Slave mSlave = null;
-        List<Node> mNodes = null;
-        
-        
-        public StatsCollectTask(CountDownLatch latch, Slave slave, List<Node> nodes) {
-            mLatch = latch;
-            mSlave = slave;
-            mNodes = nodes;
+            });
         }
 
         @Override
-        public void run() {
-            SlaveConnection conn = MasterServer.getSlaveConnection(mSlave);
-            
-            try {
-                // iterate over all nodes
-                for (Node n : mNodes) {
-                    if (n.assignedSlaveId != mSlave.id) continue;
-                    
-                    // collect stats of this node
-                    String stats = conn.getStats(n);
-                    
-                    // store the statistic data in the database
-                    Database.getInstance().putStats(n, stats);
+        public void onSeparation(final Link link) {
+            mSlaveExecutor.execute(link.source, new SlaveExecutor.NodeRunnable() {
+
+                @Override
+                public void run(SlaveConnection c, Node n) throws OperationFailedException {
+                    try {
+                        c.connectionDown(n, link.target);
+                    } catch (Exception e) {
+                        throw new OperationFailedException(e);
+                    }
+                }
+
+                @Override
+                public void onTimeout() {
+                    // timeouts won't happen here
                 }
                 
-                // decrement latch for each processed slave
-                mLatch.countDown();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (SessionNotFoundException e) {
-                // session not found - might be caused by ABORT
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+                @Override
+                public void onPrepare() throws OperationFailedException {
+                    // check if not aborted
+                    if (isAborted()) {
+                        throw new OperationFailedException("link operation aborted due to aborted session");
+                    }
+                }
+                
+                @Override
+                public void onFinish() {
+                    // TODO: announce link-down to GUI
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    System.err.println("ERROR: link-down " + link.toString() + " failed");
+                    error();
+                }
+                
+            });
         }
-    }
+    };
 }
