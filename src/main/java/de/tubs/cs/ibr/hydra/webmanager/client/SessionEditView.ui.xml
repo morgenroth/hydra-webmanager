@@ -357,6 +357,7 @@
 		</b:Row>
 		<b:Row>
 			<b:Column size="12">
+			    <g:HTMLPanel><hr /></g:HTMLPanel>
 				<b:Button icon="REPLY" type="LINK" ui:field="buttonBack">Back to
 					sessions</b:Button>
 			</b:Column>

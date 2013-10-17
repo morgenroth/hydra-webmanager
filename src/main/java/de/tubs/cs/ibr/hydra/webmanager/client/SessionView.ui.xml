@@ -15,6 +15,7 @@
     	</b:Row>
     	<b:Row>
 	    	<b:Column size="12">
+	    	    <g:HTMLPanel><hr /></g:HTMLPanel>
 				<b:Button icon="PLUS" type="PRIMARY" ui:field="buttonAdd">Add session</b:Button>
 	    	</b:Column>
     	</b:Row>
