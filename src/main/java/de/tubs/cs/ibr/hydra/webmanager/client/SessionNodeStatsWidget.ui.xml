@@ -20,7 +20,7 @@
 	</ui:style>
 	<g:HTMLPanel>
 		<b:Row>
-			<b:Column size="3">
+			<b:Column size="12">
 			    <g:HorizontalPanel spacing="12" verticalAlignment="ALIGN_MIDDLE">
 					<b:Heading size="3" ui:field="headingNode"></b:Heading>
 					<base:IconAnchor icon="REMOVE_SIGN" ui:field="buttonRemove" addStyleNames="{style.icon-remove}">
