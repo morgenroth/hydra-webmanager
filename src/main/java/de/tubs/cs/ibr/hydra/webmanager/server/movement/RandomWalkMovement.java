@@ -19,9 +19,9 @@ public class RandomWalkMovement extends MovementProvider {
     }
 
     @Override
-    public void step(Double interval) {
+    public void update() {
         // TODO Auto-generated method stub
-        
+        System.out.println("Interval: " + getTimeInterval());
     }
 
 }

@@ -1,6 +1,7 @@
 package de.tubs.cs.ibr.hydra.webmanager.server.movement;
 
 import java.util.HashSet;
+import java.util.concurrent.TimeUnit;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
@@ -10,6 +11,7 @@ public abstract class MovementProvider {
         public void onMovement(Node n, Coordinates position, Double speed, Double heading);
     }
     
+    private Long mLastUpdate = null;
     private HashSet<Node> mNodes = new HashSet<Node>();
     private HashSet<MovementHandler> mListener = new HashSet<MovementHandler>();
     
@@ -23,6 +25,24 @@ public abstract class MovementProvider {
                 m.onMovement(n, position, speed, heading);
             }
         }
+    }
+    
+    /**
+     * Calculated the time interval since the last call
+     * @return
+     */
+    protected Double getTimeInterval() {
+        Double ret = 0.0;
+        
+        Long now = System.nanoTime();
+        
+        if (mLastUpdate != null) {
+            ret = Double.valueOf(now - mLastUpdate) / Double.valueOf(TimeUnit.SECONDS.toNanos(1));
+        }
+
+        mLastUpdate = now;
+        
+        return ret;
     }
     
     public void addMovementHandler(MovementHandler m) {
@@ -61,10 +81,10 @@ public abstract class MovementProvider {
     }
     
     /**
-     * Increment the past time by the given value
-     * and updates the positions of all nodes.
+     * Updates the positions of all nodes according to the
+     * time past since the last call
      */
-    public abstract void step(Double interval);
+    public abstract void update();
     
     /**
      * Returns the duration of the simulation in seconds

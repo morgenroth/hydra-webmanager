@@ -52,6 +52,8 @@ public class SessionController {
     ScheduledFuture<?> scheduledDistribution = null;
     ScheduledFuture<?> scheduledFinish = null;
     ScheduledFuture<?> scheduledStatsCollector = null;
+    ScheduledFuture<?> scheduledMovement = null;
+    ScheduledFuture<?> scheduledTrafficGeneration = null;
     
     public SessionController(Session s) {
         mSession = s;
@@ -154,6 +156,16 @@ public class SessionController {
         // cancel stats collection
         if (scheduledStatsCollector != null) {
             scheduledStatsCollector.cancel(false);
+        }
+        
+        // cancel movement updates
+        if (scheduledMovement != null) {
+            scheduledMovement.cancel(false);
+        }
+        
+        // cancel traffic generation
+        if (scheduledTrafficGeneration != null) {
+            scheduledTrafficGeneration.cancel(false);
         }
         
         // cancel scheduled distribution
@@ -451,10 +463,11 @@ public class SessionController {
                 }, 0, mSession.stats_interval, TimeUnit.SECONDS);
             }
             
-            // TODO: schedule traffic generation
+            // schedule traffic generation
+            scheduledTrafficGeneration = mExecutor.scheduleWithFixedDelay(mTrafficGenerator, 1, 1, TimeUnit.SECONDS);
             
-            // TODO: schedule movement updates
-            
+            // schedule movement updates
+            scheduledMovement = mExecutor.scheduleWithFixedDelay(mUpdateMovement, 100, 100, TimeUnit.MILLISECONDS);
             
             // schedule a finish task - if duration is specified
             Long duration = mMovement.getDuration();
@@ -647,6 +660,21 @@ public class SessionController {
                 }
                 
             });
+        }
+    };
+    
+    private Runnable mUpdateMovement = new Runnable() {
+        @Override
+        public void run() {
+            // TODO: update movement
+            mMovement.update();
+        }
+    };
+    
+    private Runnable mTrafficGenerator = new Runnable() {
+        @Override
+        public void run() {
+            // TODO: trigger traffic generation model
         }
     };
 }
