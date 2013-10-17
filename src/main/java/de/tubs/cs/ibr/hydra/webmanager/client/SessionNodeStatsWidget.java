@@ -2,6 +2,7 @@ package de.tubs.cs.ibr.hydra.webmanager.client;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.github.gwtbootstrap.client.ui.Heading;
@@ -54,7 +55,10 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     
     // variables for incremental data processing
     DataPoint mLastObj = null;
-    Integer mLastRow = -1;
+    Integer mLastRow = 0;
+    
+    // interface mapping
+    HashMap<String, Integer> mInterfaceMap = new HashMap<String, Integer>();
     
     // is true if all charts are initialized
     boolean initialized = false;
@@ -69,22 +73,6 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         initWidget(uiBinder.createAndBindUi(this));
         mSession = session;
         mNode = node;
-    }
-    
-    @Override
-    protected void onAttach() {
-        super.onAttach();
-
-        // initialize this widget
-        initialize();
-    }
-
-    public void initialize() {
-        if (mNode == null) {
-            headingNode.setText("Average");
-        } else {
-            headingNode.setText("Node '" + mNode.name + "'");
-        }
         
         // create chart options
         mOptionsChart = LineChart.Options.create();
@@ -92,25 +80,57 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         mOptionsChart.setWidth(360);
         mOptionsChart.setHeight(480);
         
+        if (mNode == null) {
+            headingNode.setText("Average");
+        } else {
+            headingNode.setText("Node '" + mNode.name + "'");
+        }
+    }
+    
+    @Override
+    protected void onAttach() {
+        super.onAttach();
+
+        // load chart library
+        initializeChart();
+    }
+
+    public void initializeChart() {
         Runnable onLoadCallbackLine = new Runnable() {
             @Override
             public void run() {
+                // generate data table for 'traffic'
+                mDataChartTraffic = DataTable.create();
+                mDataChartTraffic.addColumn(ColumnType.STRING, "Time");
+                
                 // create and add traffic chart to panel
                 mChartTraffic = new LineChart();
                 panelTraffic.add(mChartTraffic);
+                
+                // generate data table for 'bundles'
+                mDataChartBundles = DataTable.create();
+                mDataChartBundles.addColumn(ColumnType.STRING, "Time");
+                mDataChartBundles.addColumn(ColumnType.NUMBER, "Received");
+                mDataChartBundles.addColumn(ColumnType.NUMBER, "Transmitted");
+                mDataChartBundles.addColumn(ColumnType.NUMBER, "Generated");
 
                 // create and add bundles chart to panel
                 mChartBundles = new LineChart();
                 panelBundles.add(mChartBundles);
+                
+                // generate data table for 'clock'
+                mDataChartClock = DataTable.create();
+                mDataChartClock.addColumn(ColumnType.STRING, "Time");
+                mDataChartClock.addColumn(ColumnType.NUMBER, "Offset");
 
                 // create and add clock chart to panel
                 mChartClock = new LineChart();
                 panelClock.add(mChartClock);
                 
-                updateStatsData(true);
-                
                 // set charts to initialized
                 initialized = true;
+                
+                updateStatsData();
             }
         };
         
@@ -119,63 +139,33 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         VisualizationUtils.loadVisualizationApi(onLoadCallbackLine, LineChart.PACKAGE);
     }
     
-    public void updateStatsData(final boolean rebuild) {
+    public void updateStatsData() {
         MasterControlServiceAsync mcs = (MasterControlServiceAsync) GWT
                 .create(MasterControlService.class);
         
-        Date started = (rebuild) ? mSession.started : ((mLastObj == null) ? null : mLastObj.time);
-        if (started == null) started = new Date();
-
-        // get data since last session start
-        mcs.getStatsData(mSession, mNode, started, null,
-                new AsyncCallback<ArrayList<DataPoint>>() {
-
-                    @Override
-                    public void onSuccess(ArrayList<DataPoint> result) {
-                        if (rebuild) {
-                            mDataChartTraffic = null;
-                            mDataChartBundles = null;
-                            mDataChartClock = null;
-                            
-                            // reset last object
-                            mLastObj = null;
-                            
-                            // set the current number of rows to zero
-                            mLastRow = -1;
-                        }
-                        
-                        // do not process empty data-sets
-                        if (result.isEmpty()) return;
-                        
-                        // transform result into data-table
-                        transformStatsData(result);
-                        
-                        if (mDataChartTraffic != null) {
-                            // update traffic chart
-                            mChartTraffic.draw(mDataChartTraffic, mOptionsChart);
-                        }
-
-                        if (mDataChartBundles != null) {
-                            // update bundles chart
-                            mChartBundles.draw(mDataChartBundles, mOptionsChart);
-                        }
-                        
-                        if (mDataChartClock != null) {
-                             // update clock chart
-                            mChartClock.draw(mDataChartClock, mOptionsChart);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Throwable caught) {
-                        // failed
-                    }
-                });
+        Date started = (mLastObj == null) ? mSession.started : mLastObj.time;
+        
+        if (started != null) {
+            // get data since last session start
+            mcs.getStatsData(mSession, mNode, started, null, new AsyncCallback<ArrayList<DataPoint>>() {
+                @Override
+                public void onSuccess(ArrayList<DataPoint> result) {
+                    // transform result into data-table
+                    transformStatsData(result);
+                    redraw();
+                }
+    
+                @Override
+                public void onFailure(Throwable caught) {
+                    // failed
+                }
+            });
+        }
     }
     
     public void refresh() {
         // reload stats data and redraw charts
-        if (initialized) updateStatsData(false);
+        if (initialized) updateStatsData();
     }
     
     private String getDurationString(long duration) {
@@ -188,12 +178,12 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     }
     
     private void transformStatsData(ArrayList<DataPoint> result) {
-        // get the current number of rows
-        if (mDataChartTraffic != null) {
-            // for incremental updates we need to add new rows here
-            mDataChartTraffic.addRows(result.size());
-            mDataChartBundles.addRows(result.size());
-            mDataChartClock.addRows(result.size());
+        // add more rows if necessary
+        int rowsToAdd = (mLastObj == null) ? result.size() - 1 : result.size();
+        if (rowsToAdd > 0) {
+            mDataChartBundles.addRows(rowsToAdd);
+            mDataChartTraffic.addRows(rowsToAdd);
+            mDataChartClock.addRows(rowsToAdd);
         }
         
         // iterate through all the data
@@ -207,115 +197,93 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
                 elapsedSeconds = (data.time.getTime() - mSession.started.getTime()) / 1000;
             }
             
-            /**
-             * process traffic stats
-             */
-            // generate the traffic columns
-            if (mDataChartTraffic == null)
-            {
-                mDataChartTraffic = DataTable.create();
-                
-                mDataChartTraffic.addColumn(ColumnType.STRING, "Time");
-                
-                // columns are added dynamically based on the available interfaces
-                for (DataPoint.InterfaceStats iface : data.ifaces.values()) {
-                    // skip "lo" and "eth1" interface
-                    if (iface.name.equals("lo") || iface.name.equals("eth1")) continue;
-                    
-                    mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (rx)");
-                    mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (tx)");
-                }
-                
-                // add enough rows for the first data-set
-                // "-1" because of the first skipped row
-                mDataChartTraffic.addRows(result.size() - 1);
-            }
-            else
-            {
+            // skip the first data element
+            if (mLastObj != null) {
+                /**
+                 * process traffic stats
+                 */
                 // set timestamp
                 mDataChartTraffic.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
                 
-                // index for the row data
-                Integer index = 1;
-    
                 for (Map.Entry<String, DataPoint.InterfaceStats> e : data.ifaces.entrySet()) {
                     DataPoint.InterfaceStats iface = e.getValue();
                     
                     // skip "lo" and "eth1" interface
                     if (iface.name.equals("lo") || iface.name.equals("eth1")) continue;
+                    
+                    // get columns for rx and tx
+                    int rx_index = 0, tx_index = 1;
+                    
+                    if (mInterfaceMap.containsKey(iface.name + "_rx")) {
+                        rx_index = mInterfaceMap.get(iface.name + "_rx");
+                        tx_index = mInterfaceMap.get(iface.name + "_tx");
+                    } else {
+                        rx_index = mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (rx)");
+                        tx_index = mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (tx)");
+                        mInterfaceMap.put(iface.name + "_rx", rx_index);
+                        mInterfaceMap.put(iface.name + "_tx", tx_index);
+                    }
     
                     // calculate relative data values
                     Long rx = iface.rx - mLastObj.ifaces.get(e.getKey()).rx;
                     Long tx = iface.tx - mLastObj.ifaces.get(e.getKey()).tx;
     
-                    mDataChartTraffic.setValue(mLastRow, index, rx);
-                    mDataChartTraffic.setValue(mLastRow, index + 1, tx);
-                    
-                    index += 2;
+                    mDataChartTraffic.setValue(mLastRow, rx_index, rx);
+                    mDataChartTraffic.setValue(mLastRow, tx_index, tx);
                 }
-            }
-            
-            /**
-             * process dtn stats
-             */
-            // generate data-set if necessary
-            if (mDataChartBundles == null)
-            {
-                mDataChartBundles = DataTable.create();
-                mDataChartBundles.addColumn(ColumnType.STRING, "Time");
-                mDataChartBundles.addColumn(ColumnType.NUMBER, "Received");
-                mDataChartBundles.addColumn(ColumnType.NUMBER, "Transmitted");
-                mDataChartBundles.addColumn(ColumnType.NUMBER, "Generated");
-                mDataChartBundles.addRows(result.size() - 1);
-            }
-            else
-            {
+                
+                /**
+                 * process dtn stats
+                 */
                 mDataChartBundles.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
                 mDataChartBundles.setValue(mLastRow, 1, data.bundlestats.received - mLastObj.bundlestats.received);
                 mDataChartBundles.setValue(mLastRow, 2, data.bundlestats.transmitted - mLastObj.bundlestats.transmitted);
                 mDataChartBundles.setValue(mLastRow, 3, data.bundlestats.generated - mLastObj.bundlestats.generated);
-            }
-            
-            /**
-             * process clock stats
-             */
-            // generate data-set if necessary
-            if (mDataChartClock == null)
-            {
-                mDataChartClock = DataTable.create();
-                mDataChartClock.addColumn(ColumnType.STRING, "Time");
-                mDataChartClock.addColumn(ColumnType.NUMBER, "Offset");
-                mDataChartClock.addRows(result.size() - 1);
-            }
-            else
-            {
+                
+                /**
+                 * process clock stats
+                 */
                 mDataChartClock.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
                 mDataChartClock.setValue(mLastRow, 1, data.clock.offset);
+                
+                // increment row number
+                mLastRow++;
             }
-            
+
             // store data of the last item for incremental processing
             mLastObj = data;
-            
-            // increment row number
-            mLastRow++;
         }
+    }
+    
+    public void onSessionUpdated(Session s) {
+        mSession = s;
+        refresh();
     }
 
     @Override
     public void onResize(ResizeEvent event) {
-        if (initialized) {
-            Integer width = panelTraffic.getOffsetWidth();
-            Double height = Double.valueOf(width) * Double.valueOf(11.0 / 16.0);
+        Integer width = panelTraffic.getOffsetWidth();
+        Double height = Double.valueOf(width) * Double.valueOf(11.0 / 16.0);
+        
+        if (width > 0) {
             mOptionsChart.setSize(width, height.intValue());
-            
-            if (mDataChartTraffic != null)
-                mChartTraffic.draw(mDataChartTraffic, mOptionsChart);
-            
-            if (mDataChartBundles != null)
-                mChartBundles.draw(mDataChartBundles, mOptionsChart);
-            
-            if (mDataChartClock != null)
-                mChartClock.draw(mDataChartClock, mOptionsChart);
+    
+            // redraw local charts
+            redraw();
         }
+    }
+
+    private void redraw() {
+        // do not redraw until the chart library has been initialized
+        if (!initialized) return;
+    
+        // redraw traffic chart
+        mChartTraffic.draw(mDataChartTraffic, mOptionsChart);
+    
+        // redraw bundles chart
+        mChartBundles.draw(mDataChartBundles, mOptionsChart);
+        
+        // redraw clock chart
+        mChartClock.draw(mDataChartClock, mOptionsChart);
     }
 }

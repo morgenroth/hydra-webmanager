@@ -105,6 +105,9 @@ public class SessionWatchView extends View {
         // load nodes
         refreshNodeTable(s);
         
+        // push updated session to stats widgets
+        statsView.onSessionUpdated(mSession);
+        
         // schedule / cancel progress update timer
         if (Session.State.RUNNING.equals(s.state)) {
             mRefreshProgressTimer.scheduleRepeating(100);

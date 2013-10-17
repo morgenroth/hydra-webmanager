@@ -61,24 +61,27 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
 
     public SessionStatsWidget() {
         initWidget(uiBinder.createAndBindUi(this));
-    }
-    
-    public HashMap<Long, Node> getNodes() {
-        return mNodes;
+        
+        // create chart options
+        mOptionsChart = ColumnChart.Options.create();
+        mOptionsChart.setLegend(LegendPosition.BOTTOM);
+        mOptionsChart.setWidth(640);
+        mOptionsChart.setHeight(480);
+        
+        // add resize handler
+        Window.addResizeHandler(this);
     }
     
     @Override
     public void onResize(ResizeEvent event) {
-        if (initialized) {
-            Integer width = panelTraffic.getOffsetWidth();
-            Double height = Double.valueOf(width) * Double.valueOf(9.0 / 16.0);
+        Integer width = panelTraffic.getOffsetWidth();
+        Double height = Double.valueOf(width) * Double.valueOf(9.0 / 16.0);
+        
+        if (width > 0) {
             mOptionsChart.setSize(width, height.intValue());
-            
-            if ((mDataChartTraffic != null) && (mDataChartTraffic.getNumberOfRows() > 0))
-                mChartTraffic.draw(mDataChartTraffic, mOptionsChart);
-            
-            if ((mDataChartBundles != null) && (mDataChartBundles.getNumberOfRows() > 0))
-                mChartBundles.draw(mDataChartBundles, mOptionsChart);
+        
+            // redraw local charts
+            redraw();
         }
         
         // reload stats of nodes
@@ -87,13 +90,30 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
         }
     }
     
+    public void onSessionUpdated(Session s) {
+        mSession = s;
+        
+        // push session to sub widgets
+        for (SessionNodeStatsWidget w : mNodeStats) {
+            w.onSessionUpdated(mSession);
+        }
+    }
+    
+    private void redraw() {
+        // do not redraw until the chart library has been initialized
+        if (!initialized) return;
+
+        // redraw traffic chart
+        mChartTraffic.draw(mDataChartTraffic, mOptionsChart);
+    
+        // redraw bundles chart
+        mChartBundles.draw(mDataChartBundles, mOptionsChart);
+    }
+    
     public void initialize(final Session session) {
         // load chart library
         initializeChart();
         
-        // add resize handler
-        Window.addResizeHandler(this);
-
         // load the list of nodes
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
         mcs.getNodes(session.id, new AsyncCallback<ArrayList<Node>>() {
@@ -123,27 +143,31 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     }
 
     private void initializeChart() {
-        // create chart options
-        mOptionsChart = ColumnChart.Options.create();
-        mOptionsChart.setLegend(LegendPosition.BOTTOM);
-        mOptionsChart.setWidth(640);
-        mOptionsChart.setHeight(480);
-        
         Runnable onLoadCallbackColumn = new Runnable() {
             @Override
             public void run() {
-                mChartTraffic = new ColumnChart();
+                mDataChartTraffic = DataTable.create();
+                mDataChartTraffic.addColumn(ColumnType.STRING, "Nodes");
+                
+                mChartTraffic = new ColumnChart(mDataChartTraffic, mOptionsChart);
                 panelTraffic.add(mChartTraffic);
                 //mChartTraffic.addSelectHandler(createSelectHandler(mChartTraffic));
                 
-                mChartBundles = new ColumnChart();
+                mDataChartBundles = DataTable.create();
+                mDataChartBundles.addColumn(ColumnType.STRING, "Nodes");
+                mDataChartBundles.addColumn(ColumnType.NUMBER, "Received");
+                mDataChartBundles.addColumn(ColumnType.NUMBER, "Transmitted");
+                mDataChartBundles.addColumn(ColumnType.NUMBER, "Generated");
+                
+                mChartBundles = new ColumnChart(mDataChartBundles, mOptionsChart);
+                
                 panelBundles.add(mChartBundles);
                 //mChartBundles.addSelectHandler(createSelectHandler(mChartBundles));
                 
-                updateStatsData(true);
-                
                 // set charts to initialized
                 initialized = true;
+                
+                updateStatsData();
             }
         };
         
@@ -152,17 +176,14 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
         VisualizationUtils.loadVisualizationApi(onLoadCallbackColumn, ColumnChart.PACKAGE);
     }
     
-    public void updateStatsData(final boolean rebuild) {
+    public void updateStatsData() {
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
         mcs.getStatsLatest(mSession, new AsyncCallback<HashMap<Long,DataPoint>>() {
             
             @Override
             public void onSuccess(HashMap<Long, DataPoint> result) {
-                transformStatsData(result, rebuild);
-                
-                // update charts
-                mChartTraffic.draw(mDataChartTraffic, mOptionsChart);
-                mChartBundles.draw(mDataChartBundles, mOptionsChart);
+                transformStatsData(result);
+                redraw();
             }
             
             @Override
@@ -174,7 +195,7 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     
     public void refresh() {
         // reload stats data and redraw charts
-        if (initialized) updateStatsData(false);
+        if (initialized) updateStatsData();
         
         // reload stats of nodes
         for (SessionNodeStatsWidget w : mNodeStats) {
@@ -182,33 +203,27 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
         }
     }
     
-    private void transformStatsData(HashMap<Long, DataPoint> result, boolean rebuild) {
-        if (rebuild) {
-            mDataChartBundles = DataTable.create();
-            mDataChartBundles.addColumn(ColumnType.STRING, "Nodes");
-            mDataChartBundles.addColumn(ColumnType.NUMBER, "Received");
-            mDataChartBundles.addColumn(ColumnType.NUMBER, "Transmitted");
-            mDataChartBundles.addColumn(ColumnType.NUMBER, "Generated");
-            mDataChartBundles.addRows(result.size());
-            
-            mDataChartTraffic = DataTable.create();
-            mDataChartTraffic.addColumn(ColumnType.STRING, "Nodes");
-            mDataChartTraffic.addRows(result.size());
+    private void transformStatsData(HashMap<Long, DataPoint> result) {
+        // add more rows if necessary
+        int nor = mDataChartBundles.getNumberOfRows();
+        if (nor < result.size()) {
+            mDataChartBundles.addRows(result.size() - nor);
+            mDataChartTraffic.addRows(result.size() - nor);
         }
-
+        
         Integer row = 0;
+        
         for (Entry<Long,DataPoint> e : result.entrySet()) {
             Long nodeId = e.getKey();
             DataPoint data = e.getValue();
             
-            if (rebuild)
-                mDataChartTraffic.setValue(row, 0, mNodes.get(nodeId).name);
+            mDataChartTraffic.setValue(row, 0, mNodes.get(nodeId).name);
             
             for (DataPoint.InterfaceStats iface : data.ifaces.values()) {
                 // skip "lo" and "eth1" interface
                 if (iface.name.equals("lo") || iface.name.equals("eth1")) continue;
                 
-                // add new columns if necessary
+                // get columns for rx and tx
                 int rx_index = 0, tx_index = 1;
                 
                 if (mInterfaceMap.containsKey(iface.name + "_rx")) {
@@ -216,7 +231,7 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
                     tx_index = mInterfaceMap.get(iface.name + "_tx");
                 } else {
                     rx_index = mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (rx)");
-                    tx_index = mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (rx)");
+                    tx_index = mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (tx)");
                     mInterfaceMap.put(iface.name + "_rx", rx_index);
                     mInterfaceMap.put(iface.name + "_tx", tx_index);
                 }
@@ -225,9 +240,7 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
                 mDataChartTraffic.setValue(row, tx_index, iface.tx);
             }
             
-            if (rebuild)
-                mDataChartBundles.setValue(row, 0, mNodes.get(nodeId).name);
-            
+            mDataChartBundles.setValue(row, 0, mNodes.get(nodeId).name);
             mDataChartBundles.setValue(row, 1, data.bundlestats.received);
             mDataChartBundles.setValue(row, 2, data.bundlestats.transmitted);
             mDataChartBundles.setValue(row, 3, data.bundlestats.generated);
@@ -235,46 +248,4 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
             row++;
         }
     }
-
-//    /*** CHART DEMO CODE ***/
-//    private SelectHandler createSelectHandler(final ColumnChart chart) {
-//      return new SelectHandler() {
-//        @Override
-//        public void onSelect(SelectEvent event) {
-//          String message = "";
-//          
-//          // May be multiple selections.
-//          JsArray<Selection> selections = chart.getSelections();
-//
-//          for (int i = 0; i < selections.length(); i++) {
-//            // add a new line for each selection
-//            message += i == 0 ? "" : "\n";
-//            
-//            Selection selection = selections.get(i);
-//
-//            if (selection.isCell()) {
-//              // isCell() returns true if a cell has been selected.
-//              
-//              // getRow() returns the row number of the selected cell.
-//              int row = selection.getRow();
-//              // getColumn() returns the column number of the selected cell.
-//              int column = selection.getColumn();
-//              message += "cell " + row + ":" + column + " selected";
-//            } else if (selection.isRow()) {
-//              // isRow() returns true if an entire row has been selected.
-//              
-//              // getRow() returns the row number of the selected row.
-//              int row = selection.getRow();
-//              message += "row " + row + " selected";
-//            } else {
-//              // unreachable
-//              message += "Pie chart selections should be either row selections or cell selections.";
-//              message += "  Other visualizations support column selections as well.";
-//            }
-//          }
-//          
-//          Window.alert(message);
-//        }
-//      };
-//    }
 }
