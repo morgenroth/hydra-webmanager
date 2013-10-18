@@ -116,7 +116,7 @@ public class SlaveExecutor {
             
             // fake slave object
             Slave s = new Slave();
-            s.id = mNode.slaveId;
+            s.id = mNode.assignedSlaveId;
             SlaveConnection conn = MasterServer.getSlaveConnection(s);
             
             try {

@@ -64,9 +64,6 @@ public abstract class MovementProvider {
     public void add(Node n) {
         synchronized(mNodes) {
             mNodes.add(n);
-            
-            // TODO: set communication range
-            n.range = 0.0;
         }
     }
     

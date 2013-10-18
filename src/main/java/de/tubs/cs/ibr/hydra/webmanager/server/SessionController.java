@@ -1,7 +1,6 @@
 package de.tubs.cs.ibr.hydra.webmanager.server;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -562,6 +561,9 @@ public class SessionController {
         // assign contact provider as movement handler
         mMovement.addMovementHandler(mContactProvider);
         
+        // register as movement receiver
+        mMovement.addMovementHandler(mMovementHandler);
+        
         // assign local object as contact handler
         mContactProvider.addContactHandler(mContactHandler);
         
@@ -579,6 +581,50 @@ public class SessionController {
             mContactProvider.add(n);
         }
     }
+    
+    private MovementProvider.MovementHandler mMovementHandler = new MovementProvider.MovementHandler() {
+        @Override
+        public void onMovement(final Node n, final Coordinates position, Double speed, Double heading) {
+            // update position on the node
+            mSlaveExecutor.execute(n, new SlaveExecutor.NodeRunnable() {
+
+                @Override
+                public void run(SlaveConnection c, Node n) throws OperationFailedException {
+                    try {
+                        c.setPosition(n, position.getX(), position.getY(), position.getZ());
+                    } catch (Exception e) {
+                        throw new OperationFailedException(e);
+                    }
+                }
+
+                @Override
+                public void onTimeout() {
+                    // timeouts won't happen here
+                }
+                
+                @Override
+                public void onPrepare() throws OperationFailedException {
+                    // check if not aborted
+                    if (isAborted()) {
+                        throw new OperationFailedException("position update aborted due to aborted session");
+                    }
+                }
+                
+                @Override
+                public void onFinish() {
+                    // TODO: announce new position to GUI
+                    System.out.println("POSITION SET on " + n + ": " + position);
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    System.err.println("ERROR: position update on " + n + ", " + e);
+                    error();
+                }
+                
+            });
+        }
+    };
     
     private ContactProvider.ContactHandler mContactHandler = new ContactProvider.ContactHandler() {
         @Override
@@ -611,11 +657,12 @@ public class SessionController {
                 @Override
                 public void onFinish() {
                     // TODO: announce link-up to GUI
+                    System.out.println("CONTACT: " + link);
                 }
 
                 @Override
                 public void onError(Exception e) {
-                    System.err.println("ERROR: link-up " + link.toString() + " failed");
+                    System.err.println("ERROR: link-up " + link.toString() + " failed, " + e);
                     error();
                 }
                 
@@ -652,11 +699,12 @@ public class SessionController {
                 @Override
                 public void onFinish() {
                     // TODO: announce link-down to GUI
+                    System.out.println("SEPARATION: " + link);
                 }
 
                 @Override
                 public void onError(Exception e) {
-                    System.err.println("ERROR: link-down " + link.toString() + " failed");
+                    System.err.println("ERROR: link-down " + link.toString() + " failed, " + e);
                     error();
                 }
                 
@@ -667,7 +715,7 @@ public class SessionController {
     private Runnable mUpdateMovement = new Runnable() {
         @Override
         public void run() {
-            // TODO: update movement
+            // update movement
             mMovement.update();
         }
     };

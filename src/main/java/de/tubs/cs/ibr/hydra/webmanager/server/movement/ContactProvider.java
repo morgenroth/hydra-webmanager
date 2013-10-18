@@ -67,23 +67,39 @@ public class ContactProvider implements MovementProvider.MovementHandler {
         
         // check distance for all nodes
         for (Node other : getNodes()) {
+            // do not loopback
+            if (other == n) continue;
+            
             // no position, no action!
             if (other.position == null) continue;
             
             // check distance to the other node
             Double distance = n.position.distance(other.position);
             
-            Link l = new Link(n, other);
+            Link uplink = new Link(n, other);
+            Link downlink = new Link(other, n);
             
-            if ((n.range > 0.0) && (distance >= n.range)) {
+            if ((n.range > 0.0) && (distance <= n.range)) {
                 // contact
-                if (mLinkSet.add(l)) {
-                    fireOnContactEvent(l);
+                if (mLinkSet.add(uplink)) {
+                    fireOnContactEvent(uplink);
                 }
             } else {
                 // separation
-                if (mLinkSet.remove(l)) {
-                    fireOnSeparationEvent(l);
+                if (mLinkSet.remove(uplink)) {
+                    fireOnSeparationEvent(uplink);
+                }
+            }
+            
+            if ((other.range > 0.0) && (distance <= other.range)) {
+                // contact
+                if (mLinkSet.add(downlink)) {
+                    fireOnContactEvent(downlink);
+                }
+            } else {
+                // separation
+                if (mLinkSet.remove(downlink)) {
+                    fireOnSeparationEvent(downlink);
                 }
             }
         }
