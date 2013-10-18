@@ -203,6 +203,8 @@ public class SessionContainer {
                             
                             if (data != null) {
                                 m.parameters.put("connections", data);
+                            } else {
+                                m.parameters.put("connections", "");
                             }
                         }
                         
