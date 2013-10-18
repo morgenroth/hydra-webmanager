@@ -1047,33 +1047,18 @@ public class Database {
         if (s == null) return ret;
         
         try {
-            PreparedStatement count_st = mConn.prepareStatement("SELECT COUNT(*) FROM (SELECT DISTINCT `node` FROM stats WHERE session = ?) as nodes;");
-            
-            // set session id
-            count_st.setLong(1, s.id);
-            
-            ResultSet count_rs = count_st.executeQuery();
-            Long node_count = 0L;
-            if (count_rs.next()) {
-                node_count = count_rs.getLong(1);
-            }
-            count_rs.close();
-            
-            PreparedStatement st = mConn.prepareStatement("SELECT `timestamp`, `node`, `data` FROM stats WHERE session = ? ORDER BY timestamp DESC, node LIMIT ?;");
+            PreparedStatement st = mConn.prepareStatement("SELECT `id`, `s`.`timestamp`, `s`.`data` FROM `nodes` LEFT JOIN (SELECT `timestamp`, `node`, `data` FROM `stats` ORDER BY `timestamp` DESC) as s ON (`s`.`node` = `nodes`.`id`) WHERE `session` = ? GROUP BY `id` ORDER BY `id`;");
             
             // set session id
             st.setLong(1, s.id);
-
-            // limit the number of returned records
-            st.setLong(2, node_count);
             
             // execute query
             ResultSet rs = st.executeQuery();
 
             while (rs.next()) {
-                Long nodeId = rs.getLong(2);
+                Long nodeId = rs.getLong(1);
                 
-                DataPoint data = transformJsonData(rs.getTimestamp(1), rs.getString(3));
+                DataPoint data = transformJsonData(rs.getTimestamp(2), rs.getString(3));
 
                 // put data into the data-set
                 ret.put(nodeId, data);
