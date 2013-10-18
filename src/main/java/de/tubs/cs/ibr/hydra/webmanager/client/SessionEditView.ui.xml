@@ -311,6 +311,19 @@
 								</g:FlowPanel>
 								<!-- Static -->
 								<g:FlowPanel>
+									<!-- Duration -->
+									<b:ControlGroup>
+										<b:ControlLabel for="textStaticDuration">Duration</b:ControlLabel>
+										<b:Controls>
+											<b:InputAddOn prependIcon="TIME" appendText="s">
+												<b:TextBox alternateSize="SMALL" b:id="textStaticDuration"
+													ui:field="textMovementStaticDuration" b:placeholder="infinite" />
+											</b:InputAddOn>
+											<b:HelpBlock>
+												This is the time the simulation will last.
+											</b:HelpBlock>
+										</b:Controls>
+									</b:ControlGroup>
 									<!-- Static connections -->
 									<b:ControlGroup>
 										<b:ControlLabel for="textStaticConnections">Static Connections</b:ControlLabel>

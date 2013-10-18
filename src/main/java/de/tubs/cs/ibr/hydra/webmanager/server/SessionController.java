@@ -19,6 +19,8 @@ import de.tubs.cs.ibr.hydra.webmanager.server.movement.ContactProvider;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.MovementProvider;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.NullMovement;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.RandomWalkMovement;
+import de.tubs.cs.ibr.hydra.webmanager.server.movement.StaticMovement;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
@@ -547,8 +549,9 @@ public class SessionController {
                 // random walk selected
                 mMovement = new RandomWalkMovement(mSession.mobility);
                 break;
-//            case STATIC:
-//                break;
+            case STATIC:
+                mMovement = new StaticMovement(mSession.mobility);
+                break;
 //            case THE_ONE:
 //                break;
             default:

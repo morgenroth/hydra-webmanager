@@ -88,6 +88,7 @@ public class SessionEditView extends View {
     
     // STATIC
     @UiField TextArea textMovementStaticConnections;
+    @UiField TextBox textMovementStaticDuration;
     
     @UiField SessionNodesEditor nodesEditor;
     
@@ -495,6 +496,11 @@ public class SessionEditView extends View {
                 } else {
                     textMovementStaticConnections.setText(null);
                 }
+                if (mSession.mobility.parameters.containsKey("duration")) {
+                    textMovementStaticDuration.setText(mSession.mobility.parameters.get("duration"));
+                } else {
+                    textMovementStaticDuration.setText(null);
+                }
                 break;
             case THE_ONE:
                 if (mSession.mobility.parameters.containsKey("file")) {
@@ -575,6 +581,12 @@ public class SessionEditView extends View {
     void onMovementStaticConnectionsChanged(ChangeEvent evt) {
         if (mChangedSession.mobility == null) return;
         mChangedSession.mobility.parameters.put("connections", textMovementStaticConnections.getText());
+    }
+    
+    @UiHandler("textMovementStaticDuration")
+    void onMovementStaticDurationChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("duration", textMovementStaticDuration.getText());
     }
     
     @UiHandler("panelTabs")
