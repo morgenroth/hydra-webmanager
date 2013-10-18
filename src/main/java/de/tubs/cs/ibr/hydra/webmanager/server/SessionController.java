@@ -467,7 +467,8 @@ public class SessionController {
             scheduledTrafficGeneration = mExecutor.scheduleWithFixedDelay(mTrafficGenerator, 1, 1, TimeUnit.SECONDS);
             
             // schedule movement updates
-            scheduledMovement = mExecutor.scheduleWithFixedDelay(mUpdateMovement, 100, 100, TimeUnit.MILLISECONDS);
+            Double msec = mSession.resolution * 1000.0;
+            scheduledMovement = mExecutor.scheduleWithFixedDelay(mUpdateMovement, msec.longValue(), msec.longValue(), TimeUnit.MILLISECONDS);
             
             // schedule a finish task - if duration is specified
             Long duration = mMovement.getDuration();
@@ -564,14 +565,9 @@ public class SessionController {
         Database db = Database.getInstance();
         List<Node> nodes = db.getNodes(mSession);
         
-        // mobility parameters
-        HashMap<String, String> parameters = mSession.mobility.parameters;
-        
         for (Node n : nodes) {
             // set initial communication range
-            if (parameters.containsKey("range")) {
-                n.range = Double.valueOf(parameters.get("range"));
-            }
+            n.range = (mSession.range != null) ? mSession.range : 0.0;
             
             // add node to the movement model
             mMovement.add(n);

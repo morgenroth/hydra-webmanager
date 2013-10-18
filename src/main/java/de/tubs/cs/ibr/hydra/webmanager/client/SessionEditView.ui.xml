@@ -130,7 +130,45 @@
 						</b:Column>
 					</b:Row>
 				</b:Form>
-		</b:Tab>
+			</b:Tab>
+			<!-- Simulation -->
+			<b:Tab heading="Simulation">
+				<b:Form type="HORIZONTAL">
+					<b:Row>
+						<b:Column size="12">
+							<!-- Resolution -->
+							<b:ControlGroup>
+								<b:ControlLabel for="textResolution">Unit size / Resolution</b:ControlLabel>
+								<b:Controls>
+									<b:InputAddOn appendText="s">
+										<b:TextBox alternateSize="SMALL" b:id="textResolution"
+											ui:field="textSimulationResolution" b:placeholder="0.2" />
+									</b:InputAddOn>
+									<b:HelpBlock>
+										Calculate step and connection every
+										x seconds.
+										Strict adherence to the resolution
+										can not be guaranteed,
+										however drift in
+										# sleep() will not affect the correctness of
+										the traces.
+									</b:HelpBlock>
+								</b:Controls>
+							</b:ControlGroup>
+							<!-- Communication Range -->
+							<b:ControlGroup>
+								<b:ControlLabel for="textRange">Communication Range</b:ControlLabel>
+								<b:Controls>
+									<b:InputAddOn appendText="m">
+										<b:TextBox alternateSize="SMALL" b:id="textRange"
+											ui:field="textSimulationRange" b:placeholder="300" />
+									</b:InputAddOn>
+								</b:Controls>
+							</b:ControlGroup>
+						</b:Column>
+					</b:Row>
+				</b:Form>
+			</b:Tab>
 			<!-- Network -->
 			<b:Tab heading="Network">
 				<b:Form type="HORIZONTAL">
@@ -229,26 +267,6 @@
 										</b:Controls>
 									</b:ControlGroup>
 
-									<!-- Resolution -->
-									<b:ControlGroup>
-										<b:ControlLabel for="textRwpResolution">Unit size / Resolution</b:ControlLabel>
-										<b:Controls>
-											<b:InputAddOn appendText="s">
-												<b:TextBox alternateSize="SMALL" b:id="textRwpResolution"
-													ui:field="textMovementRwpResolution" b:placeholder="0.2" />
-											</b:InputAddOn>
-											<b:HelpBlock>
-												Calculate step and connection every
-												x seconds.
-												Strict adherence to the resolution
-												can not be guaranteed,
-												however drift in
-												# sleep() will not affect the correctness of
-												the traces.
-											</b:HelpBlock>
-										</b:Controls>
-									</b:ControlGroup>
-
 									<!-- Moving Time -->
 									<b:ControlGroup>
 										<b:ControlLabel for="textRwpMovetime">Moving Time</b:ControlLabel>
@@ -278,17 +296,6 @@
 												Speed is uniformly distributed between minimum
 												and maximum.
 											</b:HelpBlock>
-										</b:Controls>
-									</b:ControlGroup>
-
-									<!-- Communication Range -->
-									<b:ControlGroup>
-										<b:ControlLabel for="textRwpRange">Communication Range</b:ControlLabel>
-										<b:Controls>
-											<b:InputAddOn appendText="m">
-												<b:TextBox alternateSize="SMALL" b:id="textRwpRange"
-													ui:field="textMovementRwpRange" b:placeholder="300" />
-											</b:InputAddOn>
 										</b:Controls>
 									</b:ControlGroup>
 								</g:FlowPanel>

@@ -127,6 +127,10 @@ public class Session implements IsSerializable {
     // stats
     public Long stats_interval = null;
     
+    // simulation parameters
+    public Double resolution = null;
+    public Double range = null;
+    
     // movement settings
     public MobilityParameterSet mobility = null;
 

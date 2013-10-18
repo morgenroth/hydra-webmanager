@@ -69,6 +69,9 @@ public class SessionEditView extends View {
     
     @UiField TextBox textStatsInterval;
     
+    @UiField TextBox textSimulationResolution;
+    @UiField TextBox textSimulationRange;
+    
     @UiField ListBox listMovementAlgorithm;
     @UiField DeckPanel panelMovement;
     
@@ -76,11 +79,9 @@ public class SessionEditView extends View {
     @UiField TextBox textMovementRwpDuration;
     @UiField TextBox textMovementRwpAreaSizeHeight;
     @UiField TextBox textMovementRwpAreaSizeWidth;
-    @UiField TextBox textMovementRwpResolution;
     @UiField TextBox textMovementRwpMovetime;
     @UiField TextBox textMovementRwpVmin;
     @UiField TextBox textMovementRwpVmax;
-    @UiField TextBox textMovementRwpRange;
     
     // ONE
     @UiField FileUpload textMovementOneUpload;
@@ -191,6 +192,19 @@ public class SessionEditView extends View {
         textBasePackages.setText(result.packages);
         textBaseQemuTemplate.setText(result.qemu_template);
         textBaseVboxTemplate.setText(result.vbox_template);
+        
+        // load global parameters
+        if (mSession.range != null) {
+            textSimulationRange.setText(mSession.range.toString());
+        } else {
+            textSimulationRange.setText("");
+        }
+        
+        if (mSession.resolution != null) {
+            textSimulationResolution.setText(mSession.resolution.toString());
+        } else {
+            textSimulationResolution.setText("");
+        }
         
         // load network
         textNetworkNodeAddressMax.setText(result.maxaddr);
@@ -457,12 +471,6 @@ public class SessionEditView extends View {
                     textMovementRwpAreaSizeWidth.setText(null);
                 }
                 
-                if (mSession.mobility.parameters.containsKey("resolution")) {
-                    textMovementRwpResolution.setText(mSession.mobility.parameters.get("resolution"));
-                } else {
-                    textMovementRwpResolution.setText(null);
-                }
-                
                 if (mSession.mobility.parameters.containsKey("movetime")) {
                     textMovementRwpMovetime.setText(mSession.mobility.parameters.get("movetime"));
                 } else {
@@ -479,12 +487,6 @@ public class SessionEditView extends View {
                     textMovementRwpVmax.setText(mSession.mobility.parameters.get("vmax"));
                 } else {
                     textMovementRwpVmax.setText(null);
-                }
-                
-                if (mSession.mobility.parameters.containsKey("range")) {
-                    textMovementRwpRange.setText(mSession.mobility.parameters.get("range"));
-                } else {
-                    textMovementRwpRange.setText(null);
                 }
                 break;
             case STATIC:
@@ -525,10 +527,13 @@ public class SessionEditView extends View {
         mChangedSession.mobility.parameters.put("width", textMovementRwpAreaSizeWidth.getText());
     }
     
-    @UiHandler("textMovementRwpResolution")
-    void onMovementRwpResolutionChanged(ChangeEvent evt) {
-        if (mChangedSession.mobility == null) return;
-        mChangedSession.mobility.parameters.put("resolution", textMovementRwpResolution.getText());
+    @UiHandler("textSimulationResolution")
+    void onSimulationResolutionChanged(ChangeEvent evt) {
+        try {
+            mChangedSession.resolution = Double.valueOf(textSimulationResolution.getText());
+        } catch (java.lang.NumberFormatException e) {
+            mChangedSession.resolution = 0.0;
+        }
     }
     
     @UiHandler("textMovementRwpMovetime")
@@ -549,10 +554,13 @@ public class SessionEditView extends View {
         mChangedSession.mobility.parameters.put("vmax", textMovementRwpVmax.getText());
     }
     
-    @UiHandler("textMovementRwpRange")
-    void onMovementRwpRangeChanged(ChangeEvent evt) {
-        if (mChangedSession.mobility == null) return;
-        mChangedSession.mobility.parameters.put("range", textMovementRwpRange.getText());
+    @UiHandler("textSimulationRange")
+    void onSimulationRangeChanged(ChangeEvent evt) {
+        try {
+            mChangedSession.range = Double.valueOf(textSimulationRange.getText());
+        } catch (java.lang.NumberFormatException e) {
+            mChangedSession.range = 0.0;
+        }
     }
     
     // ONE

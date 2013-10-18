@@ -171,10 +171,17 @@ public class SessionContainer {
             String si = sessionConf.get("stats", "collect_interval");
             s.stats_interval = (si == null) ? null : Long.valueOf(si);
             
+            // load global simulation configuration
+            String resolution = sessionConf.get("global", "resolution");
+            s.resolution = (resolution == null) ? null : Double.valueOf(resolution);
+            
+            String range = sessionConf.get("global", "range");
+            s.range = (range == null) ? null : Double.valueOf(range);
+            
             // load mobility configuration
             MobilityParameterSet m = new MobilityParameterSet();
-            if (sessionConf.hasOption("mobility", "model")) {
-                m.model = MobilityModel.fromString(sessionConf.get("mobility", "model"));
+            if (sessionConf.hasOption("global", "mobility")) {
+                m.model = MobilityModel.fromString(sessionConf.get("global", "mobility"));
                 String section = null;
                 
                 // clear all parameters
@@ -346,14 +353,33 @@ public class SessionContainer {
                 }
             }
             
+            // apply global simulation parameters
+            if (!sessionConf.hasSection("global")) sessionConf.addSection("global");
+            
+            if (s.resolution != null) {
+                if (s.resolution <= 0) {
+                    sessionConf.remove("global", "resolution");
+                } else {
+                    sessionConf.set("global", "resolution", s.resolution.toString());
+                }
+            }
+            
+            if (s.range != null) {
+                if (s.range <= 0) {
+                    sessionConf.remove("global", "range");
+                } else {
+                    sessionConf.set("global", "range", s.range.toString());
+                }
+            }
+            
             // apply movement parameters
             if (s.mobility != null) {
                 String section = null;
                 
                 // set mobility mode
-                if (!sessionConf.hasSection("mobility")) sessionConf.addSection("mobility");
+                if (!sessionConf.hasSection("global")) sessionConf.addSection("global");
                 
-                sessionConf.set("mobility", "model", s.mobility.model.toString());
+                sessionConf.set("global", "mobility", s.mobility.model.toString());
                 
                 switch (s.mobility.model) {
                     case NONE:
