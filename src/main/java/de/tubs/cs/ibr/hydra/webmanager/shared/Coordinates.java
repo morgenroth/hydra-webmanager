@@ -69,6 +69,10 @@ public class Coordinates implements Comparable<Coordinates>, IsSerializable {
         return y;
     }
     
+    public GeoCoordinates getGeoCoordinates(GeoCoordinates fix) {
+        return GeoCoordinates.fromCoordinates(this, fix);
+    }
+    
     public double getZ() {
         if (z == null) return 0.0;
         return z;

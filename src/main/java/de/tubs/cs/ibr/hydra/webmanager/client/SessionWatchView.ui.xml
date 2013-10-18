@@ -57,7 +57,9 @@
 					<b:Tab heading="Stats">
 						<client:SessionStatsWidget ui:field="statsView" />
 					</b:Tab>
-					<b:Tab heading="Map"></b:Tab>
+					<b:Tab heading="Map">
+					    <client:SessionMapWidget ui:field="mapView" />
+					</b:Tab>
 				</b:TabPanel>
 			</b:Column>
 		</b:Row>

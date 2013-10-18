@@ -46,6 +46,7 @@ public class SessionWatchView extends View {
     @UiField TextBox textDetailsDesc;
     
     @UiField SessionStatsWidget statsView;
+    @UiField SessionMapWidget mapView;
     
     interface Style extends CssResource {
         String activated();
@@ -81,6 +82,9 @@ public class SessionWatchView extends View {
         
         // initialize stats view
         statsView.initialize(s);
+        
+        // initialize map view
+        mapView.initialize(s);
     }
     
     
@@ -107,6 +111,9 @@ public class SessionWatchView extends View {
         
         // push updated session to stats widgets
         statsView.onSessionUpdated(mSession);
+        
+        // push updated session to map widget
+        mapView.onSessionUpdated(mSession);
         
         // schedule / cancel progress update timer
         if (Session.State.RUNNING.equals(s.state)) {
@@ -430,6 +437,7 @@ public class SessionWatchView extends View {
         else if (EventType.SESSION_STATS_UPDATED.equals(evt)) {
             if (isRelated(evt)) {
                 statsView.refresh();
+                mapView.refresh();
             }
         }
     }
@@ -457,5 +465,6 @@ public class SessionWatchView extends View {
     @UiHandler("panelTabs")
     void onTabChange(ShownEvent event) {
         statsView.onResize(null);
+        mapView.onResize(null);
     }
 }
