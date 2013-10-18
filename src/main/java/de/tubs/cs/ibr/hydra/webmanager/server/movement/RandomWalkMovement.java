@@ -20,8 +20,10 @@ public class RandomWalkMovement extends MovementProvider {
 
     @Override
     public void update() {
-        // TODO Auto-generated method stub
-        System.out.println("Interval: " + getTimeInterval());
+        // get the time past since the last call
+        Double interval = getTimeInterval();
+        
+        // TODO: ...
     }
 
 }
