@@ -228,8 +228,8 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
                 for (Map.Entry<String, DataPoint.InterfaceStats> e : data.ifaces.entrySet()) {
                     DataPoint.InterfaceStats iface = e.getValue();
                     
-                    // skip "lo" and "eth1" interface
-                    if (iface.name.equals("lo") || iface.name.equals("eth1")) continue;
+                    // skip "lo" and "eth0" interface
+                    if (iface.name.equals("lo") || iface.name.equals("eth0")) continue;
                     
                     // get columns for rx and tx
                     int rx_index = 0, tx_index = 1;

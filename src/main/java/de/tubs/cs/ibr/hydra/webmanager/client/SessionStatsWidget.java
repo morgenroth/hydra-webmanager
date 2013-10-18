@@ -244,8 +244,8 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
             mDataChartTraffic.setValue(row, 0, mNodes.get(nodeId).name);
             
             for (DataPoint.InterfaceStats iface : data.ifaces.values()) {
-                // skip "lo" and "eth1" interface
-                if (iface.name.equals("lo") || iface.name.equals("eth1")) continue;
+                // skip "lo" and "eth0" interface
+                if (iface.name.equals("lo") || iface.name.equals("eth0")) continue;
                 
                 // get columns for rx and tx
                 int rx_index = 0, tx_index = 1;
