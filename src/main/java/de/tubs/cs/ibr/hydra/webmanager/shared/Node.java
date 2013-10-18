@@ -69,4 +69,20 @@ public class Node implements IsSerializable {
      * which depends on the transmitter power.
      */
     public double range = 0.0;
+
+    @Override
+    public String toString() {
+        if (name != null) return name;
+        if (id != null) return id.toString();
+        return super.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Node) {
+            Node n = (Node)obj;
+            return (id == n.id);
+        }
+        return super.equals(obj);
+    }
 }
