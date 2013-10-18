@@ -580,12 +580,13 @@ public class SessionController {
     private ContactProvider.ContactHandler mContactHandler = new ContactProvider.ContactHandler() {
         @Override
         public void onContact(final Link link) {
-            mSlaveExecutor.execute(link.source, new SlaveExecutor.NodeRunnable() {
+            // allow reception on the target
+            mSlaveExecutor.execute(link.target, new SlaveExecutor.NodeRunnable() {
 
                 @Override
                 public void run(SlaveConnection c, Node n) throws OperationFailedException {
                     try {
-                        c.connectionUp(n, link.target);
+                        c.connectionUp(n, link.source);
                     } catch (Exception e) {
                         throw new OperationFailedException(e);
                     }
@@ -620,12 +621,13 @@ public class SessionController {
 
         @Override
         public void onSeparation(final Link link) {
-            mSlaveExecutor.execute(link.source, new SlaveExecutor.NodeRunnable() {
+            // deny reception on the target
+            mSlaveExecutor.execute(link.target, new SlaveExecutor.NodeRunnable() {
 
                 @Override
                 public void run(SlaveConnection c, Node n) throws OperationFailedException {
                     try {
-                        c.connectionDown(n, link.target);
+                        c.connectionDown(n, link.source);
                     } catch (Exception e) {
                         throw new OperationFailedException(e);
                     }
