@@ -109,8 +109,8 @@ public class MasterServer implements ServletContextListener {
             mConnections.notifyAll();
         }
         
-        // set slave to 'idle' state
-        Database.getInstance().updateSlave(slave, Slave.State.IDLE);
+        // set slave to 'connected' state
+        Database.getInstance().updateSlave(slave, Slave.State.CONNECTED);
     }
 
     public static void unregister(Slave s) {

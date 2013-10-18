@@ -6,12 +6,7 @@ public class Slave implements IsSerializable {
     
     public enum State {
         DISCONNECTED("disconnected"),
-        IDLE("idle"),
-        ASSIGNED("assigned"),
-        PREPARING("preparing"),
-        PREPARED("prepared"),
-        RUNNING("running"),
-        CLEANUP("clean-up");
+        CONNECTED("connected");
         
         private String mTag;
         
@@ -33,32 +28,17 @@ public class Slave implements IsSerializable {
         }
         
         public static State fromString(String tag) {
-            if (CLEANUP.equals(tag)) {
-                return State.CLEANUP;
-            }
-            else if (ASSIGNED.equals(tag)) {
-                return State.ASSIGNED;
-            }
-            else if (PREPARING.equals(tag)) {
-                return State.PREPARING;
-            }
-            else if (PREPARED.equals(tag)) {
-                return State.PREPARED;
-            }
-            else if (RUNNING.equals(tag)) {
-                return State.RUNNING;
-            }
-            else if (DISCONNECTED.equals(tag)) {
+            if (DISCONNECTED.equals(tag)) {
                 return State.DISCONNECTED;
             }
-            return State.IDLE;
+            return State.CONNECTED;
         }
     };
 
     public Long id = null;
     public String name = null;
     public String address = null;
-    public State state = State.IDLE;
+    public State state = State.DISCONNECTED;
     public String session = null;
     public Long owner = null;
     public Long capacity = null;
