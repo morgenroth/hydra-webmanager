@@ -153,6 +153,8 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
             
             @Override
             public void onSuccess(ArrayList<Link> result) {
+                if (result == null) return;
+                
                 // remove all active links
                 mLinks.removeAll(result);
                 

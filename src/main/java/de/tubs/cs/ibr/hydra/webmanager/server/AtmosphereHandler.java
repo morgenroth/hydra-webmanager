@@ -7,7 +7,10 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.logging.Logger;
 
+import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.AtmosphereResourceFactory;
+import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import org.atmosphere.cpr.Serializer;
 import org.atmosphere.handler.AbstractReflectorAtmosphereHandler;
@@ -22,26 +25,31 @@ public class AtmosphereHandler extends AbstractReflectorAtmosphereHandler {
     static final Logger logger = Logger.getLogger("AtmosphereHandler");
 
     @Override
-    public void onRequest(AtmosphereResource ar) throws IOException {
-        if (ar.getRequest().getMethod().equals("GET")) {
-            doGet(ar);
-        } else if (ar.getRequest().getMethod().equals("POST")) {
-            doPost(ar);
+    public void onRequest(AtmosphereResource r) throws IOException {
+        AtmosphereRequest req = r.getRequest();
+        
+        if (req.getMethod().equals("GET")) {
+            doGet(r);
+        } else if (req.getMethod().equals("POST")) {
+            doPost(r);
         }
     }
 
-    public void doGet(final AtmosphereResource ar) {
+    private void doGet(final AtmosphereResource res) {
+        // set encoding for the response
+        final String encoding = res.getRequest().getCharacterEncoding();
+        res.getResponse().setCharacterEncoding(encoding);
+        res.getResponse().setContentType("application/json");
 
-        ar.getResponse().setCharacterEncoding(ar.getRequest().getCharacterEncoding());
-        ar.getResponse().setContentType("application/json");
+        // subscribe to global /events
+        res.setBroadcaster( DefaultBroadcasterFactory.getDefault().lookup("/events", true) );
 
-        // lookup the broadcaster, if not found create it. Name is arbitrary
-        ar.setBroadcaster(DefaultBroadcasterFactory.getDefault().lookup("events", true));
-
-        ar.setSerializer(new Serializer() {
-            Charset charset = Charset.forName(ar.getResponse().getCharacterEncoding());
+        // add message serializer
+        res.setSerializer(new Serializer() {
+            Charset charset = Charset.forName(encoding);
 
             public void write(OutputStream os, Object o) throws IOException {
+                // only process Event messages
                 if (o instanceof Event) {
                     AutoBean<Event> bean = AutoBeanUtils.getAutoBean((Event)o);
                     
@@ -49,40 +57,54 @@ public class AtmosphereHandler extends AbstractReflectorAtmosphereHandler {
                     os.write(payload.getBytes(charset));
                     os.flush();
                 }
-                else if (o instanceof String) {
-                    String payload = (String)o;
-                    os.write(payload.getBytes(charset));
-                    os.flush();
-                }
-                else {
-                    String payload = o.toString();
-                    os.write(payload.getBytes(charset));
-                    os.flush();
-                }
             }
         });
+        
+        logger.info("atmosphere registered: " + res.uuid());
 
-        ar.suspend();
+        // suspend as long as there are no messages
+        res.suspend();
     }
 
-    public void doPost(AtmosphereResource ar) throws IOException {
+    private void doPost(AtmosphereResource res) throws IOException {
         StringBuilder data = new StringBuilder();
         BufferedReader requestReader;
 
-        requestReader = ar.getRequest().getReader();
+        requestReader = res.getRequest().getReader();
         char[] buf = new char[5120];
         int read = -1;
         while ((read = requestReader.read(buf)) > 0) {
             data.append(buf, 0, read);
         }
-        logger.info("Received json message from client: " + data.toString());
 
         String message = data.toString();
-        DefaultBroadcasterFactory.getDefault().lookup("notify").broadcast(message);
-    }
-
-    @Override
-    public void destroy() {
-
+        
+        if (message.startsWith("subscribe ")) {
+            String[] msg = message.split(" ");
+            
+            String atmosphereId = msg[1];
+            Long sessionId = Long.valueOf(msg[2]);
+            
+            AtmosphereResource r = AtmosphereResourceFactory.getDefault().find(atmosphereId);
+            Broadcaster b = DefaultBroadcasterFactory.getDefault().lookup("/session/" + sessionId, true);
+            
+            if ((b != null) && (r != null)) {
+                b.addAtmosphereResource(r);
+                logger.info("atmosphere " + r.uuid() + " subscribed to " + sessionId);
+            }
+        } else if (message.startsWith("unsubscribe ")) {
+            String[] msg = message.split(" ");
+            
+            String atmosphereId = msg[1];
+            Long sessionId = Long.valueOf(msg[2]);
+            
+            AtmosphereResource r = AtmosphereResourceFactory.getDefault().find(atmosphereId);
+            Broadcaster b = DefaultBroadcasterFactory.getDefault().lookup("/session/" + sessionId);
+            
+            if ((b != null) && (r != null)) {
+                b.removeAtmosphereResource(r);
+                logger.info("atmosphere " + r.uuid() + " un-subscribed from " + sessionId);
+            }
+        }
     }
 }

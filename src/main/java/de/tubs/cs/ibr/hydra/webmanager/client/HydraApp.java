@@ -52,6 +52,7 @@ public class HydraApp extends Composite {
     View currentView = null;
     
     AtmosphereRequest jsonRequest;
+    String atmosphereId = null;
 
     public HydraApp() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -99,8 +100,11 @@ public class HydraApp extends Composite {
             public Object deserialize(String message) throws SerializationException {
                 EventFactory factory = GWT.create(EventFactory.class);
 
-                // drop invalid messages
+                // drop invalid messages / extract atmosphere uuid
                 if (!message.startsWith("{")) {
+                    String[] uuid = message.split("\\|");
+                    onAtmosphereRegistered(uuid[0]);
+                    
                     Event e = factory.event().as();
                     e.setType(EventType.NONE);
                     return e;
@@ -120,6 +124,9 @@ public class HydraApp extends Composite {
                 if (message instanceof Event) {
                     AutoBean<Event> bean = AutoBeanUtils.getAutoBean((Event)message);
                     return AutoBeanCodex.encode(bean).getPayload();
+                }
+                else if (message instanceof String) {
+                    return (String)message;
                 }
                 throw new SerializationException("only event objects are allowed");
             }
@@ -168,6 +175,20 @@ public class HydraApp extends Composite {
 
         // subscribe to atmosphere channel
         jsonRequest = atmosphere.subscribe(jsonRequestConfig);
+    }
+    
+    protected void onAtmosphereRegistered(String uuid) {
+        WebManager.logger.info("atmosphere id: " + uuid.toString());
+        
+        // store atmosphere uuid for later
+        atmosphereId = uuid;
+        
+        // TODO: move subscription to map view
+        try {
+            jsonRequest.push("subscribe " + atmosphereId + " " + 1234);
+        } catch (SerializationException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

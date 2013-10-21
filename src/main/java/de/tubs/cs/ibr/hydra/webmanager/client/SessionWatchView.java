@@ -440,6 +440,15 @@ public class SessionWatchView extends View {
                 mapView.refresh();
             }
         }
+        else if (EventType.SESSION_LINK_UP.equals(evt)) {
+            // TODO: forward to map
+        }
+        else if (EventType.SESSION_LINK_DOWN.equals(evt)) {
+            // TODO: forward to map
+        }
+        else if (EventType.SESSION_NODE_MOVED.equals(evt)) {
+            // TODO: forward to map
+        }
     }
     
     private boolean isRelated(Event evt) {

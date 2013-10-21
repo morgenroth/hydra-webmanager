@@ -618,8 +618,9 @@ public class SessionController {
                 
                 @Override
                 public void onFinish() {
-                    // TODO: announce new position to GUI
+                    // announce new position to GUI
                     System.out.println("POSITION SET on " + n + ": " + position);
+                    MasterServer.firePositionUpdated(mSession, n, position);
                 }
 
                 @Override
@@ -662,8 +663,9 @@ public class SessionController {
                 
                 @Override
                 public void onFinish() {
-                    // TODO: announce link-up to GUI
+                    // announce link-up to GUI
                     System.out.println("CONTACT: " + link);
+                    MasterServer.fireLinkUp(mSession, link);
                 }
 
                 @Override
@@ -704,8 +706,9 @@ public class SessionController {
                 
                 @Override
                 public void onFinish() {
-                    // TODO: announce link-down to GUI
+                    // announce link-down to GUI
                     System.out.println("SEPARATION: " + link);
+                    MasterServer.fireLinkDown(mSession, link);
                 }
 
                 @Override

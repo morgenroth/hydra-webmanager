@@ -27,6 +27,7 @@ import com.google.web.bindery.autobean.vm.AutoBeanFactorySource;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.NodeAddress;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SlaveAllocation;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventFactory;
@@ -367,11 +368,67 @@ public class MasterServer implements ServletContextListener {
         BroadcasterFactory bf = DefaultBroadcasterFactory.getDefault();
         
         if (bf != null) {
-            Broadcaster channel = bf.lookup("events", true);
+            Broadcaster channel = bf.lookup("/events", true);
             
             // broadcast the event to the clients
             channel.broadcast(evt);
         }
+    }
+    
+    private static void broadcast(Long sessionId, EventType t, List<EventExtra> extras) {
+        EventFactory factory = AutoBeanFactorySource.create(EventFactory.class);
+        Event event = factory.event().as();
+        
+        event.setType(t);
+        
+        if (extras != null) {
+            event.setExtras(extras);
+        }
+        
+        broadcast(sessionId, event);
+    }
+    
+    private static void broadcast(Long sessionId, final Event evt) {
+        // get/create atmosphere broadcast channel
+        BroadcasterFactory bf = DefaultBroadcasterFactory.getDefault();
+        
+        if (bf != null) {
+            Broadcaster channel = bf.lookup("/session/" + sessionId.toString(), true);
+            
+            // broadcast the event to the clients
+            channel.broadcast(evt);
+        }
+    }
+    
+    public static void firePositionUpdated(final Session s, final Node n, final Coordinates position) {
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_NODE_ID, n.id.toString()));
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_POSITION_X, Double.toString(position.getX())));
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_POSITION_Y, Double.toString(position.getY())));
+        
+        // broadcast session change
+        MasterServer.broadcast(s.id, EventType.SESSION_NODE_MOVED, entries);
+    }
+    
+    public static void fireLinkUp(final Session s, final Link l) {
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_LINK_SOURCE_ID, l.source.id.toString()));
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_LINK_TARGET_ID, l.target.id.toString()));
+        
+        // broadcast session change
+        MasterServer.broadcast(s.id, EventType.SESSION_LINK_UP, entries);
+    }
+    
+    public static void fireLinkDown(final Session s, final Link l) {
+        List<EventExtra> entries = new ArrayList<EventExtra>();
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_LINK_SOURCE_ID, l.source.id.toString()));
+        entries.add(MasterServer.createEventExtra(EventType.EXTRA_LINK_TARGET_ID, l.target.id.toString()));
+        
+        // broadcast session change
+        MasterServer.broadcast(s.id, EventType.SESSION_LINK_DOWN, entries);
     }
     
     public static void fireSessionDataUpdated(final Session s) {
