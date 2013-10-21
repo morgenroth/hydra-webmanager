@@ -1,6 +1,7 @@
 package de.tubs.cs.ibr.hydra.webmanager.server;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -58,6 +59,11 @@ public class SessionController {
     
     public SessionController(Session s) {
         mSession = s;
+    }
+    
+    public ArrayList<Link> getLinks() {
+        if (mContactProvider == null) return null;
+        return mContactProvider.getLinks();
     }
     
     private MasterServer.EventListener mEventListener = new MasterServer.EventListener() {

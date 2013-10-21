@@ -12,6 +12,7 @@ import de.tubs.cs.ibr.hydra.webmanager.server.data.Configuration;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SessionContainer;
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session.Action;
@@ -255,5 +256,10 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     public HashMap<Long, DataPoint> getStatsLatest(Session s) {
         Database db = Database.getInstance();
         return db.getStatsLatest(s);
+    }
+
+    @Override
+    public ArrayList<Link> getLinks(Long sessionId) {
+        return MasterServer.getLinks(sessionId);
     }
 }

@@ -2,6 +2,7 @@ package de.tubs.cs.ibr.hydra.webmanager.client;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
 
 import com.google.gwt.ajaxloader.client.AjaxLoader;
@@ -25,6 +26,7 @@ import com.google.maps.gwt.client.Point;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 import de.tubs.cs.ibr.hydra.webmanager.shared.GeoCoordinates;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
@@ -44,8 +46,11 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     private MarkerImage mRedIcon = null;
     private MarkerImage mGreenIcon = null;
     
-    // list for shown nodes
+    // list for nodes
     HashMap<Long, MapNode> mNodes = new HashMap<Long, MapNode>();
+    
+    // list for links
+    HashSet<Link> mLinks = new HashSet<Link>();
     
     // map object
     GoogleMap mMap = null;
@@ -75,28 +80,6 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
         
         // load map library
         initializeMaps();
-        
-        // load the list of nodes
-        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.getNodes(session.id, new AsyncCallback<ArrayList<Node>>() {
-            
-            @Override
-            public void onSuccess(ArrayList<Node> result) {
-                // store the list of nodes
-                for (Node n : result) {
-                    // assign nodes range
-                    n.range = mSession.range;
-                    
-                    // create a map node
-                    mNodes.put(n.id, new MapNode(SessionMapWidget.this, n));
-                }
-            }
-            
-            @Override
-            public void onFailure(Throwable caught) {
-                // failed to load node list
-            }
-        });
     }
     
     private void initializeMaps() {
@@ -128,19 +111,84 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
               // set charts to initialized
               initialized = true;
               
-              updateData();
+              // resize the map frame
+              onResize(null);
+              
+              loadNodes();
           }
         };
         AjaxLoader.loadApi("maps", "3", callback, options);
     }
     
-    public void updateData() {
+    private void loadNodes() {
+        // load the list of nodes
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.getNodes(mSession.id, new AsyncCallback<ArrayList<Node>>() {
+            
+            @Override
+            public void onSuccess(ArrayList<Node> result) {
+                // store the list of nodes
+                for (Node n : result) {
+                    // assign nodes range
+                    n.range = mSession.range;
+                    
+                    // create a map node
+                    mNodes.put(n.id, new MapNode(SessionMapWidget.this, n));
+                }
+                
+                updateStats();
+            }
+            
+            @Override
+            public void onFailure(Throwable caught) {
+                // failed to load node list
+            }
+        });
+    }
+    
+    private void updateLinks() {
+        // load the list of links
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.getLinks(mSession.id, new AsyncCallback<ArrayList<Link>>() {
+            
+            @Override
+            public void onSuccess(ArrayList<Link> result) {
+                // remove all active links
+                mLinks.removeAll(result);
+                
+                for (Link l : mLinks) {
+                    // remove link
+                    MapNode source = mNodes.get(l.source.id);
+                    MapNode target = mNodes.get(l.target.id);
+                    source.setLink(target, false);
+                }
+                
+                mLinks.clear();
+                mLinks.addAll(result);
+                
+                for (Link l : mLinks) {
+                    // add links
+                    MapNode source = mNodes.get(l.source.id);
+                    MapNode target = mNodes.get(l.target.id);
+                    source.setLink(target, true);
+                }
+            }
+            
+            @Override
+            public void onFailure(Throwable caught) {
+                // failed to load node list
+            }
+        });
+    }
+    
+    public void updateStats() {
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
         mcs.getStatsLatest(mSession, new AsyncCallback<HashMap<Long,DataPoint>>() {
             
             @Override
             public void onSuccess(HashMap<Long, DataPoint> result) {
                 transformData(result);
+                updateLinks();
             }
             
             @Override
@@ -167,7 +215,7 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     
     public void refresh() {
         // reload stats data and redraw charts
-        if (initialized) updateData();
+        if (initialized) updateStats();
     }
 
     @Override

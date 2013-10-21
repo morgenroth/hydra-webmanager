@@ -1,5 +1,6 @@
 package de.tubs.cs.ibr.hydra.webmanager.server.movement;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
@@ -18,6 +19,12 @@ public class ContactProvider implements MovementProvider.MovementHandler {
 
     protected HashSet<Node> getNodes() {
         return mNodes;
+    }
+    
+    public ArrayList<Link> getLinks() {
+        ArrayList<Link> ret = new ArrayList<Link>();
+        ret.addAll(mLinkSet);
+        return ret;
     }
     
     protected void fireOnContactEvent(Link link) {

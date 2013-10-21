@@ -31,6 +31,7 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventFactory;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
@@ -578,5 +579,24 @@ public class MasterServer implements ServletContextListener {
         
         // clear all node assignments
         Database.getInstance().clearAssignment(null);
+    }
+    
+    public static ArrayList<Link> getLinks(Long sessionId) {
+        SessionController sc = null;
+        
+        synchronized(mControllers) {
+            // check if the session controller for this session already exists
+            if (!mControllers.containsKey(sessionId)) {
+                // ERROR
+                System.err.println("No session controller found for " + sessionId.toString());
+                return null;
+            }
+            
+            // create a session controller
+            sc = mControllers.get(sessionId);
+        }
+
+        // get session links
+        return sc.getLinks();
     }
 }
