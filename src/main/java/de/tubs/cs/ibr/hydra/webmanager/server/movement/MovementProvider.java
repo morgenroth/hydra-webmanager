@@ -79,7 +79,7 @@ public abstract class MovementProvider {
     
     /**
      * Updates the positions of all nodes according to the
-     * time past since the last call
+     * time passed since the last call
      */
     public abstract void update();
     
