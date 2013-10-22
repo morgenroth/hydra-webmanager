@@ -270,16 +270,16 @@ public class SessionView extends View {
     @Override
     public void onEventRaised(Event evt) {
         // refresh table on refresh event
-        if (EventType.SESSION_STATE_CHANGED.equals(evt)) {
+        if (evt.equals(EventType.SESSION_STATE_CHANGED)) {
             refreshSessionTable();
         }
-        else if (EventType.SESSION_REMOVED.equals(evt)) {
+        else if (evt.equals(EventType.SESSION_REMOVED)) {
             refreshSessionTable();
         }
-        else if (EventType.SESSION_ADDED.equals(evt)) {
+        else if (evt.equals(EventType.SESSION_ADDED)) {
             refreshSessionTable();
         }
-        else if (EventType.SESSION_DATA_UPDATED.equals(evt)) {
+        else if (evt.equals(EventType.SESSION_DATA_UPDATED)) {
             refreshSessionTable();
         }
     }

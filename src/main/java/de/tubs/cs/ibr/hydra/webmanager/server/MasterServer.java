@@ -22,15 +22,12 @@ import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.DefaultBroadcasterFactory;
 
-import com.google.web.bindery.autobean.vm.AutoBeanFactorySource;
-
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.NodeAddress;
+import de.tubs.cs.ibr.hydra.webmanager.server.data.ServerEvent;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SlaveAllocation;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
-import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
-import de.tubs.cs.ibr.hydra.webmanager.shared.EventFactory;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
@@ -329,28 +326,7 @@ public class MasterServer implements ServletContextListener {
         mTaskLoop.execute(t);
     }
     
-    private static EventExtra createEventExtra(String key, String data) {
-        EventFactory factory = AutoBeanFactorySource.create(EventFactory.class);
-        EventExtra e = factory.eventextra().as();
-        e.setKey(key);
-        e.setData(data);
-        return e;
-    }
-    
-    private static void broadcast(EventType t, List<EventExtra> extras) {
-        EventFactory factory = AutoBeanFactorySource.create(EventFactory.class);
-        Event event = factory.event().as();
-        
-        event.setType(t);
-        
-        if (extras != null) {
-            event.setExtras(extras);
-        }
-        
-        broadcast(event);
-    }
-    
-    private static void broadcast(final Event evt) {
+    public static void broadcast(final Event evt) {
         // distribute event
         mTaskLoop.execute(new Task() {
             @Override
@@ -371,21 +347,8 @@ public class MasterServer implements ServletContextListener {
             Broadcaster channel = bf.lookup("/events", true);
             
             // broadcast the event to the clients
-            channel.broadcast(evt);
+            channel.broadcast(evt.getEventData());
         }
-    }
-    
-    private static void broadcast(Long sessionId, EventType t, List<EventExtra> extras) {
-        EventFactory factory = AutoBeanFactorySource.create(EventFactory.class);
-        Event event = factory.event().as();
-        
-        event.setType(t);
-        
-        if (extras != null) {
-            event.setExtras(extras);
-        }
-        
-        broadcast(sessionId, event);
     }
     
     private static void broadcast(Long sessionId, final Event evt) {
@@ -396,99 +359,117 @@ public class MasterServer implements ServletContextListener {
             Broadcaster channel = bf.lookup("/session/" + sessionId.toString(), true);
             
             // broadcast the event to the clients
-            channel.broadcast(evt);
+            channel.broadcast(evt.getEventData());
         }
     }
     
     public static void firePositionUpdated(final Session s, final Node n, final Coordinates position) {
-        List<EventExtra> entries = new ArrayList<EventExtra>();
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_NODE_ID, n.id.toString()));
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_POSITION_X, Double.toString(position.getX())));
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_POSITION_Y, Double.toString(position.getY())));
+        // generate a new event
+        Event e = new ServerEvent(EventType.SESSION_NODE_MOVED);
+        
+        e.setExtra(EventType.EXTRA_SESSION_ID, s.id.toString());
+        e.setExtra(EventType.EXTRA_NODE_ID, n.id.toString());
+        e.setExtra(EventType.EXTRA_POSITION_X, Double.toString(position.getX()));
+        e.setExtra(EventType.EXTRA_POSITION_Y, Double.toString(position.getY()));
         
         // broadcast session change
-        MasterServer.broadcast(s.id, EventType.SESSION_NODE_MOVED, entries);
+        MasterServer.broadcast(s.id, e);
     }
     
     public static void fireLinkUp(final Session s, final Link l) {
-        List<EventExtra> entries = new ArrayList<EventExtra>();
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_LINK_SOURCE_ID, l.source.id.toString()));
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_LINK_TARGET_ID, l.target.id.toString()));
+        // generate a new event
+        Event e = new ServerEvent(EventType.SESSION_LINK_UP);
+
+        e.setExtra(EventType.EXTRA_SESSION_ID, s.id.toString());
+        e.setExtra(EventType.EXTRA_LINK_SOURCE_ID, l.source.id.toString());
+        e.setExtra(EventType.EXTRA_LINK_TARGET_ID, l.target.id.toString());
         
         // broadcast session change
-        MasterServer.broadcast(s.id, EventType.SESSION_LINK_UP, entries);
+        MasterServer.broadcast(s.id, e);
     }
     
     public static void fireLinkDown(final Session s, final Link l) {
-        List<EventExtra> entries = new ArrayList<EventExtra>();
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_LINK_SOURCE_ID, l.source.id.toString()));
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_LINK_TARGET_ID, l.target.id.toString()));
+        // generate a new event
+        Event e = new ServerEvent(EventType.SESSION_LINK_DOWN);
+        
+        e.setExtra(EventType.EXTRA_SESSION_ID, s.id.toString());
+        e.setExtra(EventType.EXTRA_LINK_SOURCE_ID, l.source.id.toString());
+        e.setExtra(EventType.EXTRA_LINK_TARGET_ID, l.target.id.toString());
         
         // broadcast session change
-        MasterServer.broadcast(s.id, EventType.SESSION_LINK_DOWN, entries);
+        MasterServer.broadcast(s.id, e);
     }
     
     public static void fireSessionDataUpdated(final Session s) {
-        List<EventExtra> entries = new ArrayList<EventExtra>();
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+        // generate a new event
+        Event e = new ServerEvent(EventType.SESSION_DATA_UPDATED);
+        
+        e.setExtra(EventType.EXTRA_SESSION_ID, s.id.toString());
         
         // broadcast session change
-        MasterServer.broadcast(EventType.SESSION_DATA_UPDATED, entries);
+        MasterServer.broadcast(e);
     }
     
     public static void fireSessionStatsUpdated(final Session s) {
-        List<EventExtra> entries = new ArrayList<EventExtra>();
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+        // generate a new event
+        Event e = new ServerEvent(EventType.SESSION_STATS_UPDATED);
+        
+        e.setExtra(EventType.EXTRA_SESSION_ID, s.id.toString());
         
         // broadcast session change
-        MasterServer.broadcast(EventType.SESSION_STATS_UPDATED, entries);
+        MasterServer.broadcast(e);
     }
     
     public static void fireNodeStateChanged(final Node n) {
-        List<EventExtra> entries = null;
+        // generate a new event
+        Event e = new ServerEvent(EventType.NODE_STATE_CHANGED);
         
         if (n != null) {
-            entries = new ArrayList<EventExtra>();
-            entries.add(MasterServer.createEventExtra(EventType.EXTRA_NODE_ID, n.id.toString()));
-            entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, n.sessionId.toString()));
-            entries.add(MasterServer.createEventExtra(EventType.EXTRA_NODE_STATE, n.state.toString()));
+            e.setExtra(EventType.EXTRA_NODE_ID, n.id.toString());
+            e.setExtra(EventType.EXTRA_SESSION_ID, n.sessionId.toString());
+            e.setExtra(EventType.EXTRA_NODE_STATE, n.state.toString());
         }
         
-        MasterServer.broadcast(EventType.NODE_STATE_CHANGED, entries);
+        MasterServer.broadcast(e);
     }
     
     public static void fireSlaveStateChanged(final Slave s) {
-        List<EventExtra> entries = new ArrayList<EventExtra>();
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SLAVE_ID, s.id.toString()));
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SLAVE_STATE, s.state.toString()));
+        // generate a new event
+        Event e = new ServerEvent(EventType.SLAVE_STATE_CHANGED);
         
-        MasterServer.broadcast(EventType.SLAVE_STATE_CHANGED, entries);
+        e.setExtra(EventType.EXTRA_SLAVE_ID, s.id.toString());
+        e.setExtra(EventType.EXTRA_SLAVE_STATE, s.state.toString());
+        
+        MasterServer.broadcast(e);
     }
     
     public static void fireSessionAdded(final Session s) {
-        List<EventExtra> entries = new ArrayList<EventExtra>();
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+        // generate a new event
+        Event e = new ServerEvent(EventType.SESSION_ADDED);
         
-        MasterServer.broadcast(EventType.SESSION_ADDED, entries);
+        e.setExtra(EventType.EXTRA_SESSION_ID, s.id.toString());
+        
+        MasterServer.broadcast(e);
     }
     
     public static void fireSessionRemoved(final Session s) {
-        List<EventExtra> entries = new ArrayList<EventExtra>();
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
+        // generate a new event
+        Event e = new ServerEvent(EventType.SESSION_REMOVED);
         
-        MasterServer.broadcast(EventType.SESSION_REMOVED, entries);
+        e.setExtra(EventType.EXTRA_SESSION_ID, s.id.toString());
+        
+        MasterServer.broadcast(e);
     }
     
     public static void fireSessionStateChanged(final Session s) {
-        List<EventExtra> entries = new ArrayList<EventExtra>();
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_SESSION_ID, s.id.toString()));
-        entries.add(MasterServer.createEventExtra(EventType.EXTRA_NEW_STATE, s.state.toString()));
+        // generate a new event
+        Event e = new ServerEvent(EventType.SESSION_STATE_CHANGED);
+        
+        e.setExtra(EventType.EXTRA_SESSION_ID, s.id.toString());
+        e.setExtra(EventType.EXTRA_NEW_STATE, s.state.toString());
         
         // broadcast session change
-        MasterServer.broadcast(EventType.SESSION_STATE_CHANGED, entries);
+        MasterServer.broadcast(e);
         
         /*** TRIGGER LOCAL ACTIONS ***/
         if (Session.State.PENDING.equals(s.state)) {

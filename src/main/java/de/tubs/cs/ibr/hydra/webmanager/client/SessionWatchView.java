@@ -7,8 +7,8 @@ import java.util.List;
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CellTable;
 import com.github.gwtbootstrap.client.ui.ProgressBar;
-import com.github.gwtbootstrap.client.ui.TextBox;
 import com.github.gwtbootstrap.client.ui.TabPanel.ShownEvent;
+import com.github.gwtbootstrap.client.ui.TextBox;
 import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
@@ -27,7 +27,6 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
-import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
@@ -430,7 +429,7 @@ public class SessionWatchView extends View {
     @Override
     public void onEventRaised(Event evt) {
         // refresh table on refresh event
-        if (EventType.NODE_STATE_CHANGED.equals(evt)) {
+        if (evt.equals(EventType.NODE_STATE_CHANGED)) {
             // do not update, if we don't have a session
             if (!mInitialized) return;
             
@@ -439,26 +438,26 @@ public class SessionWatchView extends View {
                 refreshNodeTable(mSession);
             }
         }
-        else if (EventType.SESSION_REMOVED.equals(evt)) {
+        else if (evt.equals(EventType.SESSION_REMOVED)) {
             if (isRelated(evt)) {
                 // close current view
                 resetView();
             }
         }
-        else if (EventType.SESSION_STATE_CHANGED.equals(evt)) {
+        else if (evt.equals(EventType.SESSION_STATE_CHANGED)) {
             if (isRelated(evt)) {
                 refresh();
             }
         }
-        else if (EventType.SESSION_DATA_UPDATED.equals(evt)) {
+        else if (evt.equals(EventType.SESSION_DATA_UPDATED)) {
             if (isRelated(evt)) {
                 refresh();
             }
         }
-        else if (EventType.SLAVE_STATE_CHANGED.equals(evt)) {
+        else if (evt.equals(EventType.SLAVE_STATE_CHANGED)) {
             refreshSlaves();
         }
-        else if (EventType.SESSION_STATS_UPDATED.equals(evt)) {
+        else if (evt.equals(EventType.SESSION_STATS_UPDATED)) {
             if (isRelated(evt)) {
                 statsView.refresh();
                 mapView.refresh();
@@ -471,17 +470,14 @@ public class SessionWatchView extends View {
     }
     
     private boolean isRelated(Event evt) {
-        if (evt.getExtras() == null) return true;
-        if (!mInitialized) return false;
+        // get session id (null if not set)
+        Long session_id = evt.getExtraLong(EventType.EXTRA_SESSION_ID);
         
-        for (EventExtra e : evt.getExtras()) {
-            if (EventType.EXTRA_SESSION_ID.equals(e.getKey())) {
-                if (mSession.id.toString().equals(e.getData())) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        // check if session id is set
+        if (session_id == null) return false;
+        
+        // compare to local session id
+        return session_id.equals(mSession.id);
     }
 
     @UiHandler("buttonBack")

@@ -28,7 +28,6 @@ import com.google.gwt.user.client.ui.DeckPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
-import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet.MobilityModel;
@@ -250,45 +249,43 @@ public class SessionEditView extends View {
         if (mSession == null) return;
         
         // refresh table on refresh event
-        if (EventType.NODE_STATE_CHANGED.equals(evt)) {
+        if (evt.equals(EventType.NODE_STATE_CHANGED)) {
             if (isRelated(evt)) {
                 // refresh nodes
                 nodesEditor.refresh(mSession);
             }
         }
-        else if (EventType.SESSION_REMOVED.equals(evt)) {
+        else if (evt.equals(EventType.SESSION_REMOVED)) {
             if (isRelated(evt)) {
                 // close current view
                 resetView();
             }
         }
-        else if (EventType.SESSION_STATE_CHANGED.equals(evt)) {
+        else if (evt.equals(EventType.SESSION_STATE_CHANGED)) {
             if (isRelated(evt)) {
                 refresh();
             }
         }
-        else if (EventType.SESSION_DATA_UPDATED.equals(evt)) {
+        else if (evt.equals(EventType.SESSION_DATA_UPDATED)) {
             if (isRelated(evt)) {
                 refresh();
             }
         }
-        else if (EventType.SLAVE_STATE_CHANGED.equals(evt)) {
+        else if (evt.equals(EventType.SLAVE_STATE_CHANGED)) {
          // refresh nodes
             nodesEditor.refresh(mSession);
         }
     }
     
     private boolean isRelated(Event evt) {
-        if (evt.getExtras() == null) return true;
+        // get session id (null if not set)
+        Long session_id = evt.getExtraLong(EventType.EXTRA_SESSION_ID);
         
-        for (EventExtra e : evt.getExtras()) {
-            if (EventType.EXTRA_SESSION_ID.equals(e.getKey())) {
-                if (mSession.id.toString().equals(e.getData())) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        // check if session id is set
+        if (session_id == null) return false;
+        
+        // compare to local session id
+        return session_id.equals(mSession.id);
     }
 
     @UiHandler("buttonBack")

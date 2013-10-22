@@ -2,6 +2,7 @@ package de.tubs.cs.ibr.hydra.webmanager.server;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -43,7 +44,7 @@ public class SessionController {
     SessionContainer mContainer = null;
     
     // list of all slaves used for this session
-    Set<Slave> mSlaves = null;
+    Set<Slave> mSlaves = new HashSet<Slave>();
     
     // main executor
     ScheduledExecutorService mExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -70,7 +71,7 @@ public class SessionController {
         
         @Override
         public void onEvent(Event evt) {
-            if (EventType.SLAVE_STATE_CHANGED.equals(evt)) {
+            if (evt.equals(EventType.SLAVE_STATE_CHANGED)) {
                 // if we are current try to distribute this session
                 if (scheduledDistribution != null) {
                     // cancel scheduled distribution

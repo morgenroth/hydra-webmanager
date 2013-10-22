@@ -19,7 +19,7 @@ import com.google.web.bindery.autobean.shared.AutoBean;
 import com.google.web.bindery.autobean.shared.AutoBeanCodex;
 import com.google.web.bindery.autobean.shared.AutoBeanUtils;
 
-import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventData;
 
 public class AtmosphereHandler extends AbstractReflectorAtmosphereHandler {
     static final Logger logger = Logger.getLogger("AtmosphereHandler");
@@ -50,8 +50,8 @@ public class AtmosphereHandler extends AbstractReflectorAtmosphereHandler {
 
             public void write(OutputStream os, Object o) throws IOException {
                 // only process Event messages
-                if (o instanceof Event) {
-                    AutoBean<Event> bean = AutoBeanUtils.getAutoBean((Event)o);
+                if (o instanceof EventData) {
+                    AutoBean<EventData> bean = AutoBeanUtils.getAutoBean((EventData)o);
                     
                     String payload = AutoBeanCodex.encode(bean).getPayload();
                     os.write(payload.getBytes(charset));

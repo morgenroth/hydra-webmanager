@@ -20,7 +20,8 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
-import de.tubs.cs.ibr.hydra.webmanager.shared.EventExtra;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventData;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventDataExtra;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
@@ -264,21 +265,15 @@ public class NodeView extends View {
     @Override
     public void onEventRaised(Event evt) {
         // refresh table on refresh event
-        if (EventType.NODE_STATE_CHANGED.equals(evt)) {
+        if (evt.equals(EventType.NODE_STATE_CHANGED)) {
             // check if this node is of interest
-            if (mSession != null) {
-                for (EventExtra e : evt.getExtras()) {
-                    if (EventType.EXTRA_SESSION_ID.equals(e.getKey())) {
-                        if (!mSession.id.toString().equals(e.getData())) {
-                            // abort - session id is set but not of interest
-                            return;
-                        }
-                    }
-                }
+            if (mSession == null) return;
+            
+            if ( mSession.id.equals(evt.getExtraLong(EventType.EXTRA_SESSION_ID)) ) {
+                refreshNodeTable(mSession);
             }
-            refreshNodeTable(mSession);
         }
-        else if (EventType.SLAVE_STATE_CHANGED.equals(evt)) {
+        else if (evt.equals(EventType.SLAVE_STATE_CHANGED)) {
             refreshSlaves();
         }
     }

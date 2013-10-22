@@ -24,12 +24,8 @@ import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
-import com.google.web.bindery.autobean.shared.AutoBean;
-import com.google.web.bindery.autobean.shared.AutoBeanCodex;
-import com.google.web.bindery.autobean.shared.AutoBeanUtils;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
-import de.tubs.cs.ibr.hydra.webmanager.shared.EventFactory;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 
 public class HydraApp extends Composite {
@@ -98,22 +94,17 @@ public class HydraApp extends Composite {
             
             @Override
             public Object deserialize(String message) throws SerializationException {
-                EventFactory factory = GWT.create(EventFactory.class);
-
                 // drop invalid messages / extract atmosphere uuid
                 if (!message.startsWith("{")) {
                     String[] uuid = message.split("\\|");
                     onAtmosphereRegistered(uuid[0]);
-                    
-                    Event e = factory.event().as();
-                    e.setType(EventType.NONE);
-                    return e;
+
+                    return new ClientEvent(EventType.NONE);
                 }
                 
                 try {
                     //WebManager.logger.info("message received: " + message.toString());
-                    AutoBean<Event> bean = AutoBeanCodex.decode(factory, Event.class, message);
-                    return bean.as();
+                    return ClientEvent.decode(message);
                 } catch (java.lang.RuntimeException e) {
                     throw new SerializationException("could not decode " + message.toString());
                 }
@@ -122,13 +113,12 @@ public class HydraApp extends Composite {
             @Override
             public String serialize(Object message) throws SerializationException {
                 if (message instanceof Event) {
-                    AutoBean<Event> bean = AutoBeanUtils.getAutoBean((Event)message);
-                    return AutoBeanCodex.encode(bean).getPayload();
+                    return ClientEvent.encode((Event)message);
                 }
                 else if (message instanceof String) {
                     return (String)message;
                 }
-                throw new SerializationException("only event objects are allowed");
+                throw new SerializationException("only client event objects are allowed");
             }
             
         });
@@ -159,15 +149,16 @@ public class HydraApp extends Composite {
             @Override
             public void onMessage(AtmosphereResponse response) {
                 List<Event> events = response.getMessages();
-                for (Event event : events) {
+                for (Event evt : events) {
                     // ignore none events
-                    if (EventType.NONE.equals(event)) continue;
+                    if (evt.equals(EventType.NONE)) continue;
                     
-                    WebManager.logger.info("received event: " + event.getType().toString());
+                    // transform to an event object
+                    WebManager.logger.info("received event: " + evt.toString());
 
                     // forward the event to the current view
                     if (currentView != null) {
-                        ((EventListener)currentView).onEventRaised(event);
+                        ((EventListener)currentView).onEventRaised(evt);
                     }
                 }
             }

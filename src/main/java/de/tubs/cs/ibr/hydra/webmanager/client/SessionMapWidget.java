@@ -238,13 +238,13 @@ public class SessionMapWidget extends Composite implements ResizeHandler, EventL
 
     @Override
     public void onEventRaised(Event evt) {
-        if (EventType.SESSION_LINK_UP.equals(evt)) {
+        if (evt.equals(EventType.SESSION_LINK_UP)) {
             // TODO: show new link
         }
-        else if (EventType.SESSION_LINK_DOWN.equals(evt)) {
+        else if (evt.equals(EventType.SESSION_LINK_DOWN)) {
             // TODO: hide link
         }
-        else if (EventType.SESSION_NODE_MOVED.equals(evt)) {
+        else if (evt.equals(EventType.SESSION_NODE_MOVED)) {
             // TODO: move node
         }
     }

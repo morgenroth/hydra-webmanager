@@ -39,7 +39,7 @@ public enum EventType {
         return mCode;
     }
     
-    public boolean equals(Event evt) {
+    public boolean equals(EventData evt) {
         if (evt == null) return false;
         return this.equals(evt.getType());
     }
