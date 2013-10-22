@@ -404,7 +404,7 @@ public class SessionWatchView extends View {
     }
 
     @Override
-    public void eventRaised(Event evt) {
+    public void onEventRaised(Event evt) {
         // refresh table on refresh event
         if (EventType.NODE_STATE_CHANGED.equals(evt)) {
             // do not update, if we don't have a session

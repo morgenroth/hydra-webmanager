@@ -245,7 +245,7 @@ public class SessionEditView extends View {
     }
     
     @Override
-    public void eventRaised(Event evt) {
+    public void onEventRaised(Event evt) {
         // do not update, if we don't have a session
         if (mSession == null) return;
         

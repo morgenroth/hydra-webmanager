@@ -114,7 +114,7 @@ public class SlaveView extends View {
     }
 
     @Override
-    public void eventRaised(Event evt) {
+    public void onEventRaised(Event evt) {
         // refresh table on refresh event
         if (EventType.SLAVE_STATE_CHANGED.equals(evt)) {
             refreshSlaveTable();

@@ -167,7 +167,7 @@ public class HydraApp extends Composite {
 
                     // forward the event to the current view
                     if (currentView != null) {
-                        ((EventListener)currentView).eventRaised(event);
+                        ((EventListener)currentView).onEventRaised(event);
                     }
                 }
             }

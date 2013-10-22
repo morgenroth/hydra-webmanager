@@ -262,7 +262,7 @@ public class NodeView extends View {
     }
 
     @Override
-    public void eventRaised(Event evt) {
+    public void onEventRaised(Event evt) {
         // refresh table on refresh event
         if (EventType.NODE_STATE_CHANGED.equals(evt)) {
             // check if this node is of interest

@@ -24,5 +24,5 @@ public abstract class View extends Composite implements EventListener {
     }
 
     @Override
-    public abstract void eventRaised(Event evt);
+    public abstract void onEventRaised(Event evt);
 }
