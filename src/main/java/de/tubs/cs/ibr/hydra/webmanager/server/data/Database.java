@@ -3,7 +3,6 @@ package de.tubs.cs.ibr.hydra.webmanager.server.data;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -17,16 +16,14 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import com.google.gwt.dev.json.JsonException;
-import com.google.gwt.dev.json.JsonObject;
-import com.google.gwt.dev.json.JsonValue;
-import com.google.gwt.dev.json.Pair;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
 import de.tubs.cs.ibr.hydra.webmanager.server.Task;
@@ -41,6 +38,8 @@ public class Database {
 
     private static Database __db__ = new Database();
     private Connection mConn = null;
+    
+    private JSONParser mParser = new JSONParser();
 
     public static Database getInstance() {
         if (__db__.isClosed()) __db__.open();
@@ -1092,71 +1091,64 @@ public class Database {
         
         // translate JSON to Object
         try {
-            JsonObject obj = JsonObject.parse(new StringReader(jsonData));
+            JSONObject obj = (JSONObject)mParser.parse(jsonData);
             
-            Iterator<Pair<String, JsonValue>> it = obj.iterator();
+            // return if the json is invalid
+            if (obj == null) return ret;
             
-            while (it.hasNext()) {
-                Pair<String, JsonValue> p = it.next();
-                String key = p.getA();
-                JsonObject data = p.getB().asObject();
+            JSONObject position = (JSONObject)obj.get("position");
+            if (position != null) {
+                double x = Double.valueOf((String)position.get("x"));
+                double y = Double.valueOf((String)position.get("y"));
+                double z = Double.valueOf((String)position.get("z"));
+                ret.coord = new Coordinates(x, y, z);
+            }
+            
+            JSONObject dtnd = (JSONObject)obj.get("dtnd");
+            if (dtnd != null) {
+                JSONObject dtnd_info = (JSONObject)dtnd.get("info");
+                if (dtnd_info != null) {
+                    ret.dtninfo.neighbors = Long.valueOf((String)dtnd_info.get("Neighbors"));
+                    ret.dtninfo.uptime = Long.valueOf((String)dtnd_info.get("Uptime"));
+                    ret.dtninfo.storage_size = Long.valueOf((String)dtnd_info.get("Storage-size"));
+                }
                 
-                if ("position".equals(key)) {
-                    double x = Double.valueOf(data.get("x").asString().getString());
-                    double y = Double.valueOf(data.get("y").asString().getString());
-                    double z = Double.valueOf(data.get("z").asString().getString());
-                    ret.coord = new Coordinates(x, y, z);
-                }
-                else if ("dtnd".equals(key)) {
-                    Iterator<Pair<String, JsonValue>> dtnd_it = data.iterator();
-                    while (dtnd_it.hasNext()) {
-                        Pair<String, JsonValue> dtnd_p = dtnd_it.next();
-                        String dtnd_key = dtnd_p.getA();
-                        JsonObject dtnd_data = dtnd_p.getB().asObject();
-                        
-                        if ("info".equals(dtnd_key)) {
-                            ret.dtninfo.neighbors = Long.valueOf(dtnd_data.get("Neighbors").asString().getString());
-                            ret.dtninfo.uptime = Long.valueOf(dtnd_data.get("Uptime").asString().getString());
-                            ret.dtninfo.storage_size = Long.valueOf(dtnd_data.get("Storage-size").asString().getString());
-                        }
-                        else if ("bundles".equals(dtnd_key)) {
-                            ret.bundlestats.aborted = Long.valueOf(dtnd_data.get("Aborted").asString().getString());
-                            ret.bundlestats.expired = Long.valueOf(dtnd_data.get("Expired").asString().getString());
-                            ret.bundlestats.generated = Long.valueOf(dtnd_data.get("Generated").asString().getString());
-                            ret.bundlestats.queued = Long.valueOf(dtnd_data.get("Queued").asString().getString());
-                            ret.bundlestats.received = Long.valueOf(dtnd_data.get("Received").asString().getString());
-                            ret.bundlestats.requeued = Long.valueOf(dtnd_data.get("Requeued").asString().getString());
-                            ret.bundlestats.transmitted = Long.valueOf(dtnd_data.get("Transmitted").asString().getString());
-                            ret.bundlestats.stored = Long.valueOf(dtnd_data.get("Stored").asString().getString());
-                        }
-                    }
-                }
-                else if ("iface".equals(key)) {
-                    Iterator<Pair<String, JsonValue>> iface_it = data.iterator();
-                    while (iface_it.hasNext()) {
-                        Pair<String, JsonValue> iface_p = iface_it.next();
-                        
-                        DataPoint.InterfaceStats iface = new DataPoint.InterfaceStats();
-                        iface.name = iface_p.getA();
-                        
-                        JsonObject iface_data = iface_p.getB().asObject();
-                        iface.rx = Long.valueOf(iface_data.get("rx").asString().getString());
-                        iface.tx = Long.valueOf(iface_data.get("tx").asString().getString());
-                        
-                        ret.ifaces.put(iface.name, iface);
-                    }
-                }
-                else if ("clock".equals(key)) {
-                    ret.clock.delay = Double.valueOf(data.get("Delay").asString().getString());
-                    ret.clock.offset = Double.valueOf(data.get("Offset").asString().getString());
-                    ret.clock.timex_tick = Long.valueOf(data.get("Timex-tick").asString().getString());
-                    ret.clock.timex_offset = Long.valueOf(data.get("Timex-offset").asString().getString());
-                    ret.clock.timex_freq = Long.valueOf(data.get("Timex-freq").asString().getString());
+                JSONObject bundles = (JSONObject)dtnd.get("bundles");
+                if (bundles != null) {
+                    ret.bundlestats.aborted = Long.valueOf((String)bundles.get("Aborted"));
+                    ret.bundlestats.expired = Long.valueOf((String)bundles.get("Expired"));
+                    ret.bundlestats.generated = Long.valueOf((String)bundles.get("Generated"));
+                    ret.bundlestats.queued = Long.valueOf((String)bundles.get("Queued"));
+                    ret.bundlestats.received = Long.valueOf((String)bundles.get("Received"));
+                    ret.bundlestats.requeued = Long.valueOf((String)bundles.get("Requeued"));
+                    ret.bundlestats.transmitted = Long.valueOf((String)bundles.get("Transmitted"));
+                    ret.bundlestats.stored = Long.valueOf((String)bundles.get("Stored"));
                 }
             }
-        } catch (JsonException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+            
+            JSONObject clock = (JSONObject)obj.get("clock");
+            if (clock != null) {
+                ret.clock.delay = Double.valueOf((String)clock.get("Delay"));
+                ret.clock.offset = Double.valueOf((String)clock.get("Offset"));
+                ret.clock.timex_tick = Long.valueOf((String)clock.get("Timex-tick"));
+                ret.clock.timex_offset = Long.valueOf((String)clock.get("Timex-offset"));
+                ret.clock.timex_freq = Long.valueOf((String)clock.get("Timex-freq"));
+            }
+            
+            JSONObject ifaces = (JSONObject)obj.get("iface");
+            
+            for (Object key : ifaces.keySet()) {
+                JSONObject iface_data = (JSONObject)ifaces.get(key);
+                
+                DataPoint.InterfaceStats iface = new DataPoint.InterfaceStats();
+                iface.name = (String)key;
+                
+                iface.rx = Long.valueOf((String)iface_data.get("rx"));
+                iface.tx = Long.valueOf((String)iface_data.get("tx"));
+                
+                ret.ifaces.put(iface.name, iface);
+            }
+        } catch (ParseException e) {
             e.printStackTrace();
         }
         
