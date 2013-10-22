@@ -154,7 +154,7 @@ public class HydraApp extends Composite {
                     if (evt.equals(EventType.NONE)) continue;
                     
                     // transform to an event object
-                    WebManager.logger.info("received event: " + evt.toString());
+                    //WebManager.logger.info("received event: " + evt.toString());
 
                     // forward the event to the current view
                     if (currentView != null) {

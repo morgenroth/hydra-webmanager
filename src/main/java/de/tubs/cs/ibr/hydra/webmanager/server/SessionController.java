@@ -620,7 +620,6 @@ public class SessionController {
                 @Override
                 public void onFinish() {
                     // announce new position to GUI
-                    System.out.println("POSITION SET on " + n + ": " + position);
                     MasterServer.firePositionUpdated(mSession, n, position);
                 }
 
