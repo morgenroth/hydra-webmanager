@@ -24,6 +24,7 @@ import com.google.maps.gwt.client.MapTypeId;
 import com.google.maps.gwt.client.MarkerImage;
 import com.google.maps.gwt.client.Point;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
@@ -241,13 +242,60 @@ public class SessionMapWidget extends Composite implements ResizeHandler, EventL
     @Override
     public void onEventRaised(Event evt) {
         if (evt.equals(EventType.SESSION_LINK_UP)) {
-            // TODO: show new link
+            // parse link data
+            Long source_id = evt.getExtraLong(EventType.EXTRA_LINK_SOURCE_ID);
+            Long target_id = evt.getExtraLong(EventType.EXTRA_LINK_TARGET_ID);
+            
+            if ((source_id == null) || (target_id == null)) return;
+            
+            MapNode source = mNodes.get(source_id);
+            MapNode target = mNodes.get(target_id);
+            
+            if ((source == null) || (target == null)) return;
+            
+            // enable the link
+            source.setLink(target, true);
+            
+            // add link to link-set
+            Link l = new Link(source.getNode(), target.getNode());
+            mLinks.add(l);
         }
         else if (evt.equals(EventType.SESSION_LINK_DOWN)) {
-            // TODO: hide link
+            // parse link data
+            Long source_id = evt.getExtraLong(EventType.EXTRA_LINK_SOURCE_ID);
+            Long target_id = evt.getExtraLong(EventType.EXTRA_LINK_TARGET_ID);
+            
+            if ((source_id == null) || (target_id == null)) return;
+            
+            MapNode source = mNodes.get(source_id);
+            MapNode target = mNodes.get(target_id);
+            
+            if ((source == null) || (target == null)) return;
+            
+            // disable the link
+            source.setLink(target, false);
+            
+            // remove link from link-set
+            Link l = new Link(source.getNode(), target.getNode());
+            mLinks.remove(l);
         }
         else if (evt.equals(EventType.SESSION_NODE_MOVED)) {
-            // TODO: move node
+            // get the moved node
+            Long node_id = evt.getExtraLong(EventType.EXTRA_NODE_ID);
+            MapNode n = mNodes.get(node_id);
+            
+            if (n == null) return;
+
+            // get new position
+            Double x = evt.getExtraDouble(EventType.EXTRA_POSITION_X);
+            Double y = evt.getExtraDouble(EventType.EXTRA_POSITION_Y);
+            
+            if ((x == null) || (y == null)) return;
+            
+            Coordinates coord = new Coordinates(x, y);
+            
+            // set node position
+            n.setPosition(coord, mFix);
         }
     }
 }

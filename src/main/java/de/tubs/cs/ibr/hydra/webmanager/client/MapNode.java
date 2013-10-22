@@ -41,8 +41,10 @@ public class MapNode {
         if ((link == null) && activate) {
             // add new link
             link = new MapLink(this, n);
+            mLinkedNodes.put(n.getNode().id, link);
         } else if (!activate) {
             // remove link
+            mLinkedNodes.remove(n.getNode().id);
         } else {
             return;
         }
