@@ -27,7 +27,7 @@ public class MapLink extends Link {
         
         if (mLine == null) {
             mOptions = PolylineOptions.create();
-            mOptions.setStrokeOpacity(1.0);
+            mOptions.setStrokeOpacity(0.5);
             mOptions.setStrokeColor("#000000");
             mOptions.setStrokeWeight(2);
             mOptions.setZindex(-1);
