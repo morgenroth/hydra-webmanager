@@ -47,4 +47,9 @@ public class Link implements IsSerializable, Comparable<Node> {
     public String toString() {
         return this.source.id + " -> " + this.target.id;
     }
+
+    @Override
+    public int hashCode() {
+        return this.source.hashCode() ^ this.target.hashCode();
+    }
 }
