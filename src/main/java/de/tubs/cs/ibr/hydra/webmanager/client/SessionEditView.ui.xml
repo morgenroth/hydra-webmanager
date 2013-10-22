@@ -259,10 +259,10 @@
 										<b:Controls>
 											<b:InputAddOn prependText="Size" appendText="m">
 												<b:TextBox alternateSize="SMALL" b:id="textRwpAreaSizeHeight"
-													ui:field="textMovementRwpAreaSizeHeight" b:placeholder="500" />
+													ui:field="textMovementRwpAreaSizeHeight" b:placeholder="5000" />
 												<base:AddOn text="x" />
 												<b:TextBox alternateSize="SMALL" b:id="textRwpAreaSizeWidth"
-													ui:field="textMovementRwpAreaSizeWidth" b:placeholder="500" />
+													ui:field="textMovementRwpAreaSizeWidth" b:placeholder="5000" />
 											</b:InputAddOn>
 										</b:Controls>
 									</b:ControlGroup>
