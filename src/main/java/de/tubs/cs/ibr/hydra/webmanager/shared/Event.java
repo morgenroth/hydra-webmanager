@@ -72,6 +72,12 @@ public abstract class Event {
         return Long.valueOf(value);
     }
     
+    public Double getExtraDouble(String key) {
+        String value = getExtraString(key);
+        if (value == null) return null;
+        return Double.valueOf(value);
+    }
+    
     public boolean hasExtra(String key) {
         if (key == null) return false;
         
