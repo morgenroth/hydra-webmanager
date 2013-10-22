@@ -54,7 +54,7 @@ public class Coordinates implements Comparable<Coordinates>, IsSerializable {
     }
     
     public void flipY() {
-        this.x += -1;
+        this.y += -1;
     }
     
     public double distance(Coordinates other) {
