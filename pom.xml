@@ -140,6 +140,11 @@
 		<artifactId>gwt-visualization</artifactId>
 		<version>1.0.2</version>
 	</dependency>
+	<dependency>
+		<groupId>com.github.rwl</groupId>
+		<artifactId>gwt-maps</artifactId>
+		<version>3.8.0-pre1</version>
+	</dependency>
   </dependencies>
 
   <build>
