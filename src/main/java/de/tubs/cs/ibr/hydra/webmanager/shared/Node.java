@@ -65,6 +65,12 @@ public class Node implements IsSerializable {
     public Coordinates position = null;
     
     /**
+     * Heading and speed for movement
+     */
+    public double speed = 0.0;
+    public double heading = 0.0;
+    
+    /**
      * This holds the unidirectional communication range
      * which depends on the transmitter power.
      */
