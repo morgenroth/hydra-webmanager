@@ -1,7 +1,5 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
-import java.util.HashMap;
-
 import com.google.maps.gwt.client.Circle;
 import com.google.maps.gwt.client.CircleOptions;
 import com.google.maps.gwt.client.GoogleMap;
@@ -28,36 +26,11 @@ public class MapNode {
     private DataPoint mData;
     private SessionMapWidget mWidget;
     
-    private HashMap<Long, MapLink> mLinkedNodes = new HashMap<Long, MapLink>();
-    
     public MapNode(SessionMapWidget widget, Node n) {
         mWidget = widget;
         mNode = n;
     }
-    
-    public void setLink(MapNode n, boolean activate) {
-        MapLink link = mLinkedNodes.get(n.getNode().id);
-        
-        if ((link == null) && activate) {
-            // add new link
-            link = new MapLink(this, n);
-            mLinkedNodes.put(n.getNode().id, link);
-        } else if (!activate) {
-            // remove link
-            mLinkedNodes.remove(n.getNode().id);
-        } else {
-            return;
-        }
-        
-        if (mCircle == null) return;
-        
-        if (activate) {
-            link.activate(mCircle.getMap());
-        } else {
-            link.deactivate();
-        }
-    }
-    
+
     public void setData(DataPoint data, MarkerImage icon, GoogleMap map) {
         mData = data;
         

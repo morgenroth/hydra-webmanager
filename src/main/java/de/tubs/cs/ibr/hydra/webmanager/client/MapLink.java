@@ -22,7 +22,7 @@ public class MapLink extends Link {
         mMapTarget = target;
     }
     
-    public void activate(GoogleMap map) {
+    public void show(GoogleMap map) {
         if (map == null) return;
         
         if (mLine == null) {
@@ -45,9 +45,26 @@ public class MapLink extends Link {
         mLine.setPath(path);
     }
     
-    public void deactivate() {
+    public void hide() {
         if (mLine != null) {
             mLine.setMap(null);
         }
+    }
+    
+    public boolean hasSource(MapNode m) {
+        return mMapSource.equals(m);
+    }
+    
+    public boolean hasTarget(MapNode m) {
+        return mMapTarget.equals(m);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Link) {
+            Link l = (Link)obj;
+            return (l.source == this.source) && (l.target == this.target);
+        }
+        return super.equals(obj);
     }
 }

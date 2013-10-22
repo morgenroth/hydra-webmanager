@@ -53,7 +53,7 @@ public class SessionMapWidget extends Composite implements ResizeHandler, EventL
     HashMap<Long, MapNode> mNodes = new HashMap<Long, MapNode>();
     
     // list for links
-    HashSet<Link> mLinks = new HashSet<Link>();
+    HashSet<MapLink> mLinks = new HashSet<MapLink>();
     
     // map object
     GoogleMap mMap = null;
@@ -111,9 +111,6 @@ public class SessionMapWidget extends Composite implements ResizeHandler, EventL
               mRedIcon = MarkerImage.create(res.red().getSafeUri().asString(), null, null, anchor);
               mGreenIcon = MarkerImage.create(res.green().getSafeUri().asString(), null, null, anchor);
               
-              // set charts to initialized
-              initialized = true;
-              
               // resize the map frame
               onResize(null);
               
@@ -158,25 +155,34 @@ public class SessionMapWidget extends Composite implements ResizeHandler, EventL
             public void onSuccess(ArrayList<Link> result) {
                 if (result == null) return;
                 
+                // set of disappeared links
+                HashSet<MapLink> disappeared = new HashSet<MapLink>(mLinks);
+                
                 // remove all active links
-                mLinks.removeAll(result);
+                disappeared.removeAll(result);
                 
-                for (Link l : mLinks) {
+                for (MapLink ml : disappeared) {
                     // remove link
-                    MapNode source = mNodes.get(l.source.id);
-                    MapNode target = mNodes.get(l.target.id);
-                    source.setLink(target, false);
+                    ml.hide();
                 }
                 
-                mLinks.clear();
-                mLinks.addAll(result);
+                // remove all disappeared links
+                mLinks.removeAll(disappeared);
                 
-                for (Link l : mLinks) {
-                    // add links
+                for (Link l : result) {
+                    if (mLinks.contains(l)) continue;
+                    
+                    // create one map link for each link
                     MapNode source = mNodes.get(l.source.id);
                     MapNode target = mNodes.get(l.target.id);
-                    source.setLink(target, true);
+
+                    MapLink ml = new MapLink(source, target);
+                    ml.show(mMap);
+                    mLinks.add(ml);
                 }
+                
+                // set charts to initialized
+                initialized = true;
             }
             
             @Override
@@ -193,7 +199,7 @@ public class SessionMapWidget extends Composite implements ResizeHandler, EventL
             @Override
             public void onSuccess(HashMap<Long, DataPoint> result) {
                 transformData(result);
-                updateLinks();
+                if (!initialized) updateLinks();
             }
             
             @Override
@@ -215,7 +221,7 @@ public class SessionMapWidget extends Composite implements ResizeHandler, EventL
             
             // set node position
             if (n.getPosition() == null) {
-                n.setPosition(n.getData().coord, mFix);
+                setNodePosition(n, n.getData().coord);
             }
         }
     }
@@ -253,12 +259,14 @@ public class SessionMapWidget extends Composite implements ResizeHandler, EventL
             
             if ((source == null) || (target == null)) return;
             
-            // enable the link
-            source.setLink(target, true);
+            // create a new link-object
+            MapLink ml = new MapLink(source, target);
             
-            // add link to link-set
-            Link l = new Link(source.getNode(), target.getNode());
-            mLinks.add(l);
+            // activate the link
+            if (!mLinks.contains(ml)) {
+                ml.show(mMap);
+                mLinks.add(ml);
+            }
         }
         else if (evt.equals(EventType.SESSION_LINK_DOWN)) {
             // parse link data
@@ -273,11 +281,13 @@ public class SessionMapWidget extends Composite implements ResizeHandler, EventL
             if ((source == null) || (target == null)) return;
             
             // disable the link
-            source.setLink(target, false);
-            
-            // remove link from link-set
-            Link l = new Link(source.getNode(), target.getNode());
-            mLinks.remove(l);
+            for (MapLink ml : mLinks) {
+                if (ml.hasSource(source) && ml.hasTarget(target)) {
+                    ml.hide();
+                    mLinks.remove(ml);
+                    break;
+                }
+            }
         }
         else if (evt.equals(EventType.SESSION_NODE_MOVED)) {
             // get the moved node
@@ -294,8 +304,19 @@ public class SessionMapWidget extends Composite implements ResizeHandler, EventL
             
             Coordinates coord = new Coordinates(x, y);
             
-            // set node position
-            n.setPosition(coord, mFix);
+            setNodePosition(n, coord);
+        }
+    }
+    
+    private void setNodePosition(MapNode n, Coordinates coord) {
+        // set node position
+        n.setPosition(coord, mFix);
+        
+        // adjust link position
+        for (MapLink ml : mLinks) {
+            if (ml.hasSource(n) || ml.hasTarget(n)) {
+                ml.show(mMap);
+            }
         }
     }
 }
