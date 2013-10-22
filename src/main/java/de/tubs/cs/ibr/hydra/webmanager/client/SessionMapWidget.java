@@ -213,7 +213,9 @@ public class SessionMapWidget extends Composite implements ResizeHandler, EventL
             n.setData(e.getValue(), mBlueIcon, mMap);
             
             // set node position
-            n.setPosition(n.getData().coord, mFix);
+            if (n.getPosition() == null) {
+                n.setPosition(n.getData().coord, mFix);
+            }
         }
     }
     
