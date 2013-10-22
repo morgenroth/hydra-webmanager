@@ -63,6 +63,9 @@ public class SessionWatchView extends View {
     // currently viewed session
     Session mSession = null;
     
+    // initialized flag
+    boolean mInitialized = false;
+    
     // list of slaves
     ArrayList<Slave> mSlaves = new ArrayList<Slave>();
 
@@ -72,6 +75,9 @@ public class SessionWatchView extends View {
     public SessionWatchView(HydraApp app, Session s) {
         super(app);
         initWidget(uiBinder.createAndBindUi(this));
+        
+        // assign current session
+        mSession = s;
         
         // create node table
         createNodeTable();
@@ -87,9 +93,24 @@ public class SessionWatchView extends View {
         mapView.initialize(s);
     }
     
-    
+    @Override
+    protected void onAttach() {
+        super.onAttach();
+        
+        // subscribe to session details
+        getApplication().subscribeAtmosphere(mSession.id);
+    }
+
+    @Override
+    protected void onDetach() {
+        super.onDetach();
+        
+        // un-subscribe to session details
+        getApplication().unsubscribeAtmosphere(mSession.id);
+    }
+
     private void refresh() {
-        if (mSession == null) return;
+        if (!mInitialized) return;
         
         // load session properties
         refreshSession(mSession);
@@ -102,6 +123,9 @@ public class SessionWatchView extends View {
         // update session state
         textDetailsState.setText(s.state.toString());
         textDetailsDesc.setText(s.name);
+        
+        // mark as initialized
+        mInitialized = true;
         
         // update the progress bar and clock
         updateProgress(s);
@@ -408,7 +432,7 @@ public class SessionWatchView extends View {
         // refresh table on refresh event
         if (EventType.NODE_STATE_CHANGED.equals(evt)) {
             // do not update, if we don't have a session
-            if (mSession == null) return;
+            if (!mInitialized) return;
             
             if (isRelated(evt)) {
                 // refresh nodes
@@ -440,20 +464,15 @@ public class SessionWatchView extends View {
                 mapView.refresh();
             }
         }
-        else if (EventType.SESSION_LINK_UP.equals(evt)) {
-            // TODO: forward to map
-        }
-        else if (EventType.SESSION_LINK_DOWN.equals(evt)) {
-            // TODO: forward to map
-        }
-        else if (EventType.SESSION_NODE_MOVED.equals(evt)) {
-            // TODO: forward to map
+        else {
+            // forward everything else to map view
+            mapView.onEventRaised(evt);
         }
     }
     
     private boolean isRelated(Event evt) {
         if (evt.getExtras() == null) return true;
-        if (mSession == null) return false;
+        if (!mInitialized) return false;
         
         for (EventExtra e : evt.getExtras()) {
             if (EventType.EXTRA_SESSION_ID.equals(e.getKey())) {

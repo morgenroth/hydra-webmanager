@@ -25,12 +25,14 @@ import com.google.maps.gwt.client.MarkerImage;
 import com.google.maps.gwt.client.Point;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
+import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.GeoCoordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
-public class SessionMapWidget extends Composite implements ResizeHandler {
+public class SessionMapWidget extends Composite implements ResizeHandler, EventListener {
 
     private static SessionMapWidgetUiBinder uiBinder = GWT.create(SessionMapWidgetUiBinder.class);
 
@@ -232,5 +234,18 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     
     public void onNodeClick(MapNode n) {
         // TODO: show node information
+    }
+
+    @Override
+    public void onEventRaised(Event evt) {
+        if (EventType.SESSION_LINK_UP.equals(evt)) {
+            // TODO: show new link
+        }
+        else if (EventType.SESSION_LINK_DOWN.equals(evt)) {
+            // TODO: hide link
+        }
+        else if (EventType.SESSION_NODE_MOVED.equals(evt)) {
+            // TODO: move node
+        }
     }
 }

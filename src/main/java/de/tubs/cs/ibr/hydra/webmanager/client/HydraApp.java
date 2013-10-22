@@ -182,10 +182,23 @@ public class HydraApp extends Composite {
         
         // store atmosphere uuid for later
         atmosphereId = uuid;
+    }
+    
+    public void subscribeAtmosphere(Long sessionId) {
+        if (atmosphereId == null) return;
         
-        // TODO: move subscription to map view
         try {
-            jsonRequest.push("subscribe " + atmosphereId + " " + 1234);
+            jsonRequest.push("subscribe " + atmosphereId + " " + sessionId);
+        } catch (SerializationException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void unsubscribeAtmosphere(Long sessionId) {
+        if (atmosphereId == null) return;
+        
+        try {
+            jsonRequest.push("unsubscribe " + atmosphereId + " " + sessionId);
         } catch (SerializationException e) {
             e.printStackTrace();
         }
