@@ -651,24 +651,30 @@ public class MasterServer implements ServletContextListener {
     }
     
     public static ArrayList<Node> getNodes(Session session) {
-        // get session controller
-        SessionController sc = getController(session.id);
+        Session s = null;
         
-        if (sc != null) {
-            Collection<Node> nodes = sc.getNodes();
-            if (nodes != null) {
-                return new ArrayList<Node>(nodes);
+        if (session != null) {
+            // get session controller
+            SessionController sc = getController(session.id);
+            
+            if (sc != null) {
+                Collection<Node> nodes = sc.getNodes();
+                if (nodes != null) {
+                    return new ArrayList<Node>(nodes);
+                }
             }
+            
+            // get up-to-date session object
+            s = getSession(session.id);
         }
         
         ArrayList<Node> nodes = Database.getInstance().getNodes(session);
         
-        // get up-to-date session object
-        Session s = getSession(session.id);
-        
-        for (Node n : nodes) {
-            // add session specific default values
-            n.range = s.range;
+        if (s != null) {
+            for (Node n : nodes) {
+                // add session specific default values
+                n.range = s.range;
+            }
         }
         
         return nodes;
