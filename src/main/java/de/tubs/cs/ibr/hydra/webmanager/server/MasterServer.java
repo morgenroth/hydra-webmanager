@@ -39,21 +39,15 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 public class MasterServer implements ServletContextListener {
     
     public static class DistributionFailedException extends Exception {
-
+        
         /**
          * serial ID
          */
         private static final long serialVersionUID = 2242070903678118836L;
         
-    };
-    
-    private static class AddressPoolExhausedException extends DistributionFailedException {
-
-        /**
-         * serial ID
-         */
-        private static final long serialVersionUID = 6322066557716014141L;
-        
+        public DistributionFailedException(String what) {
+            super(what);
+        }
     };
     
     public interface EventListener {
@@ -150,7 +144,7 @@ public class MasterServer implements ServletContextListener {
             
             // check if distribution is possible without changing any assignment
             if (sum < nodes.size()) {
-                throw new DistributionFailedException();
+                throw new DistributionFailedException("Not enough resources available.");
             }
             
             /**
@@ -180,15 +174,23 @@ public class MasterServer implements ServletContextListener {
                     // if this node has a pinned assignment
                     if (n.slaveId == null) continue;
                     
+                    // get the slave object
+                    Slave s = db.getSlave(n.slaveId);
+                    
+                    // check if the slave is connected
+                    if (Slave.State.DISCONNECTED.equals(s.state))
+                        throw new DistributionFailedException("At least one node is assigned to an disconnected slave.");
+                    
                     // search for the allocation of this slave
                     for (SlaveAllocation a : allocs) {
                         if (n.slaveId != a.slaveId) continue;
                         
-                        // if the pinned slave is exhausted, skip this allocation
-                        if (a.isExhausted()) break;
+                        // if the pinned slave is exhausted, abort allocation
+                        if (a.isExhausted())
+                            throw new DistributionFailedException("At least one node is assigned to an exhausted slave.");
                         
-                        // get the slave object
-                        Slave s = db.getSlave(a.slaveId);
+                        // add this slave to the allocated slaves
+                        allocSlaves.add(s);
                         
                         // assign the slave to the node
                         db.assignNode(n, s);
@@ -253,9 +255,9 @@ public class MasterServer implements ServletContextListener {
                 }
                 
                 return allocSlaves;
-            } catch (AddressPoolExhausedException e) {
+            } catch (DistributionFailedException e) {
                 // error - address pool exhausted
-                System.err.println("ERROR - address pool is exhausted");
+                System.err.println("ERROR - " + e.getMessage());
                 
                 // clear made assignments
                 db.clearAssignment(session);
@@ -269,7 +271,7 @@ public class MasterServer implements ServletContextListener {
         }
     }
     
-    private static String findFreeAddress(Set<String> allocAddresses, final NodeAddress baseAddr, final NodeAddress maxAddr) throws AddressPoolExhausedException {
+    private static String findFreeAddress(Set<String> allocAddresses, final NodeAddress baseAddr, final NodeAddress maxAddr) throws DistributionFailedException {
         for (long n = baseAddr.getLongAddress() + 1; n < maxAddr.getLongAddress(); n++) {
             NodeAddress newAddr = new NodeAddress(n, baseAddr.getLongNetmask());
             String addr = newAddr.toString();
@@ -283,7 +285,7 @@ public class MasterServer implements ServletContextListener {
         }
         
         // no more addresses available
-        throw new AddressPoolExhausedException();
+        throw new DistributionFailedException("Address pool is exhaused.");
     }
     
     private Thread mSocketLoop = new Thread() {
