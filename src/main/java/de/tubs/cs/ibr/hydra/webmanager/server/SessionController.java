@@ -263,6 +263,8 @@ public class SessionController {
         
         @Override
         public void onFinish() {
+            log("prepared");
+            
             // get the database object
             Database db = Database.getInstance();
             
@@ -302,6 +304,8 @@ public class SessionController {
         
         @Override
         public void onFinish() {
+            log("nodes created");
+            
             // schedule a preparation
             // timeout: 180 seconds
             mSlaveExecutor.execute(mSlaves, mBootUpTask, 180);
@@ -369,6 +373,8 @@ public class SessionController {
         
         @Override
         public void onFinish() {
+            log("boot-up complete");
+            
             // schedule a run task
             mExecutor.execute(mRunableBootup);
         }
@@ -414,6 +420,8 @@ public class SessionController {
         @Override
         public void run(SlaveConnection c, Node n) throws OperationFailedException {
             try {
+                log("collect stats for " + n);
+                
                 // collect stats of this node
                 String stats = c.getStats(n);
                   
@@ -475,6 +483,13 @@ public class SessionController {
                         // get all nodes of this session
                         List<Node> nodes = Database.getInstance().getNodes(mSession);
                         
+                        String nodes_list = "";
+                        for (Node n : nodes) {
+                            nodes_list += n.toString() + " ";
+                        }
+                        
+                        log("initiate stats collection for " + nodes_list);
+                        
                         // schedule stats collection
                         // timeout: 10 seconds per node
                         mSlaveExecutor.execute(mSlaves, nodes, mCollectStatsTask, 10 * nodes.size());
@@ -494,6 +509,8 @@ public class SessionController {
             if (duration != null) {
                 scheduledFinish = mExecutor.schedule(mRunableFinish, duration, TimeUnit.SECONDS);
             }
+            
+            log("running");
         }
     };
     
@@ -576,7 +593,7 @@ public class SessionController {
                 break;
         }
         
-        // assign contact provider as movement handler
+        // assign  provider as movement handler
         mMovement.addMovementHandler(mContactProvider);
         
         // register as movement receiver
@@ -675,7 +692,7 @@ public class SessionController {
                 @Override
                 public void onFinish() {
                     // announce link-up to GUI
-                    System.out.println("CONTACT: " + link);
+                    log("link up " + link);
                     MasterServer.fireLinkUp(mSession, link);
                 }
 
@@ -718,7 +735,7 @@ public class SessionController {
                 @Override
                 public void onFinish() {
                     // announce link-down to GUI
-                    System.out.println("SEPARATION: " + link);
+                    log("link down " + link);
                     MasterServer.fireLinkDown(mSession, link);
                 }
 
@@ -731,6 +748,15 @@ public class SessionController {
             });
         }
     };
+    
+    // TODO: better logging
+    private void log(String message) {
+        if (mSession == null) {
+            System.out.println("SESSION[unknown] " + message);
+        } else {
+            System.out.println("SESSION[" + mSession.id + "] " + message);
+        }
+    }
     
     private Runnable mUpdateMovement = new Runnable() {
         @Override
