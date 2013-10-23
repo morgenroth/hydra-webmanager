@@ -88,7 +88,7 @@ public class MapNode {
     
     public void setPosition(Coordinates c, GeoCoordinates fix) {
         // translate coordinates
-        setPosition(c.getGeoCoordinates(fix));
+        setPosition(c == null ? null : c.getGeoCoordinates(fix));
         
         // set node coordinates
         mNode.position = c;
@@ -96,16 +96,21 @@ public class MapNode {
 
     public void setPosition(GeoCoordinates g) {
         mGeo = g;
-        mPosition = LatLng.create(mGeo.getLat(), mGeo.getLon());
         
-        if (mMark != null) {
-            // set position
-            mMark.setPosition(mPosition);
-        }
-        
-        if (mCircle != null) {
-            // set position
-            mCircle.setCenter(mPosition);
+        if (g == null) {
+            mPosition = null;
+        } else {
+            mPosition = LatLng.create(mGeo.getLat(), mGeo.getLon());
+            
+            if (mMark != null) {
+                // set position
+                mMark.setPosition(mPosition);
+            }
+            
+            if (mCircle != null) {
+                // set position
+                mCircle.setCenter(mPosition);
+            }
         }
         
         // decide if hidden or not
