@@ -26,13 +26,26 @@ public class MapNode {
     private DataPoint mData;
     private SessionMapWidget mWidget;
     
+    private GoogleMap mMap;
+    
+    private boolean mHide = false;
+    
     public MapNode(SessionMapWidget widget, Node n) {
         mWidget = widget;
         mNode = n;
     }
+    
+    public void setHidden(boolean hidden) {
+        mHide = hidden;
+        
+        boolean showOnMap = (!hidden && (mPosition != null));
+        if (mCircle != null) mCircle.setMap( showOnMap ? mMap : null );
+        if (mMark != null) mMark.setMap( showOnMap ? mMap : null );
+    }
 
     public void setData(DataPoint data, MarkerImage icon, GoogleMap map) {
         mData = data;
+        mMap = map;
         
         if (mCircle == null) {
             mCircleOptions = CircleOptions.create();
@@ -45,18 +58,19 @@ public class MapNode {
             
             mCircle = Circle.create(mCircleOptions);
             mCircle.setRadius(mNode.range);
-            mCircle.setMap(map);
         }
         
         if (mMark == null) {
             mMark = Marker.create();
-            mMark.setMap(map);
             mMark.setTitle(mNode.name);
             mMark.setClickable(true);
             mMark.addClickListener(mClickHandler);
         }
         
         mMark.setIcon(icon);
+        
+        // decide if hidden or not
+        setHidden(mHide);
     }
     
     public void setIcon(MarkerImage icon) {
@@ -66,6 +80,9 @@ public class MapNode {
     public void setPosition(Coordinates c, GeoCoordinates fix) {
         // translate coordinates
         setPosition(c.getGeoCoordinates(fix));
+        
+        // set node coordinates
+        mNode.position = c;
     }
 
     public void setPosition(GeoCoordinates g) {
@@ -81,6 +98,9 @@ public class MapNode {
             // set position
             mCircle.setCenter(mPosition);
         }
+        
+        // decide if hidden or not
+        setHidden(mHide);
     }
     
     public LatLng getPosition() {
