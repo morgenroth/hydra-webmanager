@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -25,6 +26,7 @@ import org.atmosphere.cpr.DefaultBroadcasterFactory;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.NodeAddress;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.ServerEvent;
+import de.tubs.cs.ibr.hydra.webmanager.server.data.SessionContainer;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SlaveAllocation;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
@@ -619,9 +621,7 @@ public class MasterServer implements ServletContextListener {
         Database.getInstance().clearAssignment(null);
     }
     
-    public static ArrayList<Link> getLinks(Long sessionId) {
-        SessionController sc = null;
-        
+    private static SessionController getController(Long sessionId) {
         synchronized(mControllers) {
             // check if the session controller for this session already exists
             if (!mControllers.containsKey(sessionId)) {
@@ -630,11 +630,80 @@ public class MasterServer implements ServletContextListener {
                 return null;
             }
             
-            // create a session controller
-            sc = mControllers.get(sessionId);
+            // retrieve the session controller
+            return mControllers.get(sessionId);
         }
+    }
+    
+    public static ArrayList<Link> getLinks(Long sessionId) {
+        SessionController sc = getController(sessionId);
+        
+        if (sc == null) return new ArrayList<Link>();
 
         // get session links
         return sc.getLinks();
+    }
+    
+    public static ArrayList<Node> getNodes(Session session) {
+        // get session controller
+        SessionController sc = getController(session.id);
+        
+        if (sc != null) {
+            Collection<Node> nodes = sc.getNodes();
+            if (nodes != null) {
+                return new ArrayList<Node>(nodes);
+            }
+        }
+        
+        ArrayList<Node> nodes = Database.getInstance().getNodes(session);
+        
+        // get up-to-date session object
+        Session s = getSession(session.id);
+        
+        for (Node n : nodes) {
+            // add session specific default values
+            n.range = s.range;
+        }
+        
+        return nodes;
+    }
+    
+    public static Session getSession(Long id) {
+        final Session s = Database.getInstance().getSession(id);
+        
+        // get a session container
+        final SessionContainer sc = SessionContainer.getContainer(s);
+        
+        try {
+            // initialize the container
+            sc.initialize(null);
+            
+            // inject container parameters
+            sc.inject(s);
+        } catch (IOException e) {
+            if (!Session.State.INITIAL.equals(s.state)) {
+                // container not ready
+                // set session state to INITIAL
+                Database.getInstance().setState(s, Session.State.INITIAL);
+                
+                MasterServer.invoke(new Task() {
+                    @Override
+                    public void run() {
+                        try {
+                            // trigger initialization of the session
+                            sc.initialize(SessionContainer.getDefault());
+                            
+                            // set session state to DRAFT
+                            Database.getInstance().setState(s, Session.State.DRAFT);
+                        } catch (IOException e) {
+                            // set session state to ERROR
+                            Database.getInstance().setState(s, Session.State.ERROR);
+                        }
+                    }
+                });
+            }
+        }
+        
+        return s;
     }
 }

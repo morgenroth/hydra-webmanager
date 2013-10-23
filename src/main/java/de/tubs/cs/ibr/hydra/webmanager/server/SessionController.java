@@ -2,6 +2,7 @@ package de.tubs.cs.ibr.hydra.webmanager.server;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -62,9 +63,19 @@ public class SessionController {
         mSession = s;
     }
     
-    public ArrayList<Link> getLinks() {
+    public synchronized ArrayList<Link> getLinks() {
         if (mContactProvider == null) return null;
         return mContactProvider.getLinks();
+    }
+    
+    public synchronized Collection<Node> getNodes() {
+        if (mMovement == null) return null;
+        return mMovement.getNodes();
+    }
+    
+    public synchronized Coordinates getPosition(Node n) {
+        if (mMovement == null) return null;
+        return mMovement.getPosition(n);
     }
     
     private MasterServer.EventListener mEventListener = new MasterServer.EventListener() {
@@ -545,7 +556,7 @@ public class SessionController {
         return Session.State.ABORTED.equals( getSession().state );
     }
     
-    private void prepareSetup() {
+    private synchronized void prepareSetup() {
         // create a contact provider
         mContactProvider = new ContactProvider();
         

@@ -98,42 +98,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
 
     @Override
     public Session getSession(Long id) {
-        final Session s = Database.getInstance().getSession(id);
-        
-        // get a session container
-        final SessionContainer sc = SessionContainer.getContainer(s);
-        
-        try {
-            // initialize the container
-            sc.initialize(null);
-            
-            // inject container parameters
-            sc.inject(s);
-        } catch (IOException e) {
-            if (!Session.State.INITIAL.equals(s.state)) {
-                // container not ready
-                // set session state to INITIAL
-                Database.getInstance().setState(s, Session.State.INITIAL);
-                
-                MasterServer.invoke(new Task() {
-                    @Override
-                    public void run() {
-                        try {
-                            // trigger initialization of the session
-                            sc.initialize(SessionContainer.getDefault());
-                            
-                            // set session state to DRAFT
-                            Database.getInstance().setState(s, Session.State.DRAFT);
-                        } catch (IOException e) {
-                            // set session state to ERROR
-                            Database.getInstance().setState(s, Session.State.ERROR);
-                        }
-                    }
-                });
-            }
-        }
-        
-        return s;
+        return MasterServer.getSession(id);
     }
 
     @Override
@@ -148,7 +113,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
             s = new Session(sessionId);
         }
         
-        return Database.getInstance().getNodes(s);
+        return MasterServer.getNodes(s);
     }
 
     @Override

@@ -129,9 +129,6 @@ public class SessionMapWidget extends Composite implements ResizeHandler, EventL
             public void onSuccess(ArrayList<Node> result) {
                 // store the list of nodes
                 for (Node n : result) {
-                    // assign nodes range
-                    n.range = mSession.range;
-                    
                     // create a map node
                     mNodes.put(n.id, new MapNode(SessionMapWidget.this, n));
                 }

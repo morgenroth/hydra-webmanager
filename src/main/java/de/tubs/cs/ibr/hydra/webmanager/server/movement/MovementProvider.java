@@ -1,5 +1,7 @@
 package de.tubs.cs.ibr.hydra.webmanager.server.movement;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
@@ -12,11 +14,20 @@ public abstract class MovementProvider {
     }
     
     private Long mLastUpdate = null;
-    private HashSet<Node> mNodes = new HashSet<Node>();
+    private HashMap<Long, Node> mNodes = new HashMap<Long, Node>();
     private HashSet<MovementHandler> mListener = new HashSet<MovementHandler>();
     
-    protected HashSet<Node> getNodes() {
-        return mNodes;
+    public Collection<Node> getNodes() {
+        return mNodes.values();
+    }
+    
+    public Coordinates getPosition(Node n) {
+        Node node = mNodes.get(n.id);
+        return node.position;
+    }
+    
+    public Node getNode(Long id) {
+        return mNodes.get(id);
     }
     
     protected void fireOnMovementEvent(Node n, Coordinates position, Double speed, Double heading) {
@@ -63,7 +74,7 @@ public abstract class MovementProvider {
      */
     public void add(Node n) {
         synchronized(mNodes) {
-            mNodes.add(n);
+            mNodes.put(n.id, n);
         }
     }
     
@@ -73,7 +84,7 @@ public abstract class MovementProvider {
      */
     public void remove(Node n) {
         synchronized(mNodes) {
-            mNodes.remove(n);
+            mNodes.remove(n.id);
         }
     }
     
