@@ -109,23 +109,20 @@ public class SlaveExecutor {
             
             try {
                 mRunnable.onPrepare();
-            } catch (OperationFailedException e) {
-                mRunnable.onError(e);
-                return;
-            }
             
-            // fake slave object
-            Slave s = new Slave();
-            s.id = mNode.assignedSlaveId;
-            SlaveConnection conn = MasterServer.getSlaveConnection(s);
-            
-            try {
+                // fake slave object
+                Slave s = new Slave();
+                s.id = mNode.assignedSlaveId;
+                SlaveConnection conn = MasterServer.getSlaveConnection(s);
+                
                 // execute node task
                 mRunnable.run(conn, mNode);
                 mRunnable.onFinish();
             } catch (OperationFailedException e) {
                 // mark globally as error
                 mRunnable.onError(e);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
@@ -162,22 +159,16 @@ public class SlaveExecutor {
             try {
                 if (mSlaveRunnable != null) mSlaveRunnable.onPrepare();
                 if (mNodeRunnable != null) mNodeRunnable.onPrepare();
-            } catch (OperationFailedException e) {
-                if (mSlaveRunnable != null) mSlaveRunnable.onError(e);
-                if (mNodeRunnable != null) mNodeRunnable.onError(e);
-                return;
-            }
 
-            // prepare a latch
-            mLatch = new CountDownLatch(mSlaves.size());
-            
-            // get all nodes on this slave
-            for (Slave s : mSlaves) {
-                // schedule prepare task for this slave
-                mPooledExecutor.execute( new Distributor.Task(s) );
-            }
-            
-            try {
+                // prepare a latch
+                mLatch = new CountDownLatch(mSlaves.size());
+                
+                // get all nodes on this slave
+                for (Slave s : mSlaves) {
+                    // schedule prepare task for this slave
+                    mPooledExecutor.execute( new Distributor.Task(s) );
+                }
+
                 // wait until all tasks are done
                 if (!mLatch.await(mTimeout, TimeUnit.SECONDS)) {
                     // timeout
@@ -195,6 +186,11 @@ public class SlaveExecutor {
             } catch (InterruptedException e) {
                 if (mSlaveRunnable != null) mSlaveRunnable.onError(e);
                 if (mNodeRunnable != null) mNodeRunnable.onError(e);
+            } catch (OperationFailedException e) {
+                if (mSlaveRunnable != null) mSlaveRunnable.onError(e);
+                if (mNodeRunnable != null) mNodeRunnable.onError(e);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         
@@ -226,6 +222,8 @@ public class SlaveExecutor {
                     } catch (OperationFailedException e) {
                         // mark globally as error
                         if (mError == null) mError = e;
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
                 

@@ -333,11 +333,15 @@ public class MasterServer implements ServletContextListener {
         mTaskLoop.execute(new Task() {
             @Override
             public void run() {
-                // notify all event listener
-                synchronized(mEventListeners) {
-                    for (EventListener l : mEventListeners) {
-                        l.onEvent(evt);
+                try {
+                    // notify all event listener
+                    synchronized(mEventListeners) {
+                        for (EventListener l : mEventListeners) {
+                            l.onEvent(evt);
+                        }
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         });
