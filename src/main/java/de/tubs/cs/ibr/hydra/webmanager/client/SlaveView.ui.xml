@@ -3,11 +3,15 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui"
 	xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
  	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
+	<ui:style>
+		.pager { margin-top: 12px; }
+	</ui:style>
 	<g:HTMLPanel>
  		<b:Row>
 	    	<b:Column size="12">
 	    	    <b:Heading size="2">Slaves</b:Heading>
 				<b:CellTable ui:field="slaveTable" />
+				<b:SimplePager display="{slaveTable}" location="RIGHT" fastForwardRows="15" styleName="{style.pager}"/>
 	    	</b:Column>
     	</b:Row>
     	<b:Row>

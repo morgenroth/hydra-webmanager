@@ -3,6 +3,9 @@
 	xmlns:g="urn:import:com.google.gwt.user.client.ui"
 	xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
  	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
+	<ui:style>
+		.pager { margin-top: 12px; }
+	</ui:style>
 	<g:HTMLPanel>
 		<b:Hero>
 		    <b:Heading size="1">Hydra</b:Heading>
@@ -11,6 +14,7 @@
  		<b:Row>
 	    	<b:Column size="12">
 				<b:CellTable ui:field="sessionTable" />
+				<b:SimplePager display="{sessionTable}" location="RIGHT" fastForwardRows="15" styleName="{style.pager}"/>
 	    	</b:Column>
     	</b:Row>
     	<b:Row>

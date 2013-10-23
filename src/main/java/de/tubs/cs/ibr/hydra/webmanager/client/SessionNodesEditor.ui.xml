@@ -13,6 +13,8 @@
 			margin-left: 6px;
 			margin-right: 6px;
 		}
+
+		.pager { margin-top: 12px; }
 	</ui:style>
 	<g:HTMLPanel>
 	    <b:Row><b:Column size="12" ui:field="alertColumn" /></b:Row>
@@ -39,6 +41,7 @@
 			<!-- table of nodes -->
 			<b:Column size="12">
 				<b:CellTable ui:field="tableNodes" />
+				<b:SimplePager display="{tableNodes}" location="RIGHT" fastForwardRows="15" styleName="{style.pager}"/>
 			</b:Column>
 		</b:Row>
 		<b:Row>

@@ -9,6 +9,7 @@
 		.enabled { color:black; }
 		.disabled { color:gray; }
 		.error { color:red; }
+		.pager { margin-top: 12px; }
 	</ui:style>
 	<g:HTMLPanel>
 		<b:Row>
@@ -53,6 +54,7 @@
 					<b:Tab heading="Nodes">
 						<!-- table of nodes -->
 						<b:CellTable ui:field="tableNodes" />
+						<b:SimplePager display="{tableNodes}" location="RIGHT" fastForwardRows="15" styleName="{style.pager}"/>
 					</b:Tab>
 					<b:Tab heading="Stats">
 						<client:SessionStatsWidget ui:field="statsView" />

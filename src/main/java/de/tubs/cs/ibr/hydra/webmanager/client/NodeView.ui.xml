@@ -8,12 +8,14 @@
 		.enabled { color:black; }
 		.disabled { color:gray; }
 		.error { color:red; }
+		.pager { margin-top: 12px; }
 	</ui:style>
 	<g:HTMLPanel>
  		<b:Row>
 	    	<b:Column size="12">
 	    	    <b:Heading size="2">Nodes</b:Heading>
 				<b:CellTable ui:field="nodeTable" />
+				<b:SimplePager display="{nodeTable}" location="RIGHT" fastForwardRows="15" styleName="{style.pager}"/>
 	    	</b:Column>
     	</b:Row>
     	<b:Row>
