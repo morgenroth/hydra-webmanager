@@ -29,6 +29,7 @@ public class MapNode {
     private GoogleMap mMap;
     
     private boolean mHide = false;
+    private boolean mVisible = false;
     
     public MapNode(SessionMapWidget widget, Node n) {
         mWidget = widget;
@@ -39,8 +40,16 @@ public class MapNode {
         mHide = hidden;
         
         boolean showOnMap = (!hidden && (mPosition != null));
-        if (mCircle != null) mCircle.setMap( showOnMap ? mMap : null );
-        if (mMark != null) mMark.setMap( showOnMap ? mMap : null );
+        
+        if (!mVisible && showOnMap) {
+            if (mCircle != null) mCircle.setMap( mMap );
+            if (mMark != null) mMark.setMap( mMap );
+            mVisible = true;
+        } else if (mVisible  && !showOnMap) {
+            if (mCircle != null) mCircle.setMap( null );
+            if (mMark != null) mMark.setMap( (GoogleMap) null );
+            mVisible = false;
+        }
     }
 
     public void setData(DataPoint data, MarkerImage icon, GoogleMap map) {
