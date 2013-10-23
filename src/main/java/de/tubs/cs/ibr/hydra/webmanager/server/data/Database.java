@@ -1052,9 +1052,17 @@ public class Database {
             ResultSet rs = st.executeQuery();
 
             while (rs.next()) {
-                Long nodeId = rs.getLong(1);
+                DataPoint data = null;
                 
-                DataPoint data = transformJsonData(rs.getTimestamp(2), rs.getString(3));
+                Long nodeId = rs.getLong(1);
+                Timestamp ts = rs.getTimestamp(2);
+                String json = rs.getString(3);
+                
+                if (rs.wasNull()) {
+                    data = new DataPoint();
+                } else {
+                    data = transformJsonData(ts, json);
+                }
 
                 // put data into the data-set
                 ret.put(nodeId, data);
