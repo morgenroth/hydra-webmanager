@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -181,22 +182,32 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
 
     @Override
     public void applyNodes(ArrayList<Node> nodes) {
+        HashSet<Long> sessions = new HashSet<Long>();
+        
         Database d = Database.getInstance();
         for (Node n : nodes) {
             d.updateNode(n);
+            sessions.add(n.sessionId);
         }
         
-        MasterServer.fireNodeStateChanged(null);
+        for (Long session_id : sessions) {
+            MasterServer.fireNodeStateChanged(session_id, null);
+        }
     }
 
     @Override
     public void removeNodes(ArrayList<Node> nodes) {
+        HashSet<Long> sessions = new HashSet<Long>();
+        
         Database d = Database.getInstance();
         for (Node n : nodes) {
             d.removeNode(n);
+            sessions.add(n.sessionId);
         }
         
-        MasterServer.fireNodeStateChanged(null);
+        for (Long session_id : sessions) {
+            MasterServer.fireNodeStateChanged(session_id, null);
+        }
     }
 
     @Override
@@ -208,7 +219,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         }
         
         // prepare session change extras
-        MasterServer.fireNodeStateChanged(null);
+        MasterServer.fireNodeStateChanged(sessionId, null);
     }
 
     @Override

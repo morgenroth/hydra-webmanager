@@ -212,7 +212,7 @@ public class Database {
             
             // broadcast node state changed event
             n.address = address;
-            MasterServer.fireNodeStateChanged(n);
+            MasterServer.fireNodeStateChanged(n.sessionId, n);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -232,7 +232,7 @@ public class Database {
             
             // broadcast node state changed event
             n.state = s;
-            MasterServer.fireNodeStateChanged(n);
+            MasterServer.fireNodeStateChanged(n.sessionId, n);
         } catch (SQLException e) {
             e.printStackTrace();
         }

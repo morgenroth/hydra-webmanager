@@ -261,7 +261,7 @@ public class MasterServer implements ServletContextListener {
                 db.clearAssignment(session);
                 
                 // update views
-                MasterServer.fireNodeStateChanged(null);
+                MasterServer.fireNodeStateChanged(session.id, null);
                 
                 // re-throw the exception
                 throw e;
@@ -426,13 +426,16 @@ public class MasterServer implements ServletContextListener {
         MasterServer.broadcast(e);
     }
     
-    public static void fireNodeStateChanged(final Node n) {
+    public static void fireNodeStateChanged(final Long session_id, final Node n) {
         // generate a new event
         Event e = new ServerEvent(EventType.NODE_STATE_CHANGED);
         
+        if (session_id != null) {
+            e.setExtra(EventType.EXTRA_SESSION_ID, session_id.toString());
+        }
+        
         if (n != null) {
             e.setExtra(EventType.EXTRA_NODE_ID, n.id.toString());
-            e.setExtra(EventType.EXTRA_SESSION_ID, n.sessionId.toString());
             e.setExtra(EventType.EXTRA_NODE_STATE, n.state.toString());
         }
         
@@ -557,7 +560,7 @@ public class MasterServer implements ServletContextListener {
         Database.getInstance().clearAssignment(s);
         
         // update views
-        MasterServer.fireNodeStateChanged(null);
+        MasterServer.fireNodeStateChanged(s.id, null);
         
         synchronized(mControllers) {
             // remove the controller
