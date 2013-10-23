@@ -138,35 +138,53 @@ public class RandomWalkMovement extends MovementProvider {
         // move by some distance
         n.position.move(dx, dy);
         
+        // bounce on the edges
+        bounce(n);
+    }
+    
+    private void bounce(Node n) {
+        boolean again = false;
+        
         // handle bounds
         if (n.position.getX() < 0) {
-            // left x bound on the left
+            // hit boundary on the left
             n.heading = (-Math.PI - n.heading) % (2.0 * Math.PI);
             
             // flip x
             n.position.flipX();
+
+            again = true;
         }
-        else if (n.position.getX() > mAreaWidth) {
-            // left x bound on the right
+        else if (n.position.getX() >= mAreaWidth) {
+            // hit boundary on the right
             n.heading = (Math.PI - n.heading) % (2.0 * Math.PI);
             
             double overflow = n.position.getX() - mAreaWidth;
-            n.position.move(-2 * overflow, 0.0);
+            n.position.move(-2.0 * overflow, 0.0);
+
+            again = true;
         }
-        if (n.position.getY() < 0) {
-            // left y bound on the top
+        else if (n.position.getY() < 0) {
+            // hit boundary at the bottom
             n.heading = (-2.0 * Math.PI - n.heading) % (2.0 * Math.PI);
             
             // flip y
             n.position.flipY();
+            
+            again = true;
         }
-        else if (n.position.getY() > mAreaHeight) {
-            // left y bound on the bottom
+        if (n.position.getY() >= mAreaHeight) {
+            // hit boundary at the top
             n.heading = (2.0 * Math.PI - n.heading) % (2.0 * Math.PI);
             
             double overflow = n.position.getY() - mAreaHeight;
-            n.position.move(0.0, -2 * overflow);
+            n.position.move(0.0, -2.0 * overflow);
+            
+            again = true;
         }
+        
+        // bounce again if necessary
+        if (again) bounce(n);
     }
     
     private double randomUniform(Double min, Double max) {
