@@ -403,9 +403,8 @@ public class Database {
             ResultSet rs = st.executeQuery();
             
             while (rs.next()) {
-                Slave s = new Slave();
+                Slave s = new Slave(rs.getLong(1));
                 
-                s.id = rs.getLong(1);
                 s.name = rs.getString(2);
                 s.address = rs.getString(3);
                 if (rs.wasNull()) s.address = null;
@@ -439,8 +438,7 @@ public class Database {
             ResultSet rs = st.executeQuery();
             
             if (rs.next()) {
-                s = new Slave();
-                s.id = rs.getLong(1);
+                s = new Slave(rs.getLong(1));
                 s.name = rs.getString(2);
                 
                 s.address = rs.getString(3);
@@ -475,8 +473,7 @@ public class Database {
             ResultSet rs = st.executeQuery();
             
             if (rs.next()) {
-                s = new Slave();
-                s.id = rs.getLong(1);
+                s = new Slave(rs.getLong(1));
                 s.name = rs.getString(2);
                 s.address = rs.getString(3);
                 if (rs.wasNull()) s.address = null;

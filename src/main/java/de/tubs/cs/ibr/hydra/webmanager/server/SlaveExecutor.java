@@ -111,8 +111,7 @@ public class SlaveExecutor {
                 mRunnable.onPrepare();
             
                 // fake slave object
-                Slave s = new Slave();
-                s.id = mNode.assignedSlaveId;
+                Slave s = new Slave(mNode.assignedSlaveId);
                 SlaveConnection conn = MasterServer.getSlaveConnection(s);
                 
                 // execute node task
