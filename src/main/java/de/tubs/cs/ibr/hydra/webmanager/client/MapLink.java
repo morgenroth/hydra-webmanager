@@ -36,8 +36,6 @@ public class MapLink extends Link {
             mLine.setMap(map);
         }
         
-        System.out.println(mMapSource.getPosition().toString());
-
         JsArray<LatLng> path = JsArray.createArray().cast();
         path.push(mMapSource.getPosition());
         path.push(mMapTarget.getPosition());
