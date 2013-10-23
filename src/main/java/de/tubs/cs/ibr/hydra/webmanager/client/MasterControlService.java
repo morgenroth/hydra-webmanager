@@ -8,7 +8,7 @@ import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
-import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
+import de.tubs.cs.ibr.hydra.webmanager.shared.MapDataSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
@@ -55,11 +55,11 @@ public interface MasterControlService extends RemoteService {
     public ArrayList<Node> getNodes(Long sessionId);
     
     /**
-     * Get all links (connections) between nodes
+     * Get data to paint all nodes with links
      * @param sessionId
      * @return
      */
-    public ArrayList<Link> getLinks(Long sessionId);
+    public MapDataSet getMapData(Long sessionId);
     
     /**
      * Store writable values of the nodes

@@ -9,10 +9,7 @@ public enum EventType {
     SESSION_REMOVED("session_removed"),
     SESSION_STATS_UPDATED("session_data_updated"),
     SLAVE_STATE_CHANGED("slave_state_changed"),
-    NODE_STATE_CHANGED("node_state_changed"),
-    SESSION_LINK_UP("session_link_up"),
-    SESSION_LINK_DOWN("session_link_down"),
-    SESSION_NODE_MOVED("session_node_moved");
+    NODE_STATE_CHANGED("node_state_changed");
     
     public static final String EXTRA_SESSION_ID = "session_id";
     public static final String EXTRA_NEW_STATE = "new_state";
@@ -22,12 +19,6 @@ public enum EventType {
     
     public static final String EXTRA_NODE_ID = "node_id";
     public static final String EXTRA_NODE_STATE = "node_state";
-    
-    public static final String EXTRA_LINK_SOURCE_ID = "link_source_id";
-    public static final String EXTRA_LINK_TARGET_ID = "link_target_id";
-    
-    public static final String EXTRA_POSITION_X = "position_x";
-    public static final String EXTRA_POSITION_Y = "position_y";
     
     private String mCode = null;
     
@@ -70,15 +61,6 @@ public enum EventType {
         }
         else if (SESSION_STATS_UPDATED.getCode().equals(data)) {
             return SESSION_STATS_UPDATED;
-        }
-        else if (SESSION_LINK_UP.getCode().equals(data)) {
-            return SESSION_LINK_UP;
-        }
-        else if (SESSION_LINK_DOWN.getCode().equals(data)) {
-            return SESSION_LINK_DOWN;
-        }
-        else if (SESSION_NODE_MOVED.getCode().equals(data)) {
-            return SESSION_NODE_MOVED;
         }
         
         return NONE;

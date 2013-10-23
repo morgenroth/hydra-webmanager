@@ -28,10 +28,10 @@ import de.tubs.cs.ibr.hydra.webmanager.server.data.NodeAddress;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.ServerEvent;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SessionContainer;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SlaveAllocation;
-import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
+import de.tubs.cs.ibr.hydra.webmanager.shared.MapDataSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
@@ -359,55 +359,6 @@ public class MasterServer implements ServletContextListener {
         }
     }
     
-    private static void broadcast(Long sessionId, final Event evt) {
-        // get/create atmosphere broadcast channel
-        BroadcasterFactory bf = DefaultBroadcasterFactory.getDefault();
-        
-        if (bf != null) {
-            Broadcaster channel = bf.lookup("/session/" + sessionId.toString(), true);
-            
-            // broadcast the event to the clients
-            channel.broadcast(evt.getEventData());
-        }
-    }
-    
-    public static void firePositionUpdated(final Session s, final Node n, final Coordinates position) {
-        // generate a new event
-        Event e = new ServerEvent(EventType.SESSION_NODE_MOVED);
-        
-        e.setExtra(EventType.EXTRA_SESSION_ID, s.id.toString());
-        e.setExtra(EventType.EXTRA_NODE_ID, n.id.toString());
-        e.setExtra(EventType.EXTRA_POSITION_X, Double.toString(position.getX()));
-        e.setExtra(EventType.EXTRA_POSITION_Y, Double.toString(position.getY()));
-        
-        // broadcast session change
-        MasterServer.broadcast(s.id, e);
-    }
-    
-    public static void fireLinkUp(final Session s, final Link l) {
-        // generate a new event
-        Event e = new ServerEvent(EventType.SESSION_LINK_UP);
-
-        e.setExtra(EventType.EXTRA_SESSION_ID, s.id.toString());
-        e.setExtra(EventType.EXTRA_LINK_SOURCE_ID, l.source.id.toString());
-        e.setExtra(EventType.EXTRA_LINK_TARGET_ID, l.target.id.toString());
-        
-        // broadcast session change
-        MasterServer.broadcast(s.id, e);
-    }
-    
-    public static void fireLinkDown(final Session s, final Link l) {
-        // generate a new event
-        Event e = new ServerEvent(EventType.SESSION_LINK_DOWN);
-        
-        e.setExtra(EventType.EXTRA_SESSION_ID, s.id.toString());
-        e.setExtra(EventType.EXTRA_LINK_SOURCE_ID, l.source.id.toString());
-        e.setExtra(EventType.EXTRA_LINK_TARGET_ID, l.target.id.toString());
-        
-        // broadcast session change
-        MasterServer.broadcast(s.id, e);
-    }
-    
     public static void fireSessionDataUpdated(final Session s) {
         // generate a new event
         Event e = new ServerEvent(EventType.SESSION_DATA_UPDATED);
@@ -650,6 +601,15 @@ public class MasterServer implements ServletContextListener {
 
         // get session links
         return sc.getLinks();
+    }
+    
+    public static MapDataSet getMapData(Session session) {
+        // TODO: combine both queries
+        MapDataSet mds = new MapDataSet();
+        mds.nodes = getNodes(session);
+        mds.links = getLinks(session.id);
+        
+        return mds;
     }
     
     public static ArrayList<Node> getNodes(Session session) {

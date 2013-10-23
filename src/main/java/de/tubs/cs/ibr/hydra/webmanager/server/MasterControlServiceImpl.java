@@ -13,7 +13,7 @@ import de.tubs.cs.ibr.hydra.webmanager.server.data.Configuration;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SessionContainer;
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
-import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
+import de.tubs.cs.ibr.hydra.webmanager.shared.MapDataSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session.Action;
@@ -235,7 +235,12 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     }
 
     @Override
-    public ArrayList<Link> getLinks(Long sessionId) {
-        return MasterServer.getLinks(sessionId);
+    public MapDataSet getMapData(Long sessionId) {
+        Session s = null;
+        if (sessionId != null) {
+            s = new Session(sessionId);
+        }
+        
+        return MasterServer.getMapData(s);
     }
 }

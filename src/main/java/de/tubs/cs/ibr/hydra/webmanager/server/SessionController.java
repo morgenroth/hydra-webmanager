@@ -647,8 +647,6 @@ public class SessionController {
                 
                 @Override
                 public void onFinish() {
-                    // announce new position to GUI
-                    MasterServer.firePositionUpdated(mSession, n, position);
                 }
 
                 @Override
@@ -693,7 +691,6 @@ public class SessionController {
                 public void onFinish() {
                     // announce link-up to GUI
                     log("link up " + link);
-                    MasterServer.fireLinkUp(mSession, link);
                 }
 
                 @Override
@@ -736,7 +733,6 @@ public class SessionController {
                 public void onFinish() {
                     // announce link-down to GUI
                     log("link down " + link);
-                    MasterServer.fireLinkDown(mSession, link);
                 }
 
                 @Override

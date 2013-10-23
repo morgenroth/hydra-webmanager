@@ -460,12 +460,7 @@ public class SessionWatchView extends View {
         else if (evt.equals(EventType.SESSION_STATS_UPDATED)) {
             if (isRelated(evt)) {
                 statsView.refresh();
-                mapView.refresh();
             }
-        }
-        else {
-            // forward everything else to map view
-            mapView.onEventRaised(evt);
         }
     }
     

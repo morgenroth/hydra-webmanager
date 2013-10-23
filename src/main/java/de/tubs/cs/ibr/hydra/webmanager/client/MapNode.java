@@ -31,15 +31,32 @@ public class MapNode {
     private boolean mHide = false;
     private boolean mVisible = false;
     
-    public MapNode(SessionMapWidget widget, Node n) {
+    public MapNode(SessionMapWidget widget, Node n, GoogleMap map) {
         mWidget = widget;
         mNode = n;
+        mMap = map;
+        
+        mCircleOptions = CircleOptions.create();
+        mCircleOptions.setFillOpacity(0.2);
+        mCircleOptions.setFillColor("#007bd0");
+        mCircleOptions.setStrokeOpacity(0.6);
+        mCircleOptions.setStrokeColor("#007bd0");
+        mCircleOptions.setStrokeWeight(1);
+        mCircleOptions.setZindex(-2);
+        
+        mCircle = Circle.create(mCircleOptions);
+        mCircle.setRadius(mNode.range);
+        
+        mMark = Marker.create();
+        mMark.setTitle(mNode.name);
+        mMark.setClickable(true);
+        mMark.addClickListener(mClickHandler);
     }
     
     public void setHidden(boolean hidden) {
         mHide = hidden;
         
-        boolean showOnMap = (!hidden && (mPosition != null));
+        boolean showOnMap = (!hidden && hasPosition());
         
         if (!mVisible && showOnMap) {
             if (mCircle != null) mCircle.setMap( mMap );
@@ -52,38 +69,12 @@ public class MapNode {
         }
     }
 
-    public void setData(DataPoint data, MarkerImage icon, GoogleMap map) {
-        mData = data;
-        mMap = map;
-        
-        if (mCircle == null) {
-            mCircleOptions = CircleOptions.create();
-            mCircleOptions.setFillOpacity(0.2);
-            mCircleOptions.setFillColor("#007bd0");
-            mCircleOptions.setStrokeOpacity(0.6);
-            mCircleOptions.setStrokeColor("#007bd0");
-            mCircleOptions.setStrokeWeight(1);
-            mCircleOptions.setZindex(-2);
-            
-            mCircle = Circle.create(mCircleOptions);
-            mCircle.setRadius(mNode.range);
-        }
-        
-        if (mMark == null) {
-            mMark = Marker.create();
-            mMark.setTitle(mNode.name);
-            mMark.setClickable(true);
-            mMark.addClickListener(mClickHandler);
-        }
-        
-        mMark.setIcon(icon);
-        
-        // decide if hidden or not
-        setHidden(mHide);
-    }
-    
     public void setIcon(MarkerImage icon) {
         mMark.setIcon(icon);
+    }
+    
+    public boolean hasPosition() {
+        return mPosition != null;
     }
     
     public void setPosition(Coordinates c, GeoCoordinates fix) {
