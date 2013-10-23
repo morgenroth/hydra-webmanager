@@ -126,6 +126,11 @@
 		<version>${atmosphere-version}</version>
 	</dependency>
 	<dependency>
+		<groupId>org.atmosphere</groupId>
+		<artifactId>atmosphere-runtime-native</artifactId>
+		<version>${atmosphere-version}</version>
+	</dependency>
+	<dependency>
 		<groupId>com.nikhaldimann</groupId>
 		<artifactId>inieditor</artifactId>
 		<version>r5</version>
