@@ -632,8 +632,7 @@ public class MasterServer implements ServletContextListener {
         synchronized(mControllers) {
             // check if the session controller for this session already exists
             if (!mControllers.containsKey(sessionId)) {
-                // ERROR
-                System.err.println("No session controller found for " + sessionId.toString());
+                // no session controller available
                 return null;
             }
             
