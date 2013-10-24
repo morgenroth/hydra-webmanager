@@ -157,7 +157,9 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
                 
                 if (result.links != null) {
                     // remove all active links
-                    disappeared.removeAll(result.links);
+                    for (Link l : result.links) {
+                        disappeared.remove(l);
+                    }
                 }
                 
                 for (MapLink ml : disappeared) {

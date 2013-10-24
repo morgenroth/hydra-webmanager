@@ -134,4 +134,22 @@ public class MapNode {
             mWidget.onNodeClick(MapNode.this);
         }
     };
+    
+    @Override
+    public String toString() {
+        return mNode.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof MapNode) {
+            MapNode n = (MapNode)obj;
+            return mNode.equals(n.getNode());
+        }
+        else if (obj instanceof Node) {
+            Node n = (Node)obj;
+            return mNode.equals(n);
+        }
+        return super.equals(obj);
+    }
 }

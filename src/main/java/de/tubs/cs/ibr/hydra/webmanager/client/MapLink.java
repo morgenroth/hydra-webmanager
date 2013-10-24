@@ -3,6 +3,7 @@ package de.tubs.cs.ibr.hydra.webmanager.client;
 import com.google.gwt.core.client.JsArray;
 import com.google.maps.gwt.client.GoogleMap;
 import com.google.maps.gwt.client.LatLng;
+import com.google.maps.gwt.client.MVCArray;
 import com.google.maps.gwt.client.Polyline;
 import com.google.maps.gwt.client.PolylineOptions;
 
@@ -25,6 +26,8 @@ public class MapLink extends Link {
     public void show(GoogleMap map) {
         if (map == null) return;
         
+        MVCArray<LatLng> path = null;
+        
         if (mLine == null) {
             mOptions = PolylineOptions.create();
             mOptions.setStrokeOpacity(0.5);
@@ -34,9 +37,13 @@ public class MapLink extends Link {
             
             mLine = Polyline.create(mOptions);
             mLine.setMap(map);
+            
+            path = JsArray.createArray().cast();
+        } else {
+            path = mLine.getPath();
+            path.clear();
         }
         
-        JsArray<LatLng> path = JsArray.createArray().cast();
         path.push(mMapSource.getPosition());
         path.push(mMapTarget.getPosition());
         
@@ -46,6 +53,7 @@ public class MapLink extends Link {
     public void hide() {
         if (mLine != null) {
             mLine.setMap(null);
+            mLine = null;
         }
     }
     

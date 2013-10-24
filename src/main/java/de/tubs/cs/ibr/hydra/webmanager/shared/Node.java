@@ -91,4 +91,10 @@ public class Node implements IsSerializable {
         }
         return super.equals(obj);
     }
+
+    @Override
+    public int hashCode() {
+        if (id != null) return id.hashCode();
+        return super.hashCode();
+    }
 }
