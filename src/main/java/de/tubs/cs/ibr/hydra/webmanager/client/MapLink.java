@@ -57,6 +57,22 @@ public class MapLink extends Link {
         }
     }
     
+    public void animate(int position, int max) {
+        if (mLine == null) return;
+        
+        // interpolate movement
+        mMapSource.animate(position, max);
+        mMapTarget.animate(position, max);
+        
+        MVCArray<LatLng> path = mLine.getPath();
+        path.clear();
+    
+        path.push(mMapSource.getPosition());
+        path.push(mMapTarget.getPosition());
+        
+        mLine.setPath(path);
+    }
+    
     public boolean hasSource(MapNode m) {
         return mMapSource.equals(m);
     }

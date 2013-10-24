@@ -21,6 +21,8 @@ public class MapNode {
     private CircleOptions mCircleOptions;
     
     private GeoCoordinates mGeo;
+    private LatLng mNextPosition;
+    private LatLng mCurrentPosition;
     private LatLng mPosition;
 
     private DataPoint mData;
@@ -53,6 +55,10 @@ public class MapNode {
         mMark.addClickListener(mClickHandler);
     }
     
+    public boolean isVisible() {
+        return mVisible;
+    }
+    
     public void setHidden(boolean hidden) {
         mHide = hidden;
         
@@ -74,7 +80,15 @@ public class MapNode {
     }
     
     public boolean hasPosition() {
-        return mPosition != null;
+        return mCurrentPosition != null;
+    }
+    
+    private LatLng getInterimPosition(double position, double max) {
+        if ((mPosition == null) || (mNextPosition == null)) return null;
+        
+        double lat = mPosition.lat() + (((mNextPosition.lat() - mPosition.lat()) / max) * (position + 1.0));
+        double lng = mPosition.lng() + (((mNextPosition.lng() - mPosition.lng()) / max) * (position + 1.0));
+        return LatLng.create(lat, lng);
     }
     
     public void setPosition(Coordinates c, GeoCoordinates fix) {
@@ -85,31 +99,19 @@ public class MapNode {
         mNode.position = c;
     }
 
-    public void setPosition(GeoCoordinates g) {
+    private void setPosition(GeoCoordinates g) {
         mGeo = g;
+        mPosition = mNextPosition;
         
         if (g == null) {
-            mPosition = null;
+            mNextPosition = null;
         } else {
-            mPosition = LatLng.create(mGeo.getLat(), mGeo.getLon());
-            
-            if (mMark != null) {
-                // set position
-                mMark.setPosition(mPosition);
-            }
-            
-            if (mCircle != null) {
-                // set position
-                mCircle.setCenter(mPosition);
-            }
+            mNextPosition = LatLng.create(mGeo.getLat(), mGeo.getLon());
         }
-        
-        // decide if hidden or not
-        setHidden(mHide);
     }
     
     public LatLng getPosition() {
-        return mPosition;
+        return mCurrentPosition;
     }
     
     public Node getNode() {
@@ -126,6 +128,26 @@ public class MapNode {
 
     public void setData(DataPoint data) {
         mData = data;
+    }
+    
+    public void animate(int position, int max) {
+        // interpolate movement
+        mCurrentPosition = getInterimPosition(position, max);
+        
+        // decide if hidden or not
+        setHidden(mHide);
+        
+        if (!isVisible()) return;
+        
+        if (mMark != null) {
+            // set position
+            mMark.setPosition(mCurrentPosition);
+        }
+        
+        if (mCircle != null) {
+            // set position
+            mCircle.setCenter(mCurrentPosition);
+        }
     }
 
     public ClickHandler mClickHandler = new ClickHandler() {

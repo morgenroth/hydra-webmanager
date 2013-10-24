@@ -23,6 +23,7 @@ import com.google.maps.gwt.client.MapTypeId;
 import com.google.maps.gwt.client.MarkerImage;
 import com.google.maps.gwt.client.Point;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.GeoCoordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MapDataSet;
@@ -57,6 +58,10 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     
     // is true if all charts are initialized
     boolean initialized = false;
+    
+    // animation (interpolation) variables
+    private int mAnimationRound = 0;
+    private int mAnimationMax = 10;
 
     public SessionMapWidget() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -121,6 +126,22 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
         // do not update if not initialized
         if (!initialized) return;
         
+        // animate all visible nodes
+        for (MapNode n : mNodes.values()) {
+            n.animate(mAnimationRound, mAnimationMax);
+        }
+        
+        // animate all visible egdes
+        for (MapLink l : mLinks) {
+            l.animate(mAnimationRound, mAnimationMax);
+        }
+        
+        // move to the next animation round
+        mAnimationRound = (mAnimationRound + 1) % mAnimationMax;
+
+        // if not null, then skip refresh
+        if (mAnimationRound > 0) return;
+        
         // load the list of nodes
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
         mcs.getMapData(mSession.id, new AsyncCallback<MapDataSet>() {
@@ -146,6 +167,9 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
                         
                         // show blue marker
                         mn.setIcon(mBlueIcon);
+                        
+                        // animate the first frame
+                        mn.animate(mAnimationRound, mAnimationMax);
                     }
                 }
                 
@@ -202,6 +226,9 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
                     }
                     
                     ml.show(mMap);
+                    
+                    // animate the first frame
+                    ml.animate(mAnimationRound, mAnimationMax);
                 }
             }
             
@@ -227,8 +254,8 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
             panelMap.setHeight(height.intValue() + "px");
         }
         
-        // enable refresh timer
-        mRefreshTimer.scheduleRepeating(1000);
+        // enable refresh timer, every 100ms
+        mRefreshTimer.scheduleRepeating(100);
     }
     
     public void onNodeClick(MapNode n) {
