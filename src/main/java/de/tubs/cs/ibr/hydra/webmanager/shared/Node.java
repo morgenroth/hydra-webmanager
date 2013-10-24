@@ -2,7 +2,7 @@ package de.tubs.cs.ibr.hydra.webmanager.shared;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
 
-public class Node implements IsSerializable {
+public class Node implements IsSerializable, Comparable<Node> {
 
     public enum State {
         DRAFT("draft"),
@@ -96,5 +96,10 @@ public class Node implements IsSerializable {
     public int hashCode() {
         if (id != null) return id.hashCode();
         return super.hashCode();
+    }
+
+    @Override
+    public int compareTo(Node o) {
+        return id.compareTo(o.id);
     }
 }
