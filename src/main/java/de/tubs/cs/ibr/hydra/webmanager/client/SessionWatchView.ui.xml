@@ -59,7 +59,7 @@
 					<b:Tab heading="Stats">
 						<client:SessionStatsWidget ui:field="statsView" />
 					</b:Tab>
-					<b:Tab heading="Map">
+					<b:Tab heading="Map" ui:field="tabMapView">
 					    <client:SessionMapWidget ui:field="mapView" />
 					</b:Tab>
 				</b:TabPanel>

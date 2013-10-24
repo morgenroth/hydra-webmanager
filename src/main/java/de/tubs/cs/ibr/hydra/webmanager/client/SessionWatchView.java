@@ -7,6 +7,7 @@ import java.util.List;
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CellTable;
 import com.github.gwtbootstrap.client.ui.ProgressBar;
+import com.github.gwtbootstrap.client.ui.Tab;
 import com.github.gwtbootstrap.client.ui.TabPanel.ShownEvent;
 import com.github.gwtbootstrap.client.ui.TextBox;
 import com.google.gwt.cell.client.Cell.Context;
@@ -46,6 +47,8 @@ public class SessionWatchView extends View {
     
     @UiField SessionStatsWidget statsView;
     @UiField SessionMapWidget mapView;
+    
+    @UiField Tab tabMapView;
     
     interface Style extends CssResource {
         String activated();
@@ -484,6 +487,6 @@ public class SessionWatchView extends View {
     @UiHandler("panelTabs")
     void onTabChange(ShownEvent event) {
         statsView.onResize(null);
-        mapView.onResize(null);
+        mapView.setVisible(tabMapView.isActive());
     }
 }

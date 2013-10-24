@@ -4,10 +4,35 @@
 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui"
 	xmlns:viz="urn:import:com.google.gwt.visualization.client.visualizations">
 	<ui:style>
-		
+		.formButton {
+			margin-left: 6px;
+			margin-right: 6px;
+		}
 	</ui:style>
 	<g:HTMLPanel>
 		<b:Row>
+			<b:Column size="12">
+				<g:HorizontalPanel>
+					<g:SimplePanel>
+						<b:InputAddOn prependText="Node" appendIcon="BOOKMARK" addStyleNames="{style.formButton}">
+						    <b:ListBox alternateSize="MEDIUM" ui:field="listSelectedNode">
+						    </b:ListBox>
+						</b:InputAddOn>
+					</g:SimplePanel>
+					<g:SimplePanel>
+						<b:InputAddOn prependText="View" appendIcon="MAP_MARKER" addStyleNames="{style.formButton}">
+						    <b:ListBox alternateSize="MEDIUM" ui:field="listViewType">
+						        <g:item value="0">Static</g:item>
+						        <g:item value="1">Refreshed</g:item>
+						        <g:item value="2">Animated</g:item>
+						    </b:ListBox>
+						</b:InputAddOn>
+					</g:SimplePanel>
+					<g:SimplePanel>
+						<b:Button type="DEFAULT" ui:field="buttonRefresh">Refresh</b:Button>
+					</g:SimplePanel>
+				</g:HorizontalPanel>
+			</b:Column>
 			<b:Column size="12">
 				<g:SimplePanel ui:field="panelMap" />
 			</b:Column>

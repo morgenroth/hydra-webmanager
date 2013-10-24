@@ -1,15 +1,21 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import com.github.gwtbootstrap.client.ui.Button;
+import com.github.gwtbootstrap.client.ui.ListBox;
 import com.google.gwt.ajaxloader.client.AjaxLoader;
 import com.google.gwt.ajaxloader.client.AjaxLoader.AjaxLoaderOptions;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.logical.shared.ResizeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -37,6 +43,9 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     }
     
     @UiField SimplePanel panelMap;
+    @UiField ListBox listSelectedNode;
+    @UiField ListBox listViewType;
+    @UiField Button buttonRefresh;
 
     private GeoCoordinates mFix = null;
     private Session mSession = null;
@@ -58,15 +67,26 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     // is true if all charts are initialized
     boolean initialized = false;
     
+    private boolean mVisible = false;
+    
     // animation (interpolation) variables
     private int mAnimationRound = 0;
     private int mAnimationMax = 10;
+    
+    // selected node
+    private Long selectedNode = null;
+    
+    // 0 = static, 1 = refresh, 2 = animated
+    private int mViewMode = 0;
 
     public SessionMapWidget() {
         initWidget(uiBinder.createAndBindUi(this));
         
         // add resize handler
         Window.addResizeHandler(this);
+        
+        // disable list of nodes until all nodes are added
+        listSelectedNode.setEnabled(false);
     }
     
     public void onSessionUpdated(Session s) {
@@ -76,6 +96,12 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
         mAnimationMax = Double.valueOf(((mSession.resolution == null) ? 1.0 : mSession.resolution) * Double.valueOf(mAnimationMax)).intValue();
     }
     
+    @Override
+    protected void onDetach() {
+        setVisible(false);
+        super.onDetach();
+    }
+
     public void initialize(final Session session) {
         // store session globally
         mSession = session;
@@ -124,25 +150,32 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
         AjaxLoader.loadApi("maps", "3", callback, options);
     }
     
-    private void update() {
+    private void animate() {
         // do not update if not initialized
         if (!initialized) return;
         
-        // animate all visible nodes
-        for (MapNode n : mNodes.values()) {
-            n.animate(mAnimationRound, mAnimationMax);
-        }
-        
-        // animate all visible egdes
-        for (MapLink l : mLinks) {
-            l.animate(mAnimationRound, mAnimationMax);
+        if (mAnimationRound > 0) {
+            // animate all visible nodes
+            for (MapNode n : mNodes.values()) {
+                n.animate(mAnimationRound, mAnimationMax);
+            }
+            
+            // animate all visible egdes
+            for (MapLink l : mLinks) {
+                l.animate(mAnimationRound, mAnimationMax);
+            }
+        } else {
+            // update position from the server
+            update();
         }
         
         // move to the next animation round
         mAnimationRound = (mAnimationRound + 1) % mAnimationMax;
-
-        // if not null, then skip refresh
-        if (mAnimationRound > 0) return;
+    }
+        
+    private void update() {
+        // do not update if not initialized
+        if (!initialized) return;
         
         // load the list of nodes
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
@@ -151,10 +184,15 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
             @Override
             public void onSuccess(MapDataSet result) {
                 if (result == null) return;
+                
                 /**
                  * update nodes
                  */
                 if (result.nodes != null) {
+                    if (!listSelectedNode.isEnabled()) {
+                        Collections.sort(result.nodes);
+                    }
+                    
                     for (Node n : result.nodes) {
                         MapNode mn = mNodes.get(n.id);
                         
@@ -170,9 +208,24 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
                         // show blue marker
                         mn.setIcon(mBlueIcon);
                         
-                        // animate the first frame
-                        mn.animate(mAnimationRound, mAnimationMax);
+                        if (mViewMode == 2) {
+                            // animate the first frame
+                            mn.animate(mAnimationRound, mAnimationMax);
+                        } else {
+                            // show most recent position
+                            mn.animate(mAnimationMax, mAnimationMax);
+                        }
+                        
+                        // add node to listview
+                        if (!listSelectedNode.isEnabled()) {
+                            listSelectedNode.addItem(n.name, n.id.toString());
+                        }
                     }
+                }
+                
+                if (!listSelectedNode.isEnabled()) {
+                    listSelectedNode.setEnabled(true);
+                    onNodeSelected(null);
                 }
                 
                 /**
@@ -229,8 +282,13 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
                     
                     ml.show(mMap);
                     
-                    // animate the first frame
-                    ml.animate(mAnimationRound, mAnimationMax);
+                    if (mViewMode == 2) {
+                        // animate the first frame
+                        ml.animate(mAnimationRound, mAnimationMax);
+                    } else {
+                        // show most recent position
+                        ml.animate(mAnimationMax, mAnimationMax);
+                    }
                 }
             }
             
@@ -239,36 +297,102 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
                 // failed to load data
             }
         });
+        
+
     }
 
     @Override
     public void onResize(ResizeEvent event) {
-        // do not resize if not visible
-        if (!isVisible()) {
-            mRefreshTimer.cancel();
-            return;
-        }
-        
         Integer width = panelMap.getOffsetWidth();
         Double height = Double.valueOf(width) * Double.valueOf(9.0 / 16.0);
         
         if (width > 0) {
             panelMap.setHeight(height.intValue() + "px");
         }
-        
-        // enable refresh timer, every 100ms
-        mRefreshTimer.scheduleRepeating(100);
     }
     
     public void onNodeClick(MapNode n) {
-        // TODO: show node information
+        // show node information
+        listSelectedNode.setSelectedValue(n.getNode().id.toString());
+        onNodeSelected(null);
     }
     
     private Timer mRefreshTimer = new Timer() {
         @Override
         public void run() {
-            update();
+            if (mViewMode == 1) {
+                update();
+            }
+            else if (mViewMode == 2) {
+                animate();
+            }
         }
     };
 
+    public void setVisible(boolean visible) {
+        // do resize again
+        onResize(null);
+        
+        // if there is no change, do nothing
+        if (mVisible == visible) return;
+        
+        mVisible = visible;
+
+        if ((visible) && (mViewMode == 1)) {
+            // enable refresh timer
+            Double updateRate = ((mSession.resolution == null) ? 1.0 : mSession.resolution) * 1000.0;
+            mRefreshTimer.scheduleRepeating(updateRate.intValue());
+        } else if ((visible) && (mViewMode == 2)) {
+            // enable refresh timer, every 100ms
+            mRefreshTimer.scheduleRepeating(100);
+        } else {
+            mRefreshTimer.cancel();
+        }
+        
+        if (visible) {
+            update();
+        }
+    }
+    
+    @UiHandler("buttonRefresh")
+    void onRefreshButtonClick(ClickEvent e) {
+        update();
+    }
+    
+    @UiHandler("listSelectedNode")
+    void onNodeSelected(ChangeEvent e) {
+        if (selectedNode != null) {
+            mNodes.get(selectedNode).setIcon(mBlueIcon);
+        }
+        
+        selectedNode = Long.valueOf(listSelectedNode.getValue(listSelectedNode.getSelectedIndex()));
+        
+        if (selectedNode != null) {
+            MapNode mn = mNodes.get(selectedNode);
+            mn.setIcon(mRedIcon);
+            mMap.panTo(mn.getPosition());
+        }
+    }
+    
+    @UiHandler("listViewType")
+    void onViewChanged(ChangeEvent e) {
+        int newViewMode = listViewType.getSelectedIndex();
+        if (mViewMode == newViewMode) return;
+        
+        if (newViewMode == 0) {
+            // static
+            mRefreshTimer.cancel();
+        }
+        else if ((newViewMode == 1) && mVisible) {
+            // refresh
+            Double updateRate = ((mSession.resolution == null) ? 1.0 : mSession.resolution) * 1000.0;
+            mRefreshTimer.scheduleRepeating(updateRate.intValue());
+        }
+        else if ((newViewMode == 2) && mVisible) {
+            // animated
+            mRefreshTimer.scheduleRepeating(100);
+        }
+        
+        mViewMode = newViewMode;
+    }
 }

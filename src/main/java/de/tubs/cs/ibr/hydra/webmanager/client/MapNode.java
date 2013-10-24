@@ -84,7 +84,8 @@ public class MapNode {
     }
     
     private LatLng getInterimPosition(double position, double max) {
-        if ((mPosition == null) || (mNextPosition == null)) return null;
+        if (mNextPosition == null) return null;
+        if (mPosition == null) return mNextPosition;
         
         double lat = mPosition.lat() + (((mNextPosition.lat() - mPosition.lat()) / max) * (position + 1.0));
         double lng = mPosition.lng() + (((mNextPosition.lng() - mPosition.lng()) / max) * (position + 1.0));
