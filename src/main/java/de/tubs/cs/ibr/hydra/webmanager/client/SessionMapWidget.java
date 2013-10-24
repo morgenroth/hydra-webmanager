@@ -204,9 +204,14 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     
                         // set / update nodes position
                         mn.setPosition(n.position, mFix);
-                        
-                        // show blue marker
-                        mn.setIcon(mBlueIcon);
+
+                        if (n.id.equals(selectedNode)) {
+                            // show red marker if selected
+                            mn.setIcon(mRedIcon);
+                        } else {
+                            // show blue marker
+                            mn.setIcon(mBlueIcon);
+                        }
                         
                         if (mViewMode == 2) {
                             // animate the first frame
