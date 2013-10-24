@@ -23,7 +23,6 @@ import com.google.maps.gwt.client.MapTypeId;
 import com.google.maps.gwt.client.MarkerImage;
 import com.google.maps.gwt.client.Point;
 
-import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.GeoCoordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MapDataSet;
@@ -72,6 +71,9 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     
     public void onSessionUpdated(Session s) {
         mSession = s;
+        
+        // adjust resolution according to the session resolution
+        mAnimationMax = Double.valueOf(((mSession.resolution == null) ? 1.0 : mSession.resolution) * Double.valueOf(mAnimationMax)).intValue();
     }
     
     public void initialize(final Session session) {
