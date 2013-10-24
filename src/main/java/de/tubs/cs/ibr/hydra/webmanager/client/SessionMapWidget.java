@@ -65,7 +65,8 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     MapOptions mOptions = null;
     
     // is true if all charts are initialized
-    boolean initialized = false;
+    boolean mInitialized = false;
+    boolean mInitTriggered = false;
     
     private boolean mVisible = false;
     
@@ -109,9 +110,6 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
         // generate a fix coordinate for map projection (Arktis)
         //mFix = new GeoCoordinates(-82.142451, 93.779297);
         mFix = new GeoCoordinates(52.16, 10.32);
-        
-        // load map library
-        initializeMaps();
     }
     
     private void initializeMaps() {
@@ -141,10 +139,13 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
               mGreenIcon = MarkerImage.create(res.green().getSafeUri().asString(), null, null, anchor);
               
               // set maps to initialized
-              initialized = true;
+              mInitialized = true;
               
               // resize the map frame
               onResize(null);
+              
+              // update the data for the first time
+              update();
           }
         };
         AjaxLoader.loadApi("maps", "3", callback, options);
@@ -152,7 +153,7 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     
     private void animate() {
         // do not update if not initialized
-        if (!initialized) return;
+        if (!mInitialized) return;
         
         if (mAnimationRound > 0) {
             // animate all visible nodes
@@ -175,7 +176,7 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
         
     private void update() {
         // do not update if not initialized
-        if (!initialized) return;
+        if (!mInitialized) return;
         
         // load the list of nodes
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
@@ -342,6 +343,13 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
         if (mVisible == visible) return;
         
         mVisible = visible;
+        
+        if (!mInitTriggered) {
+            mInitTriggered = true;
+            
+            // load map library
+            initializeMaps();
+        }
 
         if ((visible) && (mViewMode == 1)) {
             // enable refresh timer
