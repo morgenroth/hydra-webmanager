@@ -12,6 +12,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.SlaveExecutor.OperationFailedException;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Configuration;
@@ -31,6 +32,9 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
 public class SessionController {
+    
+    // logger for this session
+    Logger mLogger = null;
     
     // movement model / controller
     MovementProvider mMovement = null;
@@ -60,6 +64,7 @@ public class SessionController {
     ScheduledFuture<?> scheduledTrafficGeneration = null;
     
     public SessionController(Session s) {
+        mLogger = Logger.getLogger(SessionController.class.getSimpleName() + "[" +s.id.toString() + "]");
         mSession = s;
     }
     
@@ -117,7 +122,8 @@ public class SessionController {
             // try to distribute the session now
             mExecutor.execute(mRunnableDistribute);
         } catch (IOException e) {
-            System.err.println("ERROR: " + e.toString());
+            mLogger.severe(e.toString());
+            
             // error
             error();
         }
@@ -131,7 +137,7 @@ public class SessionController {
         try {
             mExecutor.awaitTermination(5, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
-            System.err.println("Interrupted during abort()");
+            mLogger.warning("Interrupted during abort()");
         }
     }
     
@@ -146,7 +152,7 @@ public class SessionController {
         try {
             mExecutor.awaitTermination(5, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
-            System.err.println("Interrupted during cancel()");
+            mLogger.warning("Interrupted during cancel()");
         }
     }
     
@@ -212,9 +218,9 @@ public class SessionController {
             // shutdown slave executor
             mSlaveExecutor.awaitShutdown();
         } catch (InterruptedException e) {
-            System.err.println("Interrupted during onDestroy(): " + e.toString());
+            mLogger.warning("Interrupted during onDestroy(): " + e.toString());
         } catch (ExecutionException e) {
-            System.err.println("Execution failed during onDestroy(): " + e.toString());
+            mLogger.severe("Execution failed during onDestroy(): " + e.toString());
         }
         
         // clean-up from MasterServer
@@ -241,7 +247,7 @@ public class SessionController {
         
         @Override
         public void onTimeout() {
-            System.err.println("ERROR: preparation timed out");
+            mLogger.warning("preparation timed out");
             error();
         }
         
@@ -263,7 +269,7 @@ public class SessionController {
         
         @Override
         public void onFinish() {
-            log("prepared");
+            mLogger.fine("prepared");
             
             // get the database object
             Database db = Database.getInstance();
@@ -278,7 +284,7 @@ public class SessionController {
 
         @Override
         public void onError(Exception e) {
-            System.err.println("ERROR: preparation failed " + e.toString());
+            mLogger.severe("preparation failed " + e.toString());
             error();
         }
     };
@@ -290,7 +296,7 @@ public class SessionController {
         
         @Override
         public void onTimeout() {
-            System.err.println("ERROR: session timed out");
+            mLogger.warning("session timed out");
             error();
         }
         
@@ -304,7 +310,7 @@ public class SessionController {
         
         @Override
         public void onFinish() {
-            log("nodes created");
+            mLogger.fine("nodes created");
             
             // schedule a preparation
             // timeout: 180 seconds
@@ -313,7 +319,7 @@ public class SessionController {
         
         @Override
         public void onError(Exception e) {
-            System.err.println("ERROR: " + e.toString());
+            mLogger.severe(e.toString());
             error();
         }
 
@@ -359,7 +365,7 @@ public class SessionController {
         
         @Override
         public void onTimeout() {
-            System.err.println("ERROR: boot-up timed out");
+            mLogger.warning("boot-up timed out");
             error();
         }
         
@@ -373,7 +379,7 @@ public class SessionController {
         
         @Override
         public void onFinish() {
-            log("boot-up complete");
+            mLogger.fine("boot-up complete");
             
             // schedule a run task
             mExecutor.execute(mRunableBootup);
@@ -381,7 +387,7 @@ public class SessionController {
 
         @Override
         public void onError(Exception e) {
-            System.err.println("ERROR: boot-up failed " + e.toString());
+            mLogger.warning("boot-up failed " + e.toString());
             error();
         }
     };
@@ -404,7 +410,7 @@ public class SessionController {
                 mSlaveExecutor.execute(mSlaves, mPrepareTask, 120 * mSlaves.size());
             } catch (MasterServer.DistributionFailedException e) {
                 // distribution failed
-                System.err.println("Distribution of session " + mSession.id.toString() + " failed.");
+                mLogger.warning("Distribution of session " + mSession.id.toString() + " failed.");
                 
                 // check again in 2 minutes
                 scheduledDistribution = mExecutor.schedule(mRunnableDistribute, 2, TimeUnit.MINUTES);
@@ -420,7 +426,7 @@ public class SessionController {
         @Override
         public void run(SlaveConnection c, Node n) throws OperationFailedException {
             try {
-                log("collect stats for " + n);
+                mLogger.fine("collect stats for " + n);
                 
                 // collect stats of this node
                 String stats = c.getStats(n);
@@ -448,13 +454,13 @@ public class SessionController {
 
         @Override
         public void onTimeout() {
-            System.err.println("ERROR: stats collection timed out");
+            mLogger.warning("stats collection timed out");
             error();
         }
 
         @Override
         public void onError(Exception e) {
-            System.err.println("ERROR: stats collection failed " + e.toString());
+            mLogger.warning("stats collection failed " + e.toString());
             error();
         }
         
@@ -488,7 +494,7 @@ public class SessionController {
                             nodes_list += n.toString() + " ";
                         }
                         
-                        log("initiate stats collection for " + nodes_list);
+                        mLogger.fine("initiate stats collection for " + nodes_list);
                         
                         // schedule stats collection
                         // timeout: 10 seconds per node
@@ -510,7 +516,7 @@ public class SessionController {
                 scheduledFinish = mExecutor.schedule(mRunableFinish, duration, TimeUnit.SECONDS);
             }
             
-            log("running");
+            mLogger.fine("running");
         }
     };
     
@@ -544,7 +550,7 @@ public class SessionController {
         
         @Override
         public void onTimeout() {
-            System.err.println("ERROR: destroy timed out");
+            mLogger.warning("destroy timed out");
         }
         
         @Override
@@ -557,7 +563,7 @@ public class SessionController {
         
         @Override
         public void onError(Exception e) {
-            System.err.println("ERROR: destroy failed " + e.toString());
+            mLogger.severe("destroy failed " + e.toString());
         }
     };
     
@@ -651,7 +657,7 @@ public class SessionController {
 
                 @Override
                 public void onError(Exception e) {
-                    System.err.println("ERROR: position update on " + n + ", " + e);
+                    mLogger.warning("position update on " + n + " failed, " + e);
                     error();
                 }
                 
@@ -690,12 +696,12 @@ public class SessionController {
                 @Override
                 public void onFinish() {
                     // announce link-up to GUI
-                    log("link up " + link);
+                    mLogger.fine("link up " + link);
                 }
 
                 @Override
                 public void onError(Exception e) {
-                    System.err.println("ERROR: link-up " + link.toString() + " failed, " + e);
+                    mLogger.warning("link-up " + link.toString() + " failed, " + e);
                     error();
                 }
                 
@@ -732,27 +738,18 @@ public class SessionController {
                 @Override
                 public void onFinish() {
                     // announce link-down to GUI
-                    log("link down " + link);
+                    mLogger.fine("link down " + link);
                 }
 
                 @Override
                 public void onError(Exception e) {
-                    System.err.println("ERROR: link-down " + link.toString() + " failed, " + e);
+                    mLogger.warning("link-down " + link.toString() + " failed, " + e);
                     error();
                 }
                 
             });
         }
     };
-    
-    // TODO: better logging
-    private void log(String message) {
-        if (mSession == null) {
-            System.out.println("SESSION[unknown] " + message);
-        } else {
-            System.out.println("SESSION[" + mSession.id + "] " + message);
-        }
-    }
     
     private Runnable mUpdateMovement = new Runnable() {
         @Override

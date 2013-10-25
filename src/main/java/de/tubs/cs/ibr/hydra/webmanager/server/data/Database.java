@@ -20,11 +20,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import de.tubs.cs.ibr.hydra.webmanager.server.AtmosphereHandler;
 import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
 import de.tubs.cs.ibr.hydra.webmanager.server.Task;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
@@ -36,6 +38,8 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.User;
 
 public class Database {
 
+    static final Logger logger = Logger.getLogger(Database.class.getSimpleName());
+    
     private static Database __db__ = new Database();
     private Connection mConn = null;
     
@@ -80,7 +84,7 @@ public class Database {
             mConn = DriverManager.getConnection(url + dbname + "?autoReconnect=true", username, password);
         } catch (SQLException e) {
             mConn = null;
-            System.err.println("Mysql Connection Error: ");
+            logger.severe("Mysql Connection Error: " + e.getMessage());
             e.printStackTrace();
         } catch (InstantiationException e) {
             e.printStackTrace();

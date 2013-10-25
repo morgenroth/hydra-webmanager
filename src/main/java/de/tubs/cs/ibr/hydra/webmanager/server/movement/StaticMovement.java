@@ -1,10 +1,16 @@
 package de.tubs.cs.ibr.hydra.webmanager.server.movement;
 
+import java.util.logging.Logger;
+
+import de.tubs.cs.ibr.hydra.webmanager.server.AtmosphereHandler;
+import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 
 public class StaticMovement extends MovementProvider {
+    
+    static final Logger logger = Logger.getLogger(StaticMovement.class.getSimpleName());
     
     private MobilityParameterSet mParams = null;
     private boolean initialized = false;
@@ -34,7 +40,7 @@ public class StaticMovement extends MovementProvider {
                 // store previous position
                 lastpos = n.position.getX();
                 
-                System.out.println("placed " + n + " on " + n.position);
+                logger.finer("placed " + n + " on " + n.position);
                 
                 // fire movement event
                 fireOnMovementEvent(n, n.position, 0.0, 0.0);

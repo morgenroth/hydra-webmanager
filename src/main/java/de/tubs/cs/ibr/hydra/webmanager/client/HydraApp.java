@@ -103,7 +103,7 @@ public class HydraApp extends Composite {
                 }
                 
                 try {
-                    //WebManager.logger.info("message received: " + message.toString());
+                    GWT.log("message received: " + message.toString());
                     return ClientEvent.decode(message);
                 } catch (java.lang.RuntimeException e) {
                     throw new SerializationException("could not decode " + message.toString());
@@ -154,7 +154,7 @@ public class HydraApp extends Composite {
                     if (evt.equals(EventType.NONE)) continue;
                     
                     // transform to an event object
-                    //WebManager.logger.info("received event: " + evt.toString());
+                    GWT.log("received event: " + evt.toString());
 
                     // forward the event to the current view
                     if (currentView != null) {
@@ -169,7 +169,7 @@ public class HydraApp extends Composite {
     }
     
     protected void onAtmosphereRegistered(String uuid) {
-        WebManager.logger.info("atmosphere id: " + uuid.toString());
+        GWT.log("atmosphere id: " + uuid.toString());
         
         // store atmosphere uuid for later
         atmosphereId = uuid;

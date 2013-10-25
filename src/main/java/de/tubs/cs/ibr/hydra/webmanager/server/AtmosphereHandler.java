@@ -19,7 +19,7 @@ import com.google.web.bindery.autobean.shared.AutoBeanUtils;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventData;
 
 public class AtmosphereHandler extends AbstractReflectorAtmosphereHandler {
-    static final Logger logger = Logger.getLogger("AtmosphereHandler");
+    static final Logger logger = Logger.getLogger(AtmosphereHandler.class.getSimpleName());
 
     @Override
     public void onRequest(AtmosphereResource r) throws IOException {
@@ -57,7 +57,7 @@ public class AtmosphereHandler extends AbstractReflectorAtmosphereHandler {
             }
         });
         
-        logger.info("atmosphere registered: " + res.uuid());
+        logger.fine("atmosphere registered: " + res.uuid());
 
         // suspend as long as there are no messages
         res.suspend();

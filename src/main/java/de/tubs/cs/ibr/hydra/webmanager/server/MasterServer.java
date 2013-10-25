@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -37,6 +38,8 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
 public class MasterServer implements ServletContextListener {
+    
+    static final Logger logger = Logger.getLogger(MasterServer.class.getSimpleName());
     
     public static class DistributionFailedException extends Exception {
         
@@ -257,7 +260,7 @@ public class MasterServer implements ServletContextListener {
                 return allocSlaves;
             } catch (DistributionFailedException e) {
                 // error - address pool exhausted
-                System.err.println("ERROR - " + e.getMessage());
+                logger.warning(e.getMessage());
                 
                 // clear made assignments
                 db.clearAssignment(session);
@@ -298,7 +301,7 @@ public class MasterServer implements ServletContextListener {
                 
                 mSockServer = new ServerSocket(4244);
                 
-                System.out.println("Master service listening...");
+                logger.info("Master service listening...");
                 
                 while (mRunning) {
                     // accept a new client connection
@@ -321,7 +324,7 @@ public class MasterServer implements ServletContextListener {
                     }
                 }
             } catch (IOException e) {
-                System.out.println("Master service terminated.");
+                logger.warning("Master service terminated.");
             }
         }
     };
@@ -444,7 +447,7 @@ public class MasterServer implements ServletContextListener {
                         // check if the session controller for this session already exists
                         if (mControllers.containsKey(s.id)) {
                             // ERROR
-                            System.err.println("Session changed to PENDING, but there is already an active session controller.");
+                            logger.warning("Session changed to PENDING, but there is already an active session controller.");
                             return;
                         }
                         
@@ -470,7 +473,7 @@ public class MasterServer implements ServletContextListener {
                         // check if the session controller for this session already exists
                         if (!mControllers.containsKey(s.id)) {
                             // ERROR
-                            System.err.println("Session changed to CANCELLED, but no session controller found.");
+                            logger.warning("Session changed to CANCELLED, but no session controller found.");
                             return;
                         }
                         
@@ -493,7 +496,7 @@ public class MasterServer implements ServletContextListener {
                         // check if the session controller for this session already exists
                         if (!mControllers.containsKey(s.id)) {
                             // ERROR
-                            System.err.println("Session changed to ABORTED, but no session controller found.");
+                            logger.warning("Session changed to ABORTED, but no session controller found.");
                             return;
                         }
                         
@@ -555,7 +558,7 @@ public class MasterServer implements ServletContextListener {
                     mConnections.wait();
                 }
                 
-                System.out.println("all slave connections closed");
+                logger.info("all slave connections closed");
             } catch (InterruptedException e) {
                 // interrupted
                 e.printStackTrace();
