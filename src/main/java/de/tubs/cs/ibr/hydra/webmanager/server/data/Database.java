@@ -1047,10 +1047,11 @@ public class Database {
         if (s == null) return ret;
         
         try {
-            PreparedStatement st = mConn.prepareStatement("SELECT `id`, `s`.`timestamp`, `s`.`data` FROM `nodes` LEFT JOIN (SELECT `timestamp`, `node`, `data` FROM `stats` ORDER BY `timestamp` DESC) as s ON (`s`.`node` = `nodes`.`id`) WHERE `session` = ? GROUP BY `id` ORDER BY `id`;");
+            PreparedStatement st = mConn.prepareStatement("SELECT `id`, `s`.`timestamp`, `s`.`data` FROM `nodes` RIGHT JOIN (SELECT `timestamp`, `node`, `data` FROM `stats` WHERE `session` = ? ORDER BY `timestamp` DESC) as s ON (`s`.`node` = `nodes`.`id`) WHERE `session` = ? GROUP BY `id` ORDER BY `id`;");
             
             // set session id
             st.setLong(1, s.id);
+            st.setLong(2, s.id);
             
             // execute query
             ResultSet rs = st.executeQuery();
