@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 3.5.8.1deb1
+-- version 3.4.11.1deb2
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Erstellungszeit: 23. Okt 2013 um 10:45
--- Server Version: 5.5.32-0ubuntu0.13.04.1
--- PHP-Version: 5.4.9-4ubuntu2.3
+-- Erstellungszeit: 25. Okt 2013 um 15:58
+-- Server Version: 5.5.31
+-- PHP-Version: 5.4.4-14+deb7u5
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -26,7 +26,6 @@ SET time_zone = "+00:00";
 -- Tabellenstruktur für Tabelle `nodes`
 --
 
-DROP TABLE IF EXISTS `nodes`;
 CREATE TABLE IF NOT EXISTS `nodes` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `slave` int(11) DEFAULT NULL,
@@ -38,7 +37,11 @@ CREATE TABLE IF NOT EXISTS `nodes` (
   `address` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `address` (`address`),
-  KEY `group` (`group`)
+  KEY `group` (`group`),
+  KEY `session` (`session`),
+  KEY `session_slave` (`session`,`slave`),
+  KEY `assigned_slave` (`assigned_slave`),
+  KEY `state` (`state`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -47,7 +50,6 @@ CREATE TABLE IF NOT EXISTS `nodes` (
 -- Tabellenstruktur für Tabelle `sessions`
 --
 
-DROP TABLE IF EXISTS `sessions`;
 CREATE TABLE IF NOT EXISTS `sessions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user` int(11) NOT NULL,
@@ -57,7 +59,9 @@ CREATE TABLE IF NOT EXISTS `sessions` (
   `aborted` datetime DEFAULT NULL,
   `finished` datetime DEFAULT NULL,
   `state` enum('initial','draft','pending','running','finished','aborted','error','cancelled') NOT NULL DEFAULT 'initial',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `user` (`user`),
+  KEY `name` (`name`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -66,7 +70,6 @@ CREATE TABLE IF NOT EXISTS `sessions` (
 -- Tabellenstruktur für Tabelle `slaves`
 --
 
-DROP TABLE IF EXISTS `slaves`;
 CREATE TABLE IF NOT EXISTS `slaves` (
   `Id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
@@ -75,6 +78,7 @@ CREATE TABLE IF NOT EXISTS `slaves` (
   `owner` int(11) DEFAULT NULL,
   `capacity` int(11) DEFAULT NULL,
   PRIMARY KEY (`Id`),
+  UNIQUE KEY `name_address` (`name`,`address`),
   KEY `owner` (`owner`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1;
 
@@ -84,13 +88,15 @@ CREATE TABLE IF NOT EXISTS `slaves` (
 -- Tabellenstruktur für Tabelle `stats`
 --
 
-DROP TABLE IF EXISTS `stats`;
 CREATE TABLE IF NOT EXISTS `stats` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `session` int(11) NOT NULL,
   `node` int(11) NOT NULL,
   `data` text NOT NULL,
-  KEY `timestamp` (`timestamp`,`session`,`node`)
+  UNIQUE KEY `timestamp` (`timestamp`,`node`),
+  KEY `node` (`node`),
+  KEY `session` (`session`),
+  KEY `session_node` (`session`,`node`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -99,7 +105,6 @@ CREATE TABLE IF NOT EXISTS `stats` (
 -- Tabellenstruktur für Tabelle `users`
 --
 
-DROP TABLE IF EXISTS `users`;
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
