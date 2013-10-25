@@ -20,7 +20,7 @@
 						</b:InputAddOn>
 					</g:SimplePanel>
 					<g:SimplePanel>
-						<b:InputAddOn prependText="View" appendIcon="MAP_MARKER" addStyleNames="{style.formButton}">
+						<b:InputAddOn prependText="View" appendIcon="REFRESH" addStyleNames="{style.formButton}">
 						    <b:ListBox alternateSize="MEDIUM" ui:field="listViewType">
 						        <g:item value="0">Static</g:item>
 						        <g:item value="1">Refreshed</g:item>
