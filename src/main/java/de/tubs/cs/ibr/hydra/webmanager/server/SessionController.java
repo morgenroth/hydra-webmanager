@@ -433,7 +433,9 @@ public class SessionController {
                 // store the statistic data in the database
                 Database.getInstance().putStats(mSession, stats);
             } catch (Exception e) {
-                throw new OperationFailedException(e);
+                // stats collection has failed, this is no reason to shutdown the session
+                // but it should be logged
+                mLogger.severe("stats collection failed: " + e.toString());
             }
         }
 
