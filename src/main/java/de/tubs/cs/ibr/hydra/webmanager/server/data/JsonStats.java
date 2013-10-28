@@ -24,8 +24,6 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
  */
 
 public class JsonStats {
-    private static JSONParser mParser = new JSONParser();
-    
     private static Double getDouble(Object data) {
         if (data instanceof Double) {
             return (Double)data;
@@ -53,11 +51,12 @@ public class JsonStats {
     }
     
     public static HashMap<Long, String> splitAll(String jsonData) {
+        JSONParser parser = new JSONParser();
         HashMap<Long, String> ret = new HashMap<Long, String>();
         
         try {
             // translate JSON to Object
-            JSONObject obj = (JSONObject)mParser.parse(jsonData);
+            JSONObject obj = (JSONObject)parser.parse(jsonData);
             
             for (Object id : obj.keySet()) {
                 JSONObject data = (JSONObject)obj.get(id);
@@ -71,11 +70,12 @@ public class JsonStats {
     }
     
     public static HashMap<Long, DataPoint> decodeAll(Timestamp ts, String jsonData) {
+        JSONParser parser = new JSONParser();
         HashMap<Long, DataPoint> ret = new HashMap<Long, DataPoint>();
         
         try {
             // translate JSON to Object
-            JSONObject obj = (JSONObject)mParser.parse(jsonData);
+            JSONObject obj = (JSONObject)parser.parse(jsonData);
             
             for (Object id : obj.keySet()) {
                 DataPoint dp = JsonStats.decode(ts, (JSONObject)obj.get(id));
@@ -89,9 +89,10 @@ public class JsonStats {
     }
 
     public static DataPoint decode(Timestamp ts, String jsonData) {
+        JSONParser parser = new JSONParser();
         try {
             // translate JSON to Object
-            JSONObject obj = (JSONObject)mParser.parse(jsonData);
+            JSONObject obj = (JSONObject)parser.parse(jsonData);
             return JsonStats.decode(ts, obj);
         } catch (ParseException e) {
             e.printStackTrace();
