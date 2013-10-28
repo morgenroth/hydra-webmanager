@@ -18,17 +18,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
 import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
 import de.tubs.cs.ibr.hydra.webmanager.server.Task;
-import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
@@ -155,8 +151,6 @@ public class Database {
     private static Database __db__ = new Database();
     private Connection mConn = null;
     
-    private JSONParser mParser = new JSONParser();
-
     public static Database getInstance() {
         if (__db__.isClosed()) __db__.open();
         return __db__;
@@ -1100,6 +1094,11 @@ public class Database {
         return ret;
     }
     
+    /**
+     * store stats of one node int the database
+     * @param n
+     * @param data
+     */
     public void putStats(Node n, String data) {
         // do not store 'null' data
         if (data == null) return;
@@ -1119,6 +1118,41 @@ public class Database {
                 
                 // execute insertion
                 st.execute();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * store stats of multiple nodes in the database
+     * @param n
+     * @param data
+     */
+    public void putStats(Session s, String data) {
+        // do not store 'null' data
+        if (data == null) return;
+        
+        try {
+            // split json data into one data-set per node
+            HashMap<Long, String> data_map = JsonStats.splitAll(data);
+            
+            PreparedStatement st = STMT_INSERT_STATS_DATA;
+            
+            synchronized(st) {
+                for (Entry<Long, String> e : data_map.entrySet()) {
+                    // set session id
+                    st.setLong(1, s.id);
+                    
+                    // set node id
+                    st.setLong(2, e.getKey());
+                    
+                    // set data
+                    st.setString(3, e.getValue());
+                    
+                    // execute insertion
+                    st.execute();
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1193,7 +1227,7 @@ public class Database {
                 ResultSet rs = st.executeQuery();
                 
                 while (rs.next()) {
-                    DataPoint data = transformJsonData(rs.getTimestamp(1), rs.getString(2));
+                    DataPoint data = JsonStats.decode(rs.getTimestamp(1), rs.getString(2));
     
                     // put data into the data-set
                     ret.add(data);
@@ -1243,7 +1277,7 @@ public class Database {
                     if (rs.wasNull()) {
                         data = new DataPoint();
                     } else {
-                        data = transformJsonData(ts, json);
+                        data = JsonStats.decode(ts, json);
                     }
     
                     // put data into the data-set
@@ -1253,90 +1287,6 @@ public class Database {
                 rs.close();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        
-        return ret;
-    }
-    
-    private DataPoint transformJsonData(Timestamp ts, String jsonData) {
-        /**
-         * Data example
-         * {
-         * "position": {"y": "0", "x": "0", "state": "0", "z": "0"}, 
-         * "dtnd": {
-         *   "info": {"Neighbors": "0", "Uptime": "38", "Storage-size": "0"}, 
-         *   "bundles": {"Received": "0", "Generated": "0", "Stored": "0", "Transmitted": "0", "Aborted": "0", "Requeued": "0", "Expired": "0", "Queued": "0"}
-         * }, 
-         * "iface": {"lo": {"rx": "0", "tx": "0"}, "eth1": {"rx": "0", "tx": "2846"}, "eth0": {"rx": "7330", "tx": "2784"}}, 
-         * "clock": {"Delay": "0.02614", "Timex-tick": "10000", "Timex-offset": "0", "Timex-freq": "0", "Offset": "1.07629"}
-         * }
-         */
-        
-        DataPoint ret = new DataPoint();
-        
-        ret.time = ts;
-        
-        // translate JSON to Object
-        try {
-            JSONObject obj = (JSONObject)mParser.parse(jsonData);
-            
-            // return if the json is invalid
-            if (obj == null) return ret;
-            
-            JSONObject position = (JSONObject)obj.get("position");
-            if (position != null) {
-                double x = Double.valueOf((String)position.get("x"));
-                double y = Double.valueOf((String)position.get("y"));
-                double z = Double.valueOf((String)position.get("z"));
-                ret.coord = new Coordinates(x, y, z);
-            }
-            
-            JSONObject dtnd = (JSONObject)obj.get("dtnd");
-            if (dtnd != null) {
-                JSONObject dtnd_info = (JSONObject)dtnd.get("info");
-                if (dtnd_info != null) {
-                    ret.dtninfo.neighbors = Long.valueOf((String)dtnd_info.get("Neighbors"));
-                    ret.dtninfo.uptime = Long.valueOf((String)dtnd_info.get("Uptime"));
-                    ret.dtninfo.storage_size = Long.valueOf((String)dtnd_info.get("Storage-size"));
-                }
-                
-                JSONObject bundles = (JSONObject)dtnd.get("bundles");
-                if (bundles != null) {
-                    ret.bundlestats.aborted = Long.valueOf((String)bundles.get("Aborted"));
-                    ret.bundlestats.expired = Long.valueOf((String)bundles.get("Expired"));
-                    ret.bundlestats.generated = Long.valueOf((String)bundles.get("Generated"));
-                    ret.bundlestats.queued = Long.valueOf((String)bundles.get("Queued"));
-                    ret.bundlestats.received = Long.valueOf((String)bundles.get("Received"));
-                    ret.bundlestats.requeued = Long.valueOf((String)bundles.get("Requeued"));
-                    ret.bundlestats.transmitted = Long.valueOf((String)bundles.get("Transmitted"));
-                    ret.bundlestats.stored = Long.valueOf((String)bundles.get("Stored"));
-                }
-            }
-            
-            JSONObject clock = (JSONObject)obj.get("clock");
-            if (clock != null) {
-                ret.clock.delay = Double.valueOf((String)clock.get("Delay"));
-                ret.clock.offset = Double.valueOf((String)clock.get("Offset"));
-                ret.clock.timex_tick = Long.valueOf((String)clock.get("Timex-tick"));
-                ret.clock.timex_offset = Long.valueOf((String)clock.get("Timex-offset"));
-                ret.clock.timex_freq = Long.valueOf((String)clock.get("Timex-freq"));
-            }
-            
-            JSONObject ifaces = (JSONObject)obj.get("iface");
-            
-            for (Object key : ifaces.keySet()) {
-                JSONObject iface_data = (JSONObject)ifaces.get(key);
-                
-                DataPoint.InterfaceStats iface = new DataPoint.InterfaceStats();
-                iface.name = (String)key;
-                
-                iface.rx = Long.valueOf((String)iface_data.get("rx"));
-                iface.tx = Long.valueOf((String)iface_data.get("tx"));
-                
-                ret.ifaces.put(iface.name, iface);
-            }
-        } catch (ParseException e) {
             e.printStackTrace();
         }
         
