@@ -316,6 +316,10 @@ public class SlaveConnection extends Thread {
         doAction(n.sessionId, action);
     }
     
+    public String getStats(Session s) throws IOException, SessionNotFoundException, InterruptedException {
+        return doAction(s.id, "stats *");
+    }
+    
     public String getStats(Node n) throws IOException, SessionNotFoundException, InterruptedException {
         return doAction(n.sessionId, "stats " + n.id.toString());
     }

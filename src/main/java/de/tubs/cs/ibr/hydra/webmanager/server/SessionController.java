@@ -421,18 +421,17 @@ public class SessionController {
     /**
      * This task collects all the statistic data from all nodes
      */
-    private SlaveExecutor.NodeRunnable mCollectStatsTask = new SlaveExecutor.NodeRunnable() {
-
+    private SlaveExecutor.SlaveRunnable mCollectStatsTask = new SlaveExecutor.SlaveRunnable() {
         @Override
-        public void run(SlaveConnection c, Node n) throws OperationFailedException {
+        public void run(SlaveConnection c, Slave s) throws OperationFailedException {
             try {
-                mLogger.fine("collect stats for " + n);
+                mLogger.fine("collect all stats");
                 
                 // collect stats of this node
-                String stats = c.getStats(n);
+                String stats = c.getStats(mSession);
                   
                 // store the statistic data in the database
-                Database.getInstance().putStats(n, stats);
+                Database.getInstance().putStats(mSession, stats);
             } catch (Exception e) {
                 throw new OperationFailedException(e);
             }
@@ -498,7 +497,7 @@ public class SessionController {
                         
                         // schedule stats collection
                         // timeout: 10 seconds per node
-                        mSlaveExecutor.execute(mSlaves, nodes, mCollectStatsTask, 10 * nodes.size());
+                        mSlaveExecutor.execute(mSlaves, mCollectStatsTask, 10 * nodes.size());
                     }
                 }, 0, mSession.stats_interval, TimeUnit.SECONDS);
             }
