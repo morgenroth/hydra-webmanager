@@ -9,6 +9,10 @@
 			margin-left: 6px;
 			margin-right: 6px;
 		}
+
+		.monospaced {
+			font-family: monospace;
+		}
 	</ui:style>
 	<g:HTMLPanel>
 		<b:Row>
@@ -97,8 +101,8 @@
 							<b:ControlGroup>
 								<b:ControlLabel for="textPackages">Packages</b:ControlLabel>
 								<b:Controls>
-									<b:TextArea alternateSize="XLARGE" b:id="textPackages"
-										ui:field="textBasePackages"></b:TextArea>
+									<b:TextArea alternateSize="XLARGE" b:id="textPackages" addStyleNames="{style.monospaced}"
+										ui:field="textBasePackages" visibleLines="5"></b:TextArea>
 									<b:HelpBlock>These packages are installed during the base
 										preparation. Put each package into a separate line.</b:HelpBlock>
 								</b:Controls>
@@ -110,8 +114,8 @@
 							<b:ControlGroup>
 								<b:ControlLabel for="textQemuTemplate">Template (QEMU)</b:ControlLabel>
 								<b:Controls>
-									<b:TextArea alternateSize="XLARGE" b:id="textQemuTemplate"
-										ui:field="textBaseQemuTemplate"></b:TextArea>
+									<b:TextArea alternateSize="XXLARGE" b:id="textQemuTemplate" addStyleNames="{style.monospaced}"
+										ui:field="textBaseQemuTemplate" visibleLines="10"></b:TextArea>
 									<b:HelpBlock>This is the template for QEMU virtualization used
 										to create nodes on the slaves.</b:HelpBlock>
 								</b:Controls>
@@ -121,10 +125,30 @@
 							<b:ControlGroup>
 								<b:ControlLabel for="textVboxTemplate">Template (VirtualBox)</b:ControlLabel>
 								<b:Controls>
-									<b:TextArea alternateSize="XLARGE" b:id="textVboxTemplate"
-										ui:field="textBaseVboxTemplate"></b:TextArea>
+									<b:TextArea alternateSize="XXLARGE" b:id="textVboxTemplate" addStyleNames="{style.monospaced}"
+										ui:field="textBaseVboxTemplate" visibleLines="10"></b:TextArea>
 									<b:HelpBlock>This is the template for VirtualBox virtualization
 										used to create nodes on the slaves.</b:HelpBlock>
+								</b:Controls>
+							</b:ControlGroup>
+							
+							<!-- Generic Node Setup Script -->
+							<b:ControlGroup>
+								<b:ControlLabel for="textSetupScript">Generic setup</b:ControlLabel>
+								<b:Controls>
+									<b:TextArea alternateSize="XXLARGE" b:id="textSetupScript" addStyleNames="{style.monospaced}"
+										ui:field="textBaseSetupScript" visibleLines="10"></b:TextArea>
+									<b:HelpBlock>This script is applied once to the base image.</b:HelpBlock>
+								</b:Controls>
+							</b:ControlGroup>
+							
+							<!-- Individual Node Setup Script -->
+							<b:ControlGroup>
+								<b:ControlLabel for="textIndividualSetupScript">Individual setup</b:ControlLabel>
+								<b:Controls>
+									<b:TextArea alternateSize="XXLARGE" b:id="textIndividualSetupScript" addStyleNames="{style.monospaced}"
+										ui:field="textBaseIndividualSetupScript" visibleLines="10"></b:TextArea>
+									<b:HelpBlock>This script is applied to each individual node image.</b:HelpBlock>
 								</b:Controls>
 							</b:ControlGroup>
 						</b:Column>
@@ -356,6 +380,19 @@
 										<b:TextBox alternateSize="SMALL" b:id="textInterval"
 											ui:field="textStatsInterval" b:placeholder="disabled" />
 									</b:InputAddOn>
+								</b:Controls>
+							</b:ControlGroup>
+							<!-- Recording -->
+							<b:ControlGroup>
+								<b:ControlLabel>Recording</b:ControlLabel>
+								<b:Controls>
+									<b:CheckBox ui:field="checkStatsRecordContact">Record a contact trace</b:CheckBox>
+								</b:Controls>
+								<b:Controls>
+									<b:CheckBox ui:field="checkStatsRecordMovement">Record a movement trace</b:CheckBox>
+								</b:Controls>
+								<b:Controls>
+									<b:HelpBlock>Trace files are store on the Hydra server and will be available for download if the session is finished or stopped.</b:HelpBlock>
 								</b:Controls>
 							</b:ControlGroup>
 						</b:Column>

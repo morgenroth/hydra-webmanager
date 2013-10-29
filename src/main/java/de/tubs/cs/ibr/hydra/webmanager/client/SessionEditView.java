@@ -61,12 +61,17 @@ public class SessionEditView extends View {
     @UiField TextArea textBaseQemuTemplate;
     @UiField TextArea textBaseVboxTemplate;
     
+    @UiField TextArea textBaseSetupScript;
+    @UiField TextArea textBaseIndividualSetupScript;
+    
     @UiField TextBox textNetworkNodeAddressMin;
     @UiField TextBox textNetworkNodeAddressMax;
     @UiField TextBox textNetworkNodeNetmask;
     @UiField TextArea textNetworkMonitorNodes;
     
     @UiField TextBox textStatsInterval;
+    @UiField CheckBox checkStatsRecordContact;
+    @UiField CheckBox checkStatsRecordMovement;
     
     @UiField TextBox textSimulationResolution;
     @UiField TextBox textSimulationRange;
@@ -192,6 +197,8 @@ public class SessionEditView extends View {
         textBasePackages.setText(result.packages);
         textBaseQemuTemplate.setText(result.qemu_template);
         textBaseVboxTemplate.setText(result.vbox_template);
+        textBaseSetupScript.setText(result.script_generic);
+        textBaseIndividualSetupScript.setText(result.script_individual);
         
         // load global parameters
         if (mSession.range != null) {
@@ -218,6 +225,9 @@ public class SessionEditView extends View {
         } else {
             textStatsInterval.setText("");
         }
+        
+        checkStatsRecordContact.setValue(result.stats_record_contact == null ? false : result.stats_record_contact);
+        checkStatsRecordMovement.setValue(result.stats_record_movement == null ? false : result.stats_record_movement);
         
         // load session images
         refreshSessionImages(result.image);
@@ -296,7 +306,7 @@ public class SessionEditView extends View {
     
     @UiHandler("checkRemove")
     void onRemoveLockChanged(ClickEvent e) {
-        buttonRemove.setEnabled(checkRemove.isChecked());
+        buttonRemove.setEnabled(checkRemove.getValue());
     }
     
     @UiHandler("buttonRemove")
@@ -434,10 +444,30 @@ public class SessionEditView extends View {
         mChangedSession.vbox_template = textBaseVboxTemplate.getText();
     }
     
+    @UiHandler("textBaseSetupScript")
+    void onBaseSetupScriptChanged(ChangeEvent evt) {
+        mChangedSession.script_generic = textBaseSetupScript.getText();
+    }
+    
+    @UiHandler("textBaseIndividualSetupScript")
+    void onBaseIndividualSetupScriptChanged(ChangeEvent evt) {
+        mChangedSession.script_individual = textBaseIndividualSetupScript.getText();
+    }
+    
     @UiHandler("textStatsInterval")
     void onStatsIntervalChanged(ChangeEvent evt) {
         String value = textStatsInterval.getText();
         mChangedSession.stats_interval = (value.length() == 0) ? 0 : Long.valueOf(value);
+    }
+    
+    @UiHandler("checkStatsRecordContact")
+    void onStatsRecordContactChanged(ClickEvent e) {
+        mChangedSession.stats_record_contact = checkStatsRecordContact.getValue();
+    }
+    
+    @UiHandler("checkStatsRecordMovement")
+    void onStatsRecordMovementChanged(ClickEvent e) {
+        mChangedSession.stats_record_movement = checkStatsRecordMovement.getValue();
     }
     
     @UiHandler("listMovementAlgorithm")

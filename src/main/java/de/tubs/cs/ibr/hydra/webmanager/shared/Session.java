@@ -118,6 +118,8 @@ public class Session implements IsSerializable {
     public String monitor_nodes = null;
     public String qemu_template = null;
     public String vbox_template = null;
+    public String script_generic = null;
+    public String script_individual = null;
     
     // network settings
     public String minaddr = null;
@@ -126,6 +128,8 @@ public class Session implements IsSerializable {
     
     // stats
     public Long stats_interval = null;
+    public Boolean stats_record_contact = null;
+    public Boolean stats_record_movement = null;
     
     // simulation parameters
     public Double resolution = null;

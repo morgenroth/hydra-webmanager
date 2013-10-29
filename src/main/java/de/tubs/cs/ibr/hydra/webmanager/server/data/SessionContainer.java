@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.InvalidParameterException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -146,6 +148,14 @@ public class SessionContainer {
         File vbox_template = new File(mBasePath, "node-template.vbox.xml");
         s.vbox_template = loadFile(vbox_template);
         
+        // load generic setup script
+        File script_generic = new File(mBasePath, "modify_image_base.sh");
+        s.script_generic = loadFile(script_generic);
+        
+        // load individual setup script
+        File script_individual = new File(mBasePath, "modify_image_node.sh");
+        s.script_individual = loadFile(script_individual);
+        
         /**
          * Read session configuration
          */
@@ -170,6 +180,8 @@ public class SessionContainer {
             // load stats configuration
             String si = sessionConf.get("stats", "collect_interval");
             s.stats_interval = (si == null) ? null : Long.valueOf(si);
+            s.stats_record_contact = "yes".equals(sessionConf.get("stats", "record_contact"));
+            s.stats_record_movement = "yes".equals(sessionConf.get("stats", "record_movement"));
             
             // load global simulation configuration
             String resolution = sessionConf.get("global", "resolution");
@@ -302,6 +314,18 @@ public class SessionContainer {
                 storeFile(vbox_template, s.vbox_template);
             }
             
+            if (s.script_generic != null) {
+                // apply properties
+                File script_generic = new File(mBasePath, "modify_image_base.sh");
+                storeFile(script_generic, s.script_generic);
+            }
+            
+            if (s.script_individual != null) {
+                // apply properties
+                File script_individual = new File(mBasePath, "modify_image_node.sh");
+                storeFile(script_individual, s.script_individual);
+            }
+            
             // write configuration of 'base'
             base.save(conf);
         } catch (IOException e) {
@@ -353,6 +377,14 @@ public class SessionContainer {
                 } else {
                     sessionConf.set("stats", "collect_interval", s.stats_interval.toString());
                 }
+            }
+            
+            if (s.stats_record_contact != null) {
+                sessionConf.set("stats", "record_contact", s.stats_record_contact ? "yes" : "no");
+            }
+            
+            if (s.stats_record_movement != null) {
+                sessionConf.set("stats", "record_movement", s.stats_record_movement ? "yes" : "no");
             }
             
             // apply global simulation parameters
@@ -448,34 +480,42 @@ public class SessionContainer {
         if (baseFile.exists()) baseFile.delete();
         
         // output file stream
-        FileOutputStream dest = new FileOutputStream(baseFile);
-
         // create a TarOutputStream
-        TarOutputStream out = new TarOutputStream( new BufferedOutputStream( dest ) );
-
-        // collect files to tar
-        List<File> list = new LinkedList<File>();
-        
-        // list all files in the base dir
-        listFiles(mBasePath, list);
-        
-        for (File f : list) {
-            String path = f.getCanonicalPath().replaceFirst(mBasePath.getCanonicalPath(), ".");
+        try (FileOutputStream dest = new FileOutputStream(baseFile);
+                TarOutputStream out = new TarOutputStream( new BufferedOutputStream( dest ))) {
+    
+            // collect files to tar
+            List<File> list = new LinkedList<File>();
             
-           out.putNextEntry(new TarEntry(f, path));
-           BufferedInputStream origin = new BufferedInputStream(new FileInputStream( f ));
-
-           int count;
-           byte data[] = new byte[2048];
-           while((count = origin.read(data)) != -1) {
-              out.write(data, 0, count);
-           }
-
-           out.flush();
-           origin.close();
+            // list all files in the base dir
+            listFiles(mBasePath, list);
+            
+            for (File f : list) {
+                String path = f.getCanonicalPath().replaceFirst(mBasePath.getCanonicalPath(), ".");
+                
+               out.putNextEntry(new TarEntry(f, path));
+               try (BufferedInputStream origin = new BufferedInputStream(new FileInputStream( f ))) {
+                   int count;
+                   byte data[] = new byte[2048];
+                   while((count = origin.read(data)) != -1) {
+                      out.write(data, 0, count);
+                   }
+        
+                   out.flush();
+               }
+            }
         }
-
-        out.close();
+    }
+    
+    public File createTraceFile(String tag) {
+        File traces_path = new File(mPath, "traces");
+        
+        if (!traces_path.exists()) {
+            traces_path.mkdirs();
+        }
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
+         return new File(traces_path, sdf.format(new Date()) + "_" + tag + ".trace");
     }
     
     private static void copy(SessionContainer source, File targetPath) throws IOException {

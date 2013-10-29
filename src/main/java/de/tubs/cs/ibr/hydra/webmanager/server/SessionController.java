@@ -1,8 +1,10 @@
 package de.tubs.cs.ibr.hydra.webmanager.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -62,6 +64,10 @@ public class SessionController {
     ScheduledFuture<?> scheduledStatsCollector = null;
     ScheduledFuture<?> scheduledMovement = null;
     ScheduledFuture<?> scheduledTrafficGeneration = null;
+    
+    // trace recorder
+    TraceRecorder mRecorderContact = null;
+    TraceRecorder mRecorderMovement = null;
     
     public SessionController(Session s) {
         mLogger = Logger.getLogger(SessionController.class.getSimpleName() + "[" +s.id.toString() + "]");
@@ -221,6 +227,21 @@ public class SessionController {
             mLogger.warning("Interrupted during onDestroy(): " + e.toString());
         } catch (ExecutionException e) {
             mLogger.severe("Execution failed during onDestroy(): " + e.toString());
+        }
+        
+        // close trace recorder
+        try {
+            if (mRecorderContact != null) {
+                mRecorderContact.close();
+                mRecorderContact = null;
+            }
+            
+            if (mRecorderMovement != null) {
+                mRecorderMovement.close();
+                mRecorderMovement = null;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         
         // clean-up from MasterServer
@@ -476,6 +497,25 @@ public class SessionController {
             // abort process if state changed to aborted
             if (isAborted()) return;
             
+            // create trace recorders
+            if (mSession.stats_record_contact) {
+                File f = mContainer.createTraceFile("contact");
+                try {
+                    mRecorderContact = new TraceRecorder(f);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            
+            if (mSession.stats_record_movement) {
+                File f = mContainer.createTraceFile("movement");
+                try {
+                    mRecorderMovement = new TraceRecorder(f);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            
             // prepare movement, nodes initial position, and other parameters
             prepareSetup();
             
@@ -663,6 +703,15 @@ public class SessionController {
                 }
                 
             });
+            
+            // store move in trace recorder
+            if (mRecorderMovement != null) {
+                try {
+                    mRecorderMovement.logMovement(n, position, speed, heading);
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
         }
     };
     
@@ -707,6 +756,15 @@ public class SessionController {
                 }
                 
             });
+            
+            // store contact in trace recorder
+            if (mRecorderContact != null) {
+                try {
+                    mRecorderContact.logContact(link, "UP");
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
         }
 
         @Override
@@ -749,6 +807,15 @@ public class SessionController {
                 }
                 
             });
+            
+            // store contact in trace recorder
+            if (mRecorderContact != null) {
+                try {
+                    mRecorderContact.logContact(link, "DOWN");
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
         }
     };
     
