@@ -62,6 +62,9 @@
 					<b:Tab heading="Map" ui:field="tabMapView">
 					    <client:SessionMapWidget ui:field="mapView" />
 					</b:Tab>
+					<b:Tab heading="Download" ui:field="tabDownload">
+					    <client:SessionDownloadWidget ui:field="downloadView" />
+					</b:Tab>
 				</b:TabPanel>
 			</b:Column>
 		</b:Row>

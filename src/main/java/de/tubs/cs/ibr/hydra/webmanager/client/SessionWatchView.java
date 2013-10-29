@@ -47,6 +47,7 @@ public class SessionWatchView extends View {
     
     @UiField SessionStatsWidget statsView;
     @UiField SessionMapWidget mapView;
+    @UiField SessionDownloadWidget downloadView;
     
     @UiField Tab tabMapView;
     
@@ -93,6 +94,9 @@ public class SessionWatchView extends View {
         
         // initialize map view
         mapView.initialize(s);
+        
+        // initialize download view
+        downloadView.initialize(s);
     }
     
     @Override
@@ -140,6 +144,9 @@ public class SessionWatchView extends View {
         
         // push updated session to map widget
         mapView.onSessionUpdated(mSession);
+        
+        // push updated session to download widget
+        downloadView.onSessionUpdated(mSession);
         
         // schedule / cancel progress update timer
         if (Session.State.RUNNING.equals(s.state)) {

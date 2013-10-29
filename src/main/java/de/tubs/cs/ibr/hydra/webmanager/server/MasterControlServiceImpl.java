@@ -18,6 +18,7 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session.Action;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
+import de.tubs.cs.ibr.hydra.webmanager.shared.TraceFile;
 
 public class MasterControlServiceImpl extends RemoteServiceServlet implements MasterControlService {
 
@@ -242,5 +243,24 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         }
         
         return MasterServer.getMapData(s);
+    }
+
+    @Override
+    public ArrayList<TraceFile> getTraceFiles(Session s) {
+        ArrayList<TraceFile> ret = null;
+        SessionContainer sc = SessionContainer.getContainer(s);
+        
+        try {
+            // initialize the container
+            sc.initialize(null);
+            
+            // get all trace files
+            ret = sc.getTraceFiles();
+        } catch (IOException e) {
+            // could not initialize session container
+            ret = new ArrayList<TraceFile>();
+        }
+        
+        return ret;
     }
 }

@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.InvalidParameterException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -27,9 +28,10 @@ import com.nikhaldimann.inieditor.IniEditor;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet.MobilityModel;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
+import de.tubs.cs.ibr.hydra.webmanager.shared.TraceFile;
 
 public class SessionContainer {
-    private String mSessionKey = null;
+    private Long mSessionId = null;
     private File mPath = null;
     private File mBasePath = null;
     
@@ -44,7 +46,7 @@ public class SessionContainer {
     }
     
     private SessionContainer(Long sessionId) {
-        mSessionKey = sessionId.toString();
+        mSessionId = sessionId;
     }
     
     public static SessionContainer getContainer(Session s) {
@@ -61,12 +63,12 @@ public class SessionContainer {
         File p = null;
         
         // check if the session key is set
-        if (mSessionKey == null) {
+        if (mSessionId == null) {
             // initialize default session container
             p = Configuration.getDefaultSessionPath();
         } else {
             // construct the container path
-            p = new File(Configuration.getSessionPath(), mSessionKey);
+            p = new File(Configuration.getSessionPath(), mSessionId.toString());
         }
         
         // check if the session already exists
@@ -86,7 +88,7 @@ public class SessionContainer {
     
     public synchronized void destroy() {
         // do not destroy the default container
-        if (mSessionKey == null) return;
+        if (mSessionId == null) return;
         
         // check if the path is set
         if (mPath == null) return;
@@ -470,7 +472,7 @@ public class SessionContainer {
         
         // get the web-directory for this session
         File downloadDir = new File(Configuration.getWebDirectory(), "dl");
-        File sessionDir = new File(downloadDir, mSessionKey);
+        File sessionDir = new File(downloadDir, mSessionId.toString());
         if (!sessionDir.exists()) sessionDir.mkdirs();
         
         // this is the target tar file
@@ -516,6 +518,23 @@ public class SessionContainer {
         
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
         return new File(traces_path, sdf.format(new Date()) + "_" + tag + suffix);
+    }
+    
+    public ArrayList<TraceFile> getTraceFiles() {
+        File traces_path = new File(mPath, "traces");
+        
+        ArrayList<TraceFile> ret = new ArrayList<TraceFile>();
+        
+        for (File f : traces_path.listFiles()) {
+            TraceFile tf = new TraceFile();
+            tf.filename = f.getName();
+            tf.sessionId = mSessionId;
+            tf.modified = f.lastModified();
+            tf.size = f.length();
+            ret.add(tf);
+        }
+        
+        return ret;
     }
     
     private static void copy(SessionContainer source, File targetPath) throws IOException {
