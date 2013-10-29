@@ -2,8 +2,6 @@ package de.tubs.cs.ibr.hydra.webmanager.server.movement;
 
 import java.util.logging.Logger;
 
-import de.tubs.cs.ibr.hydra.webmanager.server.AtmosphereHandler;
-import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
