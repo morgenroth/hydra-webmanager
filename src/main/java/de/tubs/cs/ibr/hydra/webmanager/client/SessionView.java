@@ -10,11 +10,12 @@ import com.github.gwtbootstrap.client.ui.CellTable;
 import com.github.gwtbootstrap.client.ui.constants.ButtonType;
 import com.github.gwtbootstrap.client.ui.constants.IconType;
 import com.github.gwtbootstrap.client.ui.resources.ButtonSize;
-import com.google.gwt.cell.client.DateCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.shared.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
@@ -108,22 +109,22 @@ public class SessionView extends View {
 
         sessionTable.addColumn(nameColumn, "Description");
         
-        Column<Session, Date> dateColumn = new Column<Session, Date>(new DateCell()) {
+        TextColumn<Session> dateColumn = new TextColumn<Session>() {
           @Override
-          public Date getValue(Session s) {
+          public String getValue(Session s) {
               switch (s.state) {
                   case DRAFT:
-                      return s.created;
+                      return formatDatetime(s.created);
                   case FINISHED:
-                      return s.finished;
+                      return formatDatetime(s.finished);
                   case PENDING:
-                      return s.created;
+                      return formatDatetime(s.created);
                   case RUNNING:
-                      return s.started;
+                      return formatDatetime(s.started);
                   case ABORTED:
-                      return s.aborted;
+                      return formatDatetime(s.aborted);
                   default:
-                      return s.created;
+                      return formatDatetime(s.created);
               }
           }
         };
@@ -288,5 +289,9 @@ public class SessionView extends View {
     void onClick(ClickEvent e) {
         // edit session edit view without a existing session
         changeView(new SessionEditView(getApplication(), null));
+    }
+    
+    public static String formatDatetime(Date d) {
+        return DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_MEDIUM).format(d);
     }
 }
