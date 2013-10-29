@@ -28,6 +28,12 @@
 		<servlet-class>de.tubs.cs.ibr.hydra.webmanager.server.MasterControlServiceImpl</servlet-class>
 	</servlet>
 	
+	<servlet>
+		<servlet-name>HttpDownloadServlet</servlet-name>
+		<description>Access to the master controls</description>
+		<servlet-class>de.tubs.cs.ibr.hydra.webmanager.server.HttpDownloadServlet</servlet-class>
+	</servlet>
+	
 	<servlet-mapping>
 		<servlet-name>AtmosphereServlet</servlet-name>
 		<url-pattern>/WebManager/atmosphere/*</url-pattern>
@@ -36,6 +42,11 @@
 	<servlet-mapping>
 		<servlet-name>MasterControlService</servlet-name>
 		<url-pattern>/WebManager/master</url-pattern>
+	</servlet-mapping>
+	
+	<servlet-mapping>
+		<servlet-name>HttpDownloadServlet</servlet-name>
+		<url-pattern>/WebManager/download</url-pattern>
 	</servlet-mapping>
 	
 	<!-- Default page to serve -->

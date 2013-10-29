@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -535,6 +536,26 @@ public class SessionContainer {
         }
         
         return ret;
+    }
+    
+    public long getTraceSize(String filename) {
+        File traces_path = new File(mPath, "traces");
+        File dumpfile = new File(traces_path, filename);
+        return dumpfile.length();
+    }
+    
+    public void dumpTrace(String filename, OutputStream output) throws FileNotFoundException, IOException {
+        File traces_path = new File(mPath, "traces");
+        File dumpfile = new File(traces_path, filename);
+        
+        try (InputStream in = new FileInputStream(dumpfile)) {
+            byte[] buffer = new byte[4096];
+            
+            int length = 0;
+            while ((length = in.read(buffer)) > 0) {
+                output.write(buffer, 0, length);
+            }
+        }
     }
     
     private static void copy(SessionContainer source, File targetPath) throws IOException {

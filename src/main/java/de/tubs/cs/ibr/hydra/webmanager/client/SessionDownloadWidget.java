@@ -1,21 +1,29 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import com.github.gwtbootstrap.client.ui.CellTable;
 import com.github.gwtbootstrap.client.ui.NavLink;
+import com.google.gwt.cell.client.SafeHtmlCell;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.i18n.shared.DateTimeFormat.PredefinedFormat;
+import com.google.gwt.safehtml.client.SafeHtmlTemplates;
+import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.safehtml.shared.SafeUri;
+import com.google.gwt.safehtml.shared.UriUtils;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
@@ -31,6 +39,13 @@ public class SessionDownloadWidget extends Composite {
 
     interface SessionDownloadWidgetUiBinder extends UiBinder<Widget, SessionDownloadWidget> {
     }
+    
+    public interface SimpleCellTemplates extends SafeHtmlTemplates {
+        @Template("<a href=\"{0}\" target=\"_blank\">{1}</a>")
+        SafeHtml anchor(SafeUri href, String name);
+    }
+    
+    static final SimpleCellTemplates cell = GWT.create(SimpleCellTemplates.class);
     
     @UiField CellTable<TraceFile> traceTable;
     @UiField NavLink linkStatsDownload;
@@ -60,7 +75,8 @@ public class SessionDownloadWidget extends Composite {
     
     @UiHandler("linkStatsDownload")
     public void onStatsDownloadClick(ClickEvent evt) {
-        // TODO: download stats data dump
+        // download stats data dump
+        Window.open(GWT.getModuleBaseURL() + "download?type=stats&session=" + mSession.id, null, null);
     }
     
     private void createTraceTable() {
@@ -73,10 +89,13 @@ public class SessionDownloadWidget extends Composite {
         /**
          * name column
          */
-        TextColumn<TraceFile> nameColumn = new TextColumn<TraceFile>() {
+        Column<TraceFile, SafeHtml> nameColumn = new Column<TraceFile, SafeHtml>(new SafeHtmlCell()) {
             @Override
-            public String getValue(TraceFile f) {
-                return f.filename;
+            public SafeHtml getValue(TraceFile obj)
+            {
+                String parameters = "?type=trace&session=" + mSession.id + "&filename=" + obj.filename;
+                SafeUri href = UriUtils.fromString(GWT.getModuleBaseURL() + "download" + parameters);
+                return cell.anchor(href, obj.filename);
             }
         };
 
@@ -120,6 +139,7 @@ public class SessionDownloadWidget extends Composite {
             @Override
             public void onSuccess(ArrayList<TraceFile> result) {
                 List<TraceFile> list = mDataProvider.getList();
+                Collections.sort(list);
                 list.clear();
                 for (TraceFile tf : result) {
                     // update table data

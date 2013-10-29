@@ -1146,7 +1146,7 @@ public class Database {
                 // execute query
                 try (ResultSet rs = st.executeQuery()) {
                     while (rs.next()) {
-                        String line = String.valueOf(rs.getLong(1)) + " " + rs.getString(2) + "\n";
+                        String line = rs.getTimestamp(1).getTime() + " " + rs.getString(2) + "\n";
                         out.write(line.getBytes());
                     }
                 }
