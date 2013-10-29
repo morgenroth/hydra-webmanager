@@ -346,15 +346,13 @@ public class Database {
                     }
                 }
                 
-                ResultSet rs = st.executeQuery();
-                
-                while (rs.next()) {
-                    Node n = new Node();
-                    transform(rs, n);
-                    ret.add(n);
+                try (ResultSet rs = st.executeQuery()) {
+                    while (rs.next()) {
+                        Node n = new Node();
+                        transform(rs, n);
+                        ret.add(n);
+                    }
                 }
-                
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -371,14 +369,12 @@ public class Database {
             
             synchronized(st) {
                 st.setLong(1, id);
-                ResultSet rs = st.executeQuery();
-                
-                if (rs.next()) {
-                    n = new Node();
-                    transform(rs, n);
+                try (ResultSet rs = st.executeQuery()) {
+                    if (rs.next()) {
+                        n = new Node();
+                        transform(rs, n);
+                    }
                 }
-                
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -568,11 +564,11 @@ public class Database {
                 st.execute();
                 
                 // get session id from result-set
-                ResultSet rs = st.getGeneratedKeys();
-                if (rs.next()) {
-                    nodeId = rs.getLong(1);
+                try (ResultSet rs = st.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        nodeId = rs.getLong(1);
+                    }
                 }
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -613,15 +609,13 @@ public class Database {
                 // TODO: set right user id
                 st.setLong(1, 1);
                 
-                ResultSet rs = st.executeQuery();
-                
-                while (rs.next()) {
-                    Slave s = new Slave(rs.getLong(1));
-                    transform(rs, s);
-                    ret.add(s);
+                try (ResultSet rs = st.executeQuery()) {
+                    while (rs.next()) {
+                        Slave s = new Slave(rs.getLong(1));
+                        transform(rs, s);
+                        ret.add(s);
+                    }
                 }
-                
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -639,14 +633,12 @@ public class Database {
             synchronized(st) {
                 st.setLong(1, id);
                 
-                ResultSet rs = st.executeQuery();
-                
-                if (rs.next()) {
-                    s = new Slave(rs.getLong(1));
-                    transform(rs, s);
+                try (ResultSet rs = st.executeQuery()) {
+                    if (rs.next()) {
+                        s = new Slave(rs.getLong(1));
+                        transform(rs, s);
+                    }
                 }
-                
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -666,14 +658,12 @@ public class Database {
                 st.setString(1, name);
                 st.setString(2, address);
                 
-                ResultSet rs = st.executeQuery();
-                
-                if (rs.next()) {
-                    s = new Slave(rs.getLong(1));
-                    transform(rs, s);
+                try (ResultSet rs = st.executeQuery()) {
+                    if (rs.next()) {
+                        s = new Slave(rs.getLong(1));
+                        transform(rs, s);
+                    }
                 }
-                
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -763,11 +753,11 @@ public class Database {
                 st.execute();
                 
                 // get session id from result-set
-                ResultSet rs = st.getGeneratedKeys();
-                if (rs.next()) {
-                    slaveId = rs.getLong(1);
+                try (ResultSet rs = st.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        slaveId = rs.getLong(1);
+                    }
                 }
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -798,15 +788,13 @@ public class Database {
             PreparedStatement st = STMT_QUERY_SESSIONS;
             
             synchronized(st) {
-                ResultSet rs = st.executeQuery();
-                
-                while (rs.next()) {
-                    Session s = new Session(rs.getLong(1));
-                    transform(rs, s);
-                    ret.add(s);
+                try (ResultSet rs = st.executeQuery()) {
+                    while (rs.next()) {
+                        Session s = new Session(rs.getLong(1));
+                        transform(rs, s);
+                        ret.add(s);
+                    }
                 }
-                
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -823,14 +811,12 @@ public class Database {
             
             synchronized(st) {
                 st.setLong(1, id);
-                ResultSet rs = st.executeQuery();
-                
-                if (rs.next()) {
-                    s = new Session(rs.getLong(1));
-                    transform(rs, s);
+                try (ResultSet rs = st.executeQuery()) {
+                    if (rs.next()) {
+                        s = new Session(rs.getLong(1));
+                        transform(rs, s);
+                    }
                 }
-                
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -853,11 +839,11 @@ public class Database {
                 st.execute();
                 
                 // get session id from result-set
-                ResultSet rs = st.getGeneratedKeys();
-                if (rs.next()) {
-                    sessionId = rs.getLong(1);
+                try (ResultSet rs = st.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        sessionId = rs.getLong(1);
+                    }
                 }
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -957,14 +943,12 @@ public class Database {
             synchronized(st) {
                 st.setLong(1, userid);
                 
-                ResultSet rs = st.executeQuery();
-                
-                if (rs.next()) {
-                    ret = new User(rs.getLong(1));
-                    ret.name = rs.getString(2);
+                try (ResultSet rs = st.executeQuery()) {
+                    if (rs.next()) {
+                        ret = new User(rs.getLong(1));
+                        ret.name = rs.getString(2);
+                    }
                 }
-                
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -982,14 +966,12 @@ public class Database {
             synchronized(st) {
                 st.setString(1, username);
                 
-                ResultSet rs = st.executeQuery();
-                
-                if (rs.next()) {
-                    ret = new User(rs.getLong(1));
-                    ret.name = rs.getString(2);
+                try (ResultSet rs = st.executeQuery()) {
+                    if (rs.next()) {
+                        ret = new User(rs.getLong(1));
+                        ret.name = rs.getString(2);
+                    }
                 }
-                
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1037,20 +1019,16 @@ public class Database {
     public Set<String> getAddressAllocation() {
         Set<String> ret = new HashSet<String>();
         
-        try {
-            PreparedStatement st = STMT_QUERY_ADDRESS_ALLOCS;
-            
-            synchronized(st) {
-                ResultSet rs = st.executeQuery();
-                
+        PreparedStatement st = STMT_QUERY_ADDRESS_ALLOCS;
+        
+        synchronized(st) {
+            try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
                     ret.add(rs.getString(1));
                 }
-                
-                rs.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         
         return ret;
@@ -1065,27 +1043,25 @@ public class Database {
             PreparedStatement st = STMT_QUERY_SLAVE_ALLOCS;
             
             synchronized(st) {
-                ResultSet rs = st.executeQuery();
-                
-                while (rs.next()) {
-                    SlaveAllocation sa = new SlaveAllocation(rs.getLong(1));
-                    
-                    sa.capacity = rs.getLong(2);
-                    
-                    // check if nodes.assigned_slave is null
-                    rs.getLong(4);
-                    if (rs.wasNull()) {
-                        // if it is null, then no node is allocated to this slave
-                        sa.allocation = 0L;
-                    } else {
-                        // if it is not null, then the value (3) is the number of allocations
-                        sa.allocation = rs.getLong(3);
+                try (ResultSet rs = st.executeQuery()) {
+                    while (rs.next()) {
+                        SlaveAllocation sa = new SlaveAllocation(rs.getLong(1));
+                        
+                        sa.capacity = rs.getLong(2);
+                        
+                        // check if nodes.assigned_slave is null
+                        rs.getLong(4);
+                        if (rs.wasNull()) {
+                            // if it is null, then no node is allocated to this slave
+                            sa.allocation = 0L;
+                        } else {
+                            // if it is not null, then the value (3) is the number of allocations
+                            sa.allocation = rs.getLong(3);
+                        }
+        
+                        ret.add(sa);
                     }
-    
-                    ret.add(sa);
                 }
-                
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1168,14 +1144,12 @@ public class Database {
                 st.setLong(1, session.id);
                 
                 // execute query
-                ResultSet rs = st.executeQuery();
-                
-                while (rs.next()) {
-                    String line = String.valueOf(rs.getLong(1)) + " " + rs.getString(2) + "\n";
-                    out.write(line.getBytes());
+                try (ResultSet rs = st.executeQuery()) {
+                    while (rs.next()) {
+                        String line = String.valueOf(rs.getLong(1)) + " " + rs.getString(2) + "\n";
+                        out.write(line.getBytes());
+                    }
                 }
-                
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1224,16 +1198,14 @@ public class Database {
                 st.setTimestamp(4, new Timestamp(end.getTime()));
                 
                 // execute query
-                ResultSet rs = st.executeQuery();
-                
-                while (rs.next()) {
-                    DataPoint data = JsonStats.decode(rs.getTimestamp(1), rs.getString(2));
-    
-                    // put data into the data-set
-                    ret.add(data);
+                try (ResultSet rs = st.executeQuery()) {
+                    while (rs.next()) {
+                        DataPoint data = JsonStats.decode(rs.getTimestamp(1), rs.getString(2));
+        
+                        // put data into the data-set
+                        ret.add(data);
+                    }
                 }
-                
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1265,26 +1237,24 @@ public class Database {
                 st.setLong(2, s.id);
                 
                 // execute query
-                ResultSet rs = st.executeQuery();
-    
-                while (rs.next()) {
-                    DataPoint data = null;
-                    
-                    Long nodeId = rs.getLong(1);
-                    Timestamp ts = rs.getTimestamp(2);
-                    String json = rs.getString(3);
-                    
-                    if (rs.wasNull()) {
-                        data = new DataPoint();
-                    } else {
-                        data = JsonStats.decode(ts, json);
+                try (ResultSet rs = st.executeQuery()) {
+                    while (rs.next()) {
+                        DataPoint data = null;
+                        
+                        Long nodeId = rs.getLong(1);
+                        Timestamp ts = rs.getTimestamp(2);
+                        String json = rs.getString(3);
+                        
+                        if (rs.wasNull()) {
+                            data = new DataPoint();
+                        } else {
+                            data = JsonStats.decode(ts, json);
+                        }
+        
+                        // put data into the data-set
+                        ret.put(nodeId, data);
                     }
-    
-                    // put data into the data-set
-                    ret.put(nodeId, data);
                 }
-                
-                rs.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();

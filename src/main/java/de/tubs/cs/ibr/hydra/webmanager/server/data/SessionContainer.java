@@ -534,18 +534,14 @@ public class SessionContainer {
                 copyFolder(src, dst);
             }
         } else {
-            InputStream in = new FileInputStream(source);
-            OutputStream out = new FileOutputStream(target);
-            
-            byte[] buffer = new byte[4096];
-            
-            int length = 0;
-            while ((length = in.read(buffer)) > 0) {
-                out.write(buffer, 0, length);
+            try (InputStream in = new FileInputStream(source); OutputStream out = new FileOutputStream(target)) {
+                byte[] buffer = new byte[4096];
+                
+                int length = 0;
+                while ((length = in.read(buffer)) > 0) {
+                    out.write(buffer, 0, length);
+                }
             }
-            
-            in.close();
-            out.close();
         }
     }
     
@@ -569,15 +565,10 @@ public class SessionContainer {
         String ret = null;
         if (f.exists()) {
             ret = "";
-            try {
-                BufferedReader in = new BufferedReader(new FileReader(f));
-                try {
-                    String data = null;
-                    while ((data = in.readLine()) != null) {
-                        ret += data + "\n";
-                    }
-                } finally {
-                    in.close();
+            try (BufferedReader in = new BufferedReader(new FileReader(f))) {
+                String data = null;
+                while ((data = in.readLine()) != null) {
+                    ret += data + "\n";
                 }
             } catch (IOException e) {
                 // can not read monitor nodes
@@ -590,15 +581,10 @@ public class SessionContainer {
     }
     
     private static void storeFile(File f, String data) {
-        try {
-            BufferedWriter out = new BufferedWriter(new FileWriter(f));
-            try {
-                out.write(data);
-                out.newLine();
-                out.flush();
-            } finally {
-                out.close();
-            }
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(f))) {
+            out.write(data);
+            out.newLine();
+            out.flush();
         } catch (IOException e) {
             // can not read monitor nodes
             e.printStackTrace();
