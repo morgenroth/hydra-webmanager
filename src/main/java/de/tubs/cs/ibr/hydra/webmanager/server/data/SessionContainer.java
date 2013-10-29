@@ -507,7 +507,7 @@ public class SessionContainer {
         }
     }
     
-    public File createTraceFile(String tag) {
+    public File createTraceFile(String tag, String suffix) {
         File traces_path = new File(mPath, "traces");
         
         if (!traces_path.exists()) {
@@ -515,7 +515,7 @@ public class SessionContainer {
         }
         
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
-         return new File(traces_path, sdf.format(new Date()) + "_" + tag + ".trace");
+        return new File(traces_path, sdf.format(new Date()) + "_" + tag + suffix);
     }
     
     private static void copy(SessionContainer source, File targetPath) throws IOException {
