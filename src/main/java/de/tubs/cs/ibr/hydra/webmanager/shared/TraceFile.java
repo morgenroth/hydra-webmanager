@@ -8,6 +8,13 @@ public class TraceFile implements IsSerializable, Comparable<TraceFile> {
     public long modified = 0L;
     public long size = 0L;
     
+    public TraceFile() {
+    }
+    
+    public TraceFile(Long sessionId) {
+        this.sessionId = sessionId;
+    }
+    
     @Override
     public int compareTo(TraceFile o) {
         return filename.compareTo(o.filename);

@@ -518,11 +518,11 @@ public class SessionContainer {
         ArrayList<TraceFile> ret = new ArrayList<TraceFile>();
         
         for (File f : getTracePath().listFiles()) {
-            TraceFile tf = new TraceFile();
+            TraceFile tf = new TraceFile(mSessionId);
             tf.filename = f.getName();
-            tf.sessionId = mSessionId;
             tf.modified = f.lastModified();
             tf.size = f.length();
+
             ret.add(tf);
         }
         
