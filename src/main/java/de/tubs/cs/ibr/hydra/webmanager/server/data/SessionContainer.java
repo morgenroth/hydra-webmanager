@@ -6,7 +6,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -511,22 +510,14 @@ public class SessionContainer {
     }
     
     public File createTraceFile(String tag, String suffix) {
-        File traces_path = new File(mPath, "traces");
-        
-        if (!traces_path.exists()) {
-            traces_path.mkdirs();
-        }
-        
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
-        return new File(traces_path, sdf.format(new Date()) + "_" + tag + suffix);
+        return new File(getTracePath(), sdf.format(new Date()) + "_" + tag + suffix);
     }
     
     public ArrayList<TraceFile> getTraceFiles() {
-        File traces_path = new File(mPath, "traces");
-        
         ArrayList<TraceFile> ret = new ArrayList<TraceFile>();
         
-        for (File f : traces_path.listFiles()) {
+        for (File f : getTracePath().listFiles()) {
             TraceFile tf = new TraceFile();
             tf.filename = f.getName();
             tf.sessionId = mSessionId;
@@ -538,24 +529,14 @@ public class SessionContainer {
         return ret;
     }
     
-    public long getTraceSize(String filename) {
+    public File getTracePath() {
         File traces_path = new File(mPath, "traces");
-        File dumpfile = new File(traces_path, filename);
-        return dumpfile.length();
-    }
-    
-    public void dumpTrace(String filename, OutputStream output) throws FileNotFoundException, IOException {
-        File traces_path = new File(mPath, "traces");
-        File dumpfile = new File(traces_path, filename);
         
-        try (InputStream in = new FileInputStream(dumpfile)) {
-            byte[] buffer = new byte[4096];
-            
-            int length = 0;
-            while ((length = in.read(buffer)) > 0) {
-                output.write(buffer, 0, length);
-            }
+        if (!traces_path.exists()) {
+            traces_path.mkdirs();
         }
+        
+        return traces_path;
     }
     
     private static void copy(SessionContainer source, File targetPath) throws IOException {
