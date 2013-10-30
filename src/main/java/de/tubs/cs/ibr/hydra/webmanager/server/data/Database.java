@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
@@ -94,86 +96,61 @@ public class Database {
     private final static String INSERT_SESSION = "INSERT INTO sessions (`user`, `created`) VALUES (?, NOW());";
     private final static String INSERT_STATS_DATA = "INSERT INTO stats (`session`, `node`, `data`) VALUES (?, ?, ?);";
     
-    private PreparedStatement STMT_QUERY_NODES = null;
-    private PreparedStatement STMT_QUERY_NODES_SESSION = null;
-    private PreparedStatement STMT_QUERY_NODES_SESSION_SLAVE = null;
-    
-    private PreparedStatement STMT_QUERY_NODE = null;
-    
-    private PreparedStatement STMT_QUERY_SLAVES = null;
-    private PreparedStatement STMT_QUERY_SLAVE = null;
-    private PreparedStatement STMT_QUERY_SLAVE_NAME_ADDRESS = null;
-    
-    private PreparedStatement STMT_QUERY_SESSIONS = null;
-    private PreparedStatement STMT_QUERY_SESSION = null;
-    
-    private PreparedStatement STMT_QUERY_USER = null;
-    private PreparedStatement STMT_QUERY_USER_BY_NAME = null;
-    
-    private PreparedStatement STMT_QUERY_ADDRESS_ALLOCS = null;
-    private PreparedStatement STMT_QUERY_SLAVE_ALLOCS = null;
-    
-    private PreparedStatement STMT_QUERY_STATS = null;
-    private PreparedStatement STMT_QUERY_STATS_BY_NODE = null;
-    private PreparedStatement STMT_QUERY_STATS_LATEST = null;
-    
-    private PreparedStatement STMT_UPDATE_NODE_ADDRESS = null;
-    private PreparedStatement STMT_UPDATE_NODE_STATE = null;
-    private PreparedStatement STMT_UPDATE_NODE = null;
-    private PreparedStatement STMT_UPDATE_NODE_ASSIGNMENT = null;
-    private PreparedStatement STMT_UPDATE_NODE_NAME = null;
-    
-    private PreparedStatement STMT_UPDATE_NODES_CLEAR = null;
-    private PreparedStatement STMT_UPDATE_NODES_CLEAR_SESSION = null;
-    
-    private PreparedStatement STMT_UPDATE_SLAVE_STATE = null;
-    private PreparedStatement STMT_UPDATE_SLAVE_OWNER_CAPACITY = null;
-    private PreparedStatement STMT_UPDATE_SLAVES_RESET = null;
-    
-    private PreparedStatement STMT_UPDATE_SESSION_NAME = null;
-    private PreparedStatement STMT_UPDATE_SESSION_STATE_ABORTED = null;
-    private PreparedStatement STMT_UPDATE_SESSION_STATE_RUNNING = null;
-    private PreparedStatement STMT_UPDATE_SESSION_STATE_FINISHED = null;
-    private PreparedStatement STMT_UPDATE_SESSION_STATE_DRAFT = null;
-    private PreparedStatement STMT_UPDATE_SESSION_STATE = null;
-
-    private PreparedStatement STMT_UPDATE_SESSIONS_RESET = null;
-    
-    private PreparedStatement STMT_DELETE_NODE = null;
-    private PreparedStatement STMT_DELETE_SESSION_NODES = null;
-    private PreparedStatement STMT_DELETE_SESSION = null;
-    
-    private PreparedStatement STMT_INSERT_NODE = null;
-    private PreparedStatement STMT_INSERT_SLAVE = null;
-    private PreparedStatement STMT_INSERT_SESSION = null;
-    private PreparedStatement STMT_INSERT_STATS_DATA = null;
-    
     private static Database __db__ = new Database();
-    private Connection mConn = null;
+    
+    //private Connection mConn = null;
+    private boolean mInitialized = false;
+    private BlockingQueue<Connection> mConnPool = new LinkedBlockingQueue<Connection>();
+    
+    private static final int CONNECTION_POOL_SIZE = 5;
     
     public static Database getInstance() {
-        if (__db__.isClosed()) __db__.open();
         return __db__;
     }
     
-    public void close() {
-        if (mConn != null)
-            try {
-                mConn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
+    public synchronized void initializePool() {
+        if (!mInitialized) {
+            // create connection pool
+            for (int i = 0; i < CONNECTION_POOL_SIZE; i++) {
+                Connection conn = createConnection();
+                if (conn != null) mConnPool.offer( conn );
             }
+            
+            mInitialized = true;
+        }
+    }
+    
+    public Connection getConnection() {
+        initializePool();
+        
+        try {
+            return mConnPool.take();
+        } catch (InterruptedException e) {
+            return null;
+        }
+    }
+    
+    public void releaseConnection(Connection conn) {
+        if (conn != null) mConnPool.offer(conn);
     }
 
-    public boolean isClosed() {
-        try {
-            return (mConn == null) || mConn.isClosed();
-        } catch (SQLException e) {
-            return true;
+    public synchronized void close() {
+        if (mInitialized) {
+            for (int i = 0; i < CONNECTION_POOL_SIZE; i++) {
+                try {
+                    mConnPool.take().close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            mInitialized = false;
         }
     }
 
-    private void open() {
+    private Connection createConnection() {
+        Connection ret = null;
         String driver = "com.mysql.jdbc.Driver";
 
         try {
@@ -187,12 +164,9 @@ public class Database {
             Class.forName(driver).newInstance();
             
             // open db connection
-            mConn = DriverManager.getConnection(url + dbname + "?autoReconnect=true", username, password);
-            
-            // prepare all statements
-            prepareStatements();
+            ret = DriverManager.getConnection(url + dbname + "?autoReconnect=true", username, password);
         } catch (SQLException e) {
-            mConn = null;
+            ret = null;
             logger.severe("Mysql Connection Error: " + e.getMessage());
             e.printStackTrace();
         } catch (InstantiationException e) {
@@ -204,62 +178,8 @@ public class Database {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-    
-    private void prepareStatements() throws SQLException {
-         STMT_QUERY_NODES = mConn.prepareStatement(QUERY_NODES);
-         STMT_QUERY_NODES_SESSION = mConn.prepareStatement(QUERY_NODES_SESSION);
-         STMT_QUERY_NODES_SESSION_SLAVE = mConn.prepareStatement(QUERY_NODES_SESSION_SLAVE);
         
-         STMT_QUERY_NODE = mConn.prepareStatement(QUERY_NODE);
-        
-         STMT_QUERY_SLAVES = mConn.prepareStatement(QUERY_SLAVES);
-         STMT_QUERY_SLAVE = mConn.prepareStatement(QUERY_SLAVE);
-         STMT_QUERY_SLAVE_NAME_ADDRESS = mConn.prepareStatement(QUERY_SLAVE_NAME_ADDRESS);
-        
-         STMT_QUERY_SESSIONS = mConn.prepareStatement(QUERY_SESSIONS);
-         STMT_QUERY_SESSION = mConn.prepareStatement(QUERY_SESSION);
-        
-         STMT_QUERY_USER = mConn.prepareStatement(QUERY_USER);
-         STMT_QUERY_USER_BY_NAME = mConn.prepareStatement(QUERY_USER_BY_NAME);
-        
-         STMT_QUERY_ADDRESS_ALLOCS = mConn.prepareStatement(QUERY_ADDRESS_ALLOCS);
-         STMT_QUERY_SLAVE_ALLOCS = mConn.prepareStatement(QUERY_SLAVE_ALLOCS);
-        
-         STMT_QUERY_STATS = mConn.prepareStatement(QUERY_STATS);
-         STMT_QUERY_STATS_BY_NODE = mConn.prepareStatement(QUERY_STATS_BY_NODE);
-         STMT_QUERY_STATS_LATEST = mConn.prepareStatement(QUERY_STATS_LATEST);
-        
-         STMT_UPDATE_NODE_ADDRESS = mConn.prepareStatement(UPDATE_NODE_ADDRESS);
-         STMT_UPDATE_NODE_STATE = mConn.prepareStatement(UPDATE_NODE_STATE);
-         STMT_UPDATE_NODE = mConn.prepareStatement(UPDATE_NODE);
-         STMT_UPDATE_NODE_ASSIGNMENT = mConn.prepareStatement(UPDATE_NODE_ASSIGNMENT);
-         STMT_UPDATE_NODE_NAME = mConn.prepareStatement(UPDATE_NODE_NAME);
-        
-         STMT_UPDATE_SLAVE_STATE = mConn.prepareStatement(UPDATE_SLAVE_STATE);
-         STMT_UPDATE_SLAVE_OWNER_CAPACITY = mConn.prepareStatement(UPDATE_SLAVE_OWNER_CAPACITY);
-         STMT_UPDATE_SLAVES_RESET = mConn.prepareStatement(UPDATE_SLAVES_RESET);
-        
-         STMT_UPDATE_SESSION_NAME = mConn.prepareStatement(UPDATE_SESSION_NAME);
-         STMT_UPDATE_SESSION_STATE_ABORTED = mConn.prepareStatement(UPDATE_SESSION_STATE_ABORTED);
-         STMT_UPDATE_SESSION_STATE_RUNNING = mConn.prepareStatement(UPDATE_SESSION_STATE_RUNNING);
-         STMT_UPDATE_SESSION_STATE_FINISHED = mConn.prepareStatement(UPDATE_SESSION_STATE_FINISHED);
-         STMT_UPDATE_SESSION_STATE_DRAFT = mConn.prepareStatement(UPDATE_SESSION_STATE_DRAFT);
-         STMT_UPDATE_SESSION_STATE = mConn.prepareStatement(UPDATE_SESSION_STATE);
-        
-         STMT_UPDATE_NODES_CLEAR = mConn.prepareStatement(UPDATE_NODES_CLEAR);
-         STMT_UPDATE_NODES_CLEAR_SESSION = mConn.prepareStatement(UPDATE_NODES_CLEAR_SESSION);
-        
-         STMT_UPDATE_SESSIONS_RESET = mConn.prepareStatement(UPDATE_SESSIONS_RESET);
-        
-         STMT_DELETE_NODE = mConn.prepareStatement(DELETE_NODE);
-         STMT_DELETE_SESSION_NODES = mConn.prepareStatement(DELETE_SESSION_NODES);
-         STMT_DELETE_SESSION = mConn.prepareStatement(DELETE_SESSION);
-        
-         STMT_INSERT_NODE = mConn.prepareStatement(INSERT_NODE, Statement.RETURN_GENERATED_KEYS);
-         STMT_INSERT_SLAVE = mConn.prepareStatement(INSERT_SLAVE, Statement.RETURN_GENERATED_KEYS);
-         STMT_INSERT_SESSION = mConn.prepareStatement(INSERT_SESSION, Statement.RETURN_GENERATED_KEYS);
-         STMT_INSERT_STATS_DATA = mConn.prepareStatement(INSERT_STATS_DATA);
+        return ret;
     }
     
     private void transform(ResultSet rs, Node n) throws SQLException {
@@ -325,20 +245,26 @@ public class Database {
     public ArrayList<Node> getNodes(Session session, Slave slave) {
         ArrayList<Node> ret = new ArrayList<Node>();
         
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return ret;
+        
         try {
-            PreparedStatement st;
+            String query = null;
             
+            // select the right query
             if (session == null) {
-                st = STMT_QUERY_NODES;
+                query = QUERY_NODES;
             }
             else if (slave == null) {
-                st = STMT_QUERY_NODES_SESSION;
+                query = QUERY_NODES_SESSION;
             }
             else {
-                st = STMT_QUERY_NODES_SESSION_SLAVE;
+                query = QUERY_NODES_SESSION_SLAVE;
             }
             
-            synchronized(st) {
+            // create a statement
+            try (PreparedStatement st = conn.prepareStatement(query)) {
                 if (session != null) {
                     st.setLong(1, session.id);
                     if (slave != null) {
@@ -356,6 +282,8 @@ public class Database {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
         
         return ret;
@@ -364,21 +292,23 @@ public class Database {
     public Node getNode(Long id) {
         Node n = null;
         
-        try {
-            PreparedStatement st = STMT_QUERY_NODE;
-            
-            synchronized(st) {
-                st.setLong(1, id);
-                try (ResultSet rs = st.executeQuery()) {
-                    if (rs.next()) {
-                        n = new Node();
-                        transform(rs, n);
-                    }
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return n;
+        
+        try (PreparedStatement st = conn.prepareStatement(QUERY_NODE)) {
+            st.setLong(1, id);
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    n = new Node();
+                    transform(rs, n);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
+            n = null;
+        } finally {
+            releaseConnection(conn);
         }
         
         return n;
@@ -387,169 +317,192 @@ public class Database {
     public void updateNode(Node n, String address) {
         if (n.id == null) return;
         
-        try {
-            PreparedStatement st = STMT_UPDATE_NODE_ADDRESS;
-            
-            synchronized(st) {
-                if (address == null) {
-                    st.setNull(1, Types.VARCHAR);
-                } else {
-                    st.setString(1, address);
-                }
-                
-                st.setLong(2, n.id);
-                
-                // execute the query
-                st.executeUpdate();
-                
-                // broadcast node state changed event
-                n.address = address;
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        try (PreparedStatement st = conn.prepareStatement(UPDATE_NODE_ADDRESS)) {
+            if (address == null) {
+                st.setNull(1, Types.VARCHAR);
+            } else {
+                st.setString(1, address);
             }
+            
+            st.setLong(2, n.id);
+            
+            // execute the query
+            st.executeUpdate();
+            
+            // broadcast node state changed event
+            n.address = address;
             
             MasterServer.fireNodeStateChanged(n.sessionId, n);
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
     }
     
     public void updateNode(Node n, Node.State s) {
         if (n.id == null) return;
         
-        try {
-            PreparedStatement st = STMT_UPDATE_NODE_STATE;
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        try (PreparedStatement st = conn.prepareStatement(UPDATE_NODE_STATE)) {
+            st.setString(1, s.toString());
+            st.setLong(2, n.id);
             
-            synchronized(st) {
-                st.setString(1, s.toString());
-                st.setLong(2, n.id);
-                
-                // execute the query
-                st.executeUpdate();
-                
-                // broadcast node state changed event
-                n.state = s;
-            }
+            // execute the query
+            st.executeUpdate();
+            
+            // broadcast node state changed event
+            n.state = s;
+
             MasterServer.fireNodeStateChanged(n.sessionId, n);
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
     }
     
     public void updateNode(Node n) {
         if (n.id == null) return;
         
-        try {
-            PreparedStatement st = STMT_UPDATE_NODE;
-            
-            synchronized(st) {
-                if (n.slaveId == null) {
-                    st.setNull(1, Types.INTEGER);
-                } else {
-                    st.setLong(1, n.slaveId);
-                }
-                
-                if (n.name == null) {
-                    st.setString(2, "n" + n.id.toString());
-                } else {
-                    st.setString(2, n.name);
-                }
-                
-                st.setLong(3, n.id);
-                
-                // execute the query
-                st.executeUpdate();
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        try (PreparedStatement st = conn.prepareStatement(UPDATE_NODE)) {
+            if (n.slaveId == null) {
+                st.setNull(1, Types.INTEGER);
+            } else {
+                st.setLong(1, n.slaveId);
             }
+            
+            if (n.name == null) {
+                st.setString(2, "n" + n.id.toString());
+            } else {
+                st.setString(2, n.name);
+            }
+            
+            st.setLong(3, n.id);
+            
+            // execute the query
+            st.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
     }
     
     public void assignNode(Node n, Slave s) {
         if (n.id == null) return;
         
-        try {
-            PreparedStatement st = STMT_UPDATE_NODE_ASSIGNMENT;
-            
-            synchronized(st) {
-                if ((s == null) || (s.id == null)) {
-                    st.setNull(1, Types.INTEGER);
-                } else {
-                    st.setLong(1, s.id);
-                }
-                
-                st.setLong(2, n.id);
-                
-                // execute the query
-                st.executeUpdate();
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        try (PreparedStatement st = conn.prepareStatement(UPDATE_NODE_ASSIGNMENT)) {
+            if ((s == null) || (s.id == null)) {
+                st.setNull(1, Types.INTEGER);
+            } else {
+                st.setLong(1, s.id);
             }
+            
+            st.setLong(2, n.id);
+            
+            // execute the query
+            st.executeUpdate();
             
             // set the assigned slave id field in the node object
             n.assignedSlaveId = s.id;
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
     }
     
     public void clearAssignment(Session s) {
-        try {
-            PreparedStatement st = null;
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        String query = null;
+        
+        if (s == null) {
+            // clear all assignments
+            query = UPDATE_NODES_CLEAR;
+        } else {
+            // clear all assignments of a session
+            query = UPDATE_NODES_CLEAR_SESSION;
+        }
+        
+        try (PreparedStatement st = conn.prepareStatement(query)) {
+            // set session id
+            if (s != null) st.setLong(1, s.id);
             
-            if (s == null) {
-                // clear all assignments
-                st = STMT_UPDATE_NODES_CLEAR;
-            } else {
-                // clear all assignments of a session
-                st = STMT_UPDATE_NODES_CLEAR_SESSION;
-            }
-            
-            synchronized(st) {
-                // set session id
-                if (s != null) st.setLong(1, s.id);
-                
-                // execute the query
-                st.executeUpdate();
-            }
+            // execute the query
+            st.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
     }
     
     public void resetSessions() {
-        try {
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        try (Statement st = conn.createStatement()) {
             // reset all sessions to 'draft' state
-            synchronized(STMT_UPDATE_SESSIONS_RESET) {
-                // execute the query
-                STMT_UPDATE_SESSIONS_RESET.executeUpdate();
-            }
+            st.executeUpdate(UPDATE_SESSIONS_RESET);
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
     }
     
     public void removeNode(Node n) {
         if (n.id == null) return;
         
-        try {
-            PreparedStatement st = STMT_DELETE_NODE;
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        try (PreparedStatement st = conn.prepareStatement(DELETE_NODE)) {
+            // set the session id
+            st.setLong(1, n.id);
             
-            synchronized(st) {
-                // set the session id
-                st.setLong(1, n.id);
-                
-                // execute insertion
-                st.execute();
-            }
+            // execute insertion
+            st.execute();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
     }
     
     public Node createNode(Long sessionId, Long slaveId) {
         Long nodeId = null;
+        
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return null;
 
         try {
-            PreparedStatement st = STMT_INSERT_NODE;
+            // disable auto-commit
+            conn.setAutoCommit(false);
             
-            synchronized(st) {
+            try (PreparedStatement st = conn.prepareStatement(INSERT_NODE)) {
                 // set the name
                 st.setLong(1, sessionId);
                 
@@ -567,22 +520,15 @@ public class Database {
                 try (ResultSet rs = st.getGeneratedKeys()) {
                     if (rs.next()) {
                         nodeId = rs.getLong(1);
+                    } else {
+                        // something went wrong
+                        return null;
                     }
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        
-        // something went wrong
-        if (nodeId == null)
-            return null;
-        
-        // create initial node name
-        try {
-            PreparedStatement st = STMT_UPDATE_NODE_NAME;
             
-            synchronized(st) {
+            // create initial node name
+            try (PreparedStatement st = conn.prepareStatement(UPDATE_NODE_NAME)) {
                 // set the node name
                 st.setString(1, "n" + nodeId.toString());
                 
@@ -592,8 +538,24 @@ public class Database {
                 // execute insertion
                 st.executeUpdate();
             }
+            
+            // commit changes
+            conn.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                conn.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+            return null;
+        } finally {
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            releaseConnection(conn);
         }
         
         return getNode(nodeId);
@@ -602,23 +564,25 @@ public class Database {
     public ArrayList<Slave> getSlaves() {
         ArrayList<Slave> ret = new ArrayList<Slave>();
         
-        try {
-            PreparedStatement st = STMT_QUERY_SLAVES;
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return ret;
+        
+        try (PreparedStatement st = conn.prepareStatement(QUERY_SLAVES)) {
+            // TODO: set right user id
+            st.setLong(1, 1);
             
-            synchronized(st) {
-                // TODO: set right user id
-                st.setLong(1, 1);
-                
-                try (ResultSet rs = st.executeQuery()) {
-                    while (rs.next()) {
-                        Slave s = new Slave(rs.getLong(1));
-                        transform(rs, s);
-                        ret.add(s);
-                    }
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    Slave s = new Slave(rs.getLong(1));
+                    transform(rs, s);
+                    ret.add(s);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
         
         return ret;
@@ -627,22 +591,24 @@ public class Database {
     public Slave getSlave(Long id) {
         Slave s = null;
         
-        try {
-            PreparedStatement st = STMT_QUERY_SLAVE;
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return s;
+        
+        try (PreparedStatement st = conn.prepareStatement(QUERY_SLAVE)) {
+            st.setLong(1, id);
             
-            synchronized(st) {
-                st.setLong(1, id);
-                
-                try (ResultSet rs = st.executeQuery()) {
-                    if (rs.next()) {
-                        s = new Slave(rs.getLong(1));
-                        transform(rs, s);
-                    }
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    s = new Slave(rs.getLong(1));
+                    transform(rs, s);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
+            s = null;
+        } finally {
+            releaseConnection(conn);
         }
         
         return s;
@@ -651,41 +617,45 @@ public class Database {
     public Slave getSlave(String name, String address) {
         Slave s = null;
         
-        try {
-            PreparedStatement st = STMT_QUERY_SLAVE_NAME_ADDRESS;
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return s;
+        
+        try (PreparedStatement st = conn.prepareStatement(QUERY_SLAVE_NAME_ADDRESS)) {
+            st.setString(1, name);
+            st.setString(2, address);
             
-            synchronized(st) {
-                st.setString(1, name);
-                st.setString(2, address);
-                
-                try (ResultSet rs = st.executeQuery()) {
-                    if (rs.next()) {
-                        s = new Slave(rs.getLong(1));
-                        transform(rs, s);
-                    }
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    s = new Slave(rs.getLong(1));
+                    transform(rs, s);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
+            s = null;
+        } finally {
+            releaseConnection(conn);
         }
         
         return s;
     }
     
     public void updateSlave(Slave s, Slave.State state) {
-        try {
-            PreparedStatement st = STMT_UPDATE_SLAVE_STATE;
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        try (PreparedStatement st = conn.prepareStatement(UPDATE_SLAVE_STATE)) {
+            st.setString(1, state.toString());
+            st.setLong(2, s.id);
             
-            synchronized(st) {
-                st.setString(1, state.toString());
-                st.setLong(2, s.id);
-                
-                // execute the query
-                st.executeUpdate();
-            }
+            // execute the query
+            st.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
         
         // update slave object
@@ -695,72 +665,76 @@ public class Database {
     }
     
     public void updateSlave(Slave s, Long owner, Long capacity) {
-        try {
-            PreparedStatement st = STMT_UPDATE_SLAVE_OWNER_CAPACITY;
-            
-            synchronized(st) {
-                // set the owner
-                if (owner == null) {
-                    st.setNull(1, Types.INTEGER);
-                } else {
-                    st.setLong(1, owner);
-                }
-                
-                // set the capacity
-                if (capacity == null) {
-                    st.setNull(2, Types.INTEGER);
-                } else {
-                    st.setLong(2, capacity);
-                }
-                
-                st.setLong(3, s.id);
-                
-                st.executeUpdate();
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        try (PreparedStatement st = conn.prepareStatement(UPDATE_SLAVE_OWNER_CAPACITY)) {
+            // set the owner
+            if (owner == null) {
+                st.setNull(1, Types.INTEGER);
+            } else {
+                st.setLong(1, owner);
             }
+            
+            // set the capacity
+            if (capacity == null) {
+                st.setNull(2, Types.INTEGER);
+            } else {
+                st.setLong(2, capacity);
+            }
+            
+            st.setLong(3, s.id);
+            
+            st.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
     }
     
     public Slave createSlave(String name, String address, Long owner, Long capacity) {
         Long slaveId = null;
+        
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return null;
 
-        try {
-            PreparedStatement st = STMT_INSERT_SLAVE;
-
-            synchronized(st) {
-                // set the name
-                st.setString(1, name);
-                
-                // set the address
-                st.setString(2, address);
-                
-                // set the owner
-                if (owner == null) {
-                    st.setNull(3, Types.INTEGER);
-                } else {
-                    st.setLong(3, owner);
-                }
-                
-                // set the capacity
-                if (capacity == null) {
-                    st.setNull(4, Types.INTEGER);
-                } else {
-                    st.setLong(4, capacity);
-                }
-                
-                // execute insertion
-                st.execute();
-                
-                // get session id from result-set
-                try (ResultSet rs = st.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        slaveId = rs.getLong(1);
-                    }
+        try (PreparedStatement st = conn.prepareStatement(INSERT_SLAVE)) {
+            // set the name
+            st.setString(1, name);
+            
+            // set the address
+            st.setString(2, address);
+            
+            // set the owner
+            if (owner == null) {
+                st.setNull(3, Types.INTEGER);
+            } else {
+                st.setLong(3, owner);
+            }
+            
+            // set the capacity
+            if (capacity == null) {
+                st.setNull(4, Types.INTEGER);
+            } else {
+                st.setLong(4, capacity);
+            }
+            
+            // execute insertion
+            st.execute();
+            
+            // get session id from result-set
+            try (ResultSet rs = st.getGeneratedKeys()) {
+                if (rs.next()) {
+                    slaveId = rs.getLong(1);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
         
         // something went wrong
@@ -771,33 +745,39 @@ public class Database {
     }
     
     public void resetSlaves() {
-        try {
-            synchronized(STMT_UPDATE_SLAVES_RESET) {
-                // execute the query
-                STMT_UPDATE_SLAVES_RESET.executeUpdate();
-            }
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        try (Statement st = conn.createStatement()) {
+            // execute the query
+            st.executeUpdate(UPDATE_SLAVES_RESET);
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
     }
     
     public ArrayList<Session> getSessions() {
         ArrayList<Session> ret = new ArrayList<Session>();
         
-        try {
-            PreparedStatement st = STMT_QUERY_SESSIONS;
-            
-            synchronized(st) {
-                try (ResultSet rs = st.executeQuery()) {
-                    while (rs.next()) {
-                        Session s = new Session(rs.getLong(1));
-                        transform(rs, s);
-                        ret.add(s);
-                    }
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return ret;
+        
+        try (PreparedStatement st = conn.prepareStatement(QUERY_SESSIONS)) {
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    Session s = new Session(rs.getLong(1));
+                    transform(rs, s);
+                    ret.add(s);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
         
         return ret;
@@ -806,20 +786,22 @@ public class Database {
     public Session getSession(Long id) {
         Session s = null;
         
-        try {
-            PreparedStatement st = STMT_QUERY_SESSION;
-            
-            synchronized(st) {
-                st.setLong(1, id);
-                try (ResultSet rs = st.executeQuery()) {
-                    if (rs.next()) {
-                        s = new Session(rs.getLong(1));
-                        transform(rs, s);
-                    }
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return s;
+        
+        try (PreparedStatement st = conn.prepareStatement(QUERY_SESSION)) {
+            st.setLong(1, id);
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    s = new Session(rs.getLong(1));
+                    transform(rs, s);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
         
         return s;
@@ -827,26 +809,28 @@ public class Database {
     
     public Session createSession() {
         Long sessionId = null;
+        
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return null;
 
-        try {
-            PreparedStatement st = STMT_INSERT_SESSION;
+        try (PreparedStatement st = conn.prepareStatement(INSERT_SESSION)) {
+            // TODO: set right user id
+            st.setLong(1, 1);
             
-            synchronized(st) {
-                // TODO: set right user id
-                st.setLong(1, 1);
-                
-                // execute insertion
-                st.execute();
-                
-                // get session id from result-set
-                try (ResultSet rs = st.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        sessionId = rs.getLong(1);
-                    }
+            // execute insertion
+            st.execute();
+            
+            // get session id from result-set
+            try (ResultSet rs = st.getGeneratedKeys()) {
+                if (rs.next()) {
+                    sessionId = rs.getLong(1);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
         
         // something went wrong
@@ -862,32 +846,34 @@ public class Database {
     }
     
     public void removeSession(final Session s) {
-        // remove all nodes of this session
-        try {
-            PreparedStatement st = STMT_DELETE_SESSION_NODES;
-            
-            synchronized(st) {
-                // set the session id
-                st.setLong(1, s.id);
-                
-                // execute insertion
-                st.execute();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
         
-        // remove the session
         try {
-            PreparedStatement st = STMT_DELETE_SESSION;
+            // disable auto-commit
+            conn.setAutoCommit(false);
             
-            synchronized(st) {
+            // remove all nodes of this session
+            try (PreparedStatement st = conn.prepareStatement(DELETE_SESSION_NODES)) {
                 // set the session id
                 st.setLong(1, s.id);
                 
                 // execute insertion
                 st.execute();
             }
+        
+            // remove the session
+            try (PreparedStatement st = conn.prepareStatement(DELETE_SESSION)) {
+                // set the session id
+                st.setLong(1, s.id);
+                
+                // execute insertion
+                st.execute();
+            }
+            
+            // commit changes
+            conn.commit();
             
             // enqueue directory removal
             MasterServer.invoke(new Task() {
@@ -912,6 +898,13 @@ public class Database {
             MasterServer.fireSessionRemoved(s);
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                conn.setAutoCommit(false);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            releaseConnection(conn);
         }
     }
     
@@ -919,39 +912,43 @@ public class Database {
         // do not update session if name is not set
         if (s.name == null) return;
         
-        try {
-            PreparedStatement st = STMT_UPDATE_SESSION_NAME;
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        try (PreparedStatement st = conn.prepareStatement(UPDATE_SESSION_NAME)) {
+            st.setString(1, s.name);
+            st.setLong(2, s.id);
             
-            synchronized(st) {
-                st.setString(1, s.name);
-                st.setLong(2, s.id);
-                
-                // execute the query
-                st.executeUpdate();
-            }
+            // execute the query
+            st.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
     }
     
     public User getUser(Long userid) {
         User ret = null;
         
-        try {
-            PreparedStatement st = STMT_QUERY_USER;
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return ret;
+        
+        try (PreparedStatement st = conn.prepareStatement(QUERY_USER)) {
+            st.setLong(1, userid);
             
-            synchronized(st) {
-                st.setLong(1, userid);
-                
-                try (ResultSet rs = st.executeQuery()) {
-                    if (rs.next()) {
-                        ret = new User(rs.getLong(1));
-                        ret.name = rs.getString(2);
-                    }
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    ret = new User(rs.getLong(1));
+                    ret.name = rs.getString(2);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
         
         return ret;
@@ -960,75 +957,83 @@ public class Database {
     public User getUser(String username) {
         User ret = null;
         
-        try {
-            PreparedStatement st = STMT_QUERY_USER_BY_NAME;
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return ret;
+        
+        try (PreparedStatement st = conn.prepareStatement(QUERY_USER_BY_NAME)) {
+            st.setString(1, username);
             
-            synchronized(st) {
-                st.setString(1, username);
-                
-                try (ResultSet rs = st.executeQuery()) {
-                    if (rs.next()) {
-                        ret = new User(rs.getLong(1));
-                        ret.name = rs.getString(2);
-                    }
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) {
+                    ret = new User(rs.getLong(1));
+                    ret.name = rs.getString(2);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
         
         return ret;
     }
     
     public void setState(Session s, Session.State state) {
-        try {
-            PreparedStatement st = null;
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        String query = null;
+        
+        if (Session.State.ABORTED.equals(state)) {
+            query = UPDATE_SESSION_STATE_ABORTED;
+        }
+        else if (Session.State.RUNNING.equals(state)) {
+            query = UPDATE_SESSION_STATE_RUNNING;
+        }
+        else if (Session.State.FINISHED.equals(state)) {
+            query = UPDATE_SESSION_STATE_FINISHED;
+        }
+        else if (Session.State.DRAFT.equals(state)) {
+            query = UPDATE_SESSION_STATE_DRAFT;
+        }
+        else {
+            query = UPDATE_SESSION_STATE;
+        }
+        
+        try (PreparedStatement st = conn.prepareStatement(query)) {
+            st.setString(1, state.toString());
+            st.setLong(2, s.id);
             
-            if (Session.State.ABORTED.equals(state)) {
-                st = STMT_UPDATE_SESSION_STATE_ABORTED;
-            }
-            else if (Session.State.RUNNING.equals(state)) {
-                st = STMT_UPDATE_SESSION_STATE_RUNNING;
-            }
-            else if (Session.State.FINISHED.equals(state)) {
-                st = STMT_UPDATE_SESSION_STATE_FINISHED;
-            }
-            else if (Session.State.DRAFT.equals(state)) {
-                st = STMT_UPDATE_SESSION_STATE_DRAFT;
-            }
-            else {
-                st = STMT_UPDATE_SESSION_STATE;
-            }
-            
-            synchronized(st) {
-                st.setString(1, state.toString());
-                st.setLong(2, s.id);
-                
-                // execute the query
-                st.executeUpdate();
-            }
+            // execute the query
+            st.executeUpdate();
 
             // broadcast session change
             s.state = state;
             MasterServer.fireSessionStateChanged(s);
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
     }
     
     public Set<String> getAddressAllocation() {
         Set<String> ret = new HashSet<String>();
         
-        PreparedStatement st = STMT_QUERY_ADDRESS_ALLOCS;
-        
-        synchronized(st) {
-            try (ResultSet rs = st.executeQuery()) {
-                while (rs.next()) {
-                    ret.add(rs.getString(1));
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return ret;
+
+        try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(QUERY_ADDRESS_ALLOCS)) {
+            while (rs.next()) {
+                ret.add(rs.getString(1));
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
         
         return ret;
@@ -1039,32 +1044,32 @@ public class Database {
         
         List<SlaveAllocation> ret = new LinkedList<SlaveAllocation>();
         
-        try {
-            PreparedStatement st = STMT_QUERY_SLAVE_ALLOCS;
-            
-            synchronized(st) {
-                try (ResultSet rs = st.executeQuery()) {
-                    while (rs.next()) {
-                        SlaveAllocation sa = new SlaveAllocation(rs.getLong(1));
-                        
-                        sa.capacity = rs.getLong(2);
-                        
-                        // check if nodes.assigned_slave is null
-                        rs.getLong(4);
-                        if (rs.wasNull()) {
-                            // if it is null, then no node is allocated to this slave
-                            sa.allocation = 0L;
-                        } else {
-                            // if it is not null, then the value (3) is the number of allocations
-                            sa.allocation = rs.getLong(3);
-                        }
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return ret;
         
-                        ret.add(sa);
-                    }
+        try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(QUERY_SLAVE_ALLOCS)) {
+            while (rs.next()) {
+                SlaveAllocation sa = new SlaveAllocation(rs.getLong(1));
+                
+                sa.capacity = rs.getLong(2);
+                
+                // check if nodes.assigned_slave is null
+                rs.getLong(4);
+                if (rs.wasNull()) {
+                    // if it is null, then no node is allocated to this slave
+                    sa.allocation = 0L;
+                } else {
+                    // if it is not null, then the value (3) is the number of allocations
+                    sa.allocation = rs.getLong(3);
                 }
+
+                ret.add(sa);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
         
         return ret;
@@ -1079,24 +1084,26 @@ public class Database {
         // do not store 'null' data
         if (data == null) return;
         
-        try {
-            PreparedStatement st = STMT_INSERT_STATS_DATA;
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        try (PreparedStatement st = conn.prepareStatement(INSERT_STATS_DATA)) {
+            // set session id
+            st.setLong(1, n.sessionId);
             
-            synchronized(st) {
-                // set session id
-                st.setLong(1, n.sessionId);
-                
-                // set node id
-                st.setLong(2, n.id);
-                
-                // set data
-                st.setString(3, data);
-                
-                // execute insertion
-                st.execute();
-            }
+            // set node id
+            st.setLong(2, n.id);
+            
+            // set data
+            st.setString(3, data);
+            
+            // execute insertion
+            st.execute();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -1109,50 +1116,69 @@ public class Database {
         // do not store 'null' data
         if (data == null) return;
         
-        try {
-            // split json data into one data-set per node
-            HashMap<Long, String> data_map = JsonStats.splitAll(data);
+        // split json data into one data-set per node
+        HashMap<Long, String> data_map = JsonStats.splitAll(data);
+        
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        try (PreparedStatement st = conn.prepareStatement(INSERT_STATS_DATA)) {
+            // disable auto-commit
+            conn.setAutoCommit(false);
             
-            PreparedStatement st = STMT_INSERT_STATS_DATA;
-            
-            synchronized(st) {
-                for (Entry<Long, String> e : data_map.entrySet()) {
-                    // set session id
-                    st.setLong(1, s.id);
-                    
-                    // set node id
-                    st.setLong(2, e.getKey());
-                    
-                    // set data
-                    st.setString(3, e.getValue());
-                    
-                    // execute insertion
-                    st.execute();
-                }
+            for (Entry<Long, String> e : data_map.entrySet()) {
+                // set session id
+                st.setLong(1, s.id);
+                
+                // set node id
+                st.setLong(2, e.getKey());
+                
+                // set data
+                st.setString(3, e.getValue());
+                
+                // execute insertion
+                st.execute();
             }
+            
+            conn.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                conn.rollback();
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+        } finally {
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            releaseConnection(conn);
         }
     }
     
     public void dumpStats(Session session, OutputStream out) throws IOException {
-        try {
-            PreparedStatement st = STMT_QUERY_STATS;
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        try (PreparedStatement st = conn.prepareStatement(QUERY_STATS)) {
+            // set session id
+            st.setLong(1, session.id);
             
-            synchronized(st) {
-                // set session id
-                st.setLong(1, session.id);
-                
-                // execute query
-                try (ResultSet rs = st.executeQuery()) {
-                    while (rs.next()) {
-                        String line = rs.getTimestamp(1).getTime() + " " + rs.getString(2) + "\n";
-                        out.write(line.getBytes());
-                    }
+            // execute query
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    String line = rs.getTimestamp(1).getTime() + " " + rs.getString(2) + "\n";
+                    out.write(line.getBytes());
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -1178,37 +1204,39 @@ public class Database {
         
         ArrayList<DataPoint> ret = new ArrayList<DataPoint>();
         
-        try {
-            PreparedStatement st = STMT_QUERY_STATS_BY_NODE;
-            
-            synchronized(st) {
-                // set session id
-                st.setLong(1, s.id);
-                
-                // set node id
-                st.setLong(2, n.id);
-                
-                if (begin != null) {
-                    st.setTimestamp(3, new Timestamp(begin.getTime()));
-                } else {
-                    st.setInt(3, 0);
-                }
-                
-                if (end == null) end = new Date();
-                st.setTimestamp(4, new Timestamp(end.getTime()));
-                
-                // execute query
-                try (ResultSet rs = st.executeQuery()) {
-                    while (rs.next()) {
-                        DataPoint data = JsonStats.decode(rs.getTimestamp(1), rs.getString(2));
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return ret;
         
-                        // put data into the data-set
-                        ret.add(data);
-                    }
+        try (PreparedStatement st = conn.prepareStatement(QUERY_STATS_BY_NODE)) {
+            // set session id
+            st.setLong(1, s.id);
+            
+            // set node id
+            st.setLong(2, n.id);
+            
+            if (begin != null) {
+                st.setTimestamp(3, new Timestamp(begin.getTime()));
+            } else {
+                st.setInt(3, 0);
+            }
+            
+            if (end == null) end = new Date();
+            st.setTimestamp(4, new Timestamp(end.getTime()));
+            
+            // execute query
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    DataPoint data = JsonStats.decode(rs.getTimestamp(1), rs.getString(2));
+    
+                    // put data into the data-set
+                    ret.add(data);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
         
         // reverse ordering of data
@@ -1228,36 +1256,38 @@ public class Database {
         // return an empty hash-map if session is not set
         if (s == null) return ret;
         
-        try {
-            PreparedStatement st = STMT_QUERY_STATS_LATEST;
-            
-            synchronized(st) {
-                // set session id
-                st.setLong(1, s.id);
-                st.setLong(2, s.id);
-                
-                // execute query
-                try (ResultSet rs = st.executeQuery()) {
-                    while (rs.next()) {
-                        DataPoint data = null;
-                        
-                        Long nodeId = rs.getLong(1);
-                        Timestamp ts = rs.getTimestamp(2);
-                        String json = rs.getString(3);
-                        
-                        if (rs.wasNull()) {
-                            data = new DataPoint();
-                        } else {
-                            data = JsonStats.decode(ts, json);
-                        }
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return ret;
         
-                        // put data into the data-set
-                        ret.put(nodeId, data);
+        try (PreparedStatement st = conn.prepareStatement(QUERY_STATS_LATEST)) {
+            // set session id
+            st.setLong(1, s.id);
+            st.setLong(2, s.id);
+            
+            // execute query
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    DataPoint data = null;
+                    
+                    Long nodeId = rs.getLong(1);
+                    Timestamp ts = rs.getTimestamp(2);
+                    String json = rs.getString(3);
+                    
+                    if (rs.wasNull()) {
+                        data = new DataPoint();
+                    } else {
+                        data = JsonStats.decode(ts, json);
                     }
+    
+                    // put data into the data-set
+                    ret.put(nodeId, data);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
         
         return ret;
