@@ -523,7 +523,7 @@ public class SessionController {
             
             // schedule stats collection
             if (mSession.stats_interval != null) {
-                scheduledStatsCollector = mExecutor.scheduleAtFixedRate(new Runnable() {
+                scheduledStatsCollector = mExecutor.scheduleWithFixedDelay(new Runnable() {
                     @Override
                     public void run() {
                         // get all nodes of this session
