@@ -208,17 +208,17 @@ public class SessionContainer {
                         section = "randomwalk";
                         break;
                     case STATIC:
-                        section = "staticconnections";
+                        section = "static";
                         
-                        // read connections from file
-                        if (sessionConf.hasOption(section, "connections")) {
-                            File f = new File(mPath, sessionConf.get(section, "connections"));
+                        // read positions from file
+                        if (sessionConf.hasOption(section, "positions")) {
+                            File f = new File(mPath, sessionConf.get(section, "positions"));
                             String data = SessionContainer.loadFile(f);
                             
                             if (data != null) {
-                                m.parameters.put("connections", data);
+                                m.parameters.put("positions", data);
                             } else {
-                                m.parameters.put("connections", "");
+                                m.parameters.put("positions", "");
                             }
                         }
                         
@@ -424,13 +424,7 @@ public class SessionContainer {
                         section = "randomwalk";
                         break;
                     case STATIC:
-                        section = "staticconnections";
-    
-                        // store connections to file
-                        if (s.mobility.parameters.containsKey("connections")) {
-                            File f = new File(mPath, sessionConf.get(section, "connections"));
-                            SessionContainer.storeFile(f, s.mobility.parameters.get("connections"));
-                        }
+                        section = "static";
                         break;
                     case THE_ONE:
                         section = "onetrace";
@@ -443,8 +437,8 @@ public class SessionContainer {
                     if (!sessionConf.hasSection(section)) sessionConf.addSection(section);
                     
                     for (Entry<String, String> e : s.mobility.parameters.entrySet()) {
-                        // exclude 'connections'
-                        if ("connections".equals(e.getKey()))
+                        // exclude 'positions'
+                        if ("positions".equals(e.getKey()))
                             continue;
                         
                         if ((e.getValue() == null) || (e.getValue().length() == 0)) {
@@ -454,6 +448,15 @@ public class SessionContainer {
                             // set parameter
                             sessionConf.set(section, e.getKey(), e.getValue());
                         }
+                    }
+                    
+                    // replace positions data with positions file path
+                    if (s.mobility.parameters.containsKey("positions")) {
+                        if (!sessionConf.hasOption(section, "positions")) {
+                            sessionConf.set(section, "positions", "static-positions.txt");
+                        }
+                        File f = new File(mPath, sessionConf.get(section, "positions"));
+                        SessionContainer.storeFile(f, s.mobility.parameters.get("positions"));
                     }
                 }
             }

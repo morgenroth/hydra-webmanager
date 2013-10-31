@@ -96,7 +96,7 @@ public class SessionEditView extends View {
     @UiField Button buttonMovementOneTrace;
     
     // STATIC
-    @UiField TextArea textMovementStaticConnections;
+    @UiField TextArea textMovementStaticPositions;
     @UiField TextBox textMovementStaticDuration;
     
     @UiField SessionNodesEditor nodesEditor;
@@ -579,10 +579,10 @@ public class SessionEditView extends View {
                 }
                 break;
             case STATIC:
-                if (mSession.mobility.parameters.containsKey("connections")) {
-                    textMovementStaticConnections.setText(mSession.mobility.parameters.get("connections"));
+                if (mSession.mobility.parameters.containsKey("positions")) {
+                    textMovementStaticPositions.setText(mSession.mobility.parameters.get("positions"));
                 } else {
-                    textMovementStaticConnections.setText(null);
+                    textMovementStaticPositions.setText(null);
                 }
                 if (mSession.mobility.parameters.containsKey("duration")) {
                     textMovementStaticDuration.setText(mSession.mobility.parameters.get("duration"));
@@ -716,10 +716,10 @@ public class SessionEditView extends View {
     }
     
     // STATIC
-    @UiHandler("textMovementStaticConnections")
-    void onMovementStaticConnectionsChanged(ChangeEvent evt) {
+    @UiHandler("textMovementStaticPositions")
+    void onMovementStaticPositionsChanged(ChangeEvent evt) {
         if (mChangedSession.mobility == null) return;
-        mChangedSession.mobility.parameters.put("connections", textMovementStaticConnections.getText());
+        mChangedSession.mobility.parameters.put("positions", textMovementStaticPositions.getText());
     }
     
     @UiHandler("textMovementStaticDuration")

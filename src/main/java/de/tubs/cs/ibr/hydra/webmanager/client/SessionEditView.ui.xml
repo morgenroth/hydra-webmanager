@@ -250,7 +250,7 @@
 										<b:item value="none">None</b:item>
 										<b:item value="randomwalk">Random Walk</b:item>
 										<b:item value="theone">The ONE Trace Player</b:item>
-										<b:item value="static">Static Connections</b:item>
+										<b:item value="static">Static Positions</b:item>
 									</b:ListBox>
 									<b:HelpBlock>The movement will be calculated using the selected
 										algorithm.</b:HelpBlock>
@@ -352,17 +352,15 @@
 											</b:HelpBlock>
 										</b:Controls>
 									</b:ControlGroup>
-									<!-- Static connections -->
+									<!-- Static positions -->
 									<b:ControlGroup>
-										<b:ControlLabel for="textStaticConnections">Static Connections</b:ControlLabel>
+										<b:ControlLabel for="textStaticPositions">Static Positions</b:ControlLabel>
 										<b:Controls>
-											<b:TextArea alternateSize="XLARGE" b:id="textStaticConnections"
-												ui:field="textMovementStaticConnections"></b:TextArea>
-											<b:HelpBlock>Static connections are defined by each
-												connection in one line.
-												Each line defines an unidirectional link. For bidirectional
-												links, both connections
-												must be defined separately.</b:HelpBlock>
+											<b:TextArea alternateSize="XLARGE" b:id="textStaticPositions"
+												ui:field="textMovementStaticPositions"></b:TextArea>
+											<b:HelpBlock>Each line defines an position of one node on the map.
+											    One line consists of 'x', 'y' and 'z' position. Use '0.0' for empty values.
+												If not positions are defined all nodes are arranged in a straight line.</b:HelpBlock>
 										</b:Controls>
 									</b:ControlGroup>
 								</g:FlowPanel>
