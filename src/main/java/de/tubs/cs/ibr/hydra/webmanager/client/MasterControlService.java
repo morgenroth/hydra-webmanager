@@ -12,7 +12,7 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.MapDataSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
-import de.tubs.cs.ibr.hydra.webmanager.shared.TraceFile;
+import de.tubs.cs.ibr.hydra.webmanager.shared.DataFile;
 
 @RemoteServiceRelativePath("master")
 public interface MasterControlService extends RemoteService {
@@ -114,5 +114,13 @@ public interface MasterControlService extends RemoteService {
      * @param s The session of the files to list
      * @return A list of trace files
      */
-    public ArrayList<TraceFile> getTraceFiles(Session s);
+    public ArrayList<DataFile> getSessionFiles(Session s, String tag);
+    
+    /**
+     * Remove a session file
+     * @param s
+     * @param tag
+     * @param filename
+     */
+    public void removeSessionFile(Session s, String tag, String filename);
 }

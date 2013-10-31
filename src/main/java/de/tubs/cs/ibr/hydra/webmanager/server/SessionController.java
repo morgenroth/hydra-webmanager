@@ -498,7 +498,7 @@ public class SessionController {
             
             // create trace recorders
             if (mSession.stats_record_contact) {
-                File f = mContainer.createTraceFile("contact", ".trace.gz");
+                File f = mContainer.createDataFile("traces", "contact", ".trace.gz");
                 try {
                     mRecorderContact = new TraceRecorder(f);
                 } catch (IOException e) {
@@ -507,7 +507,7 @@ public class SessionController {
             }
             
             if (mSession.stats_record_movement) {
-                File f = mContainer.createTraceFile("movement", ".trace.gz");
+                File f = mContainer.createDataFile("traces", "movement", ".trace.gz");
                 try {
                     mRecorderMovement = new TraceRecorder(f);
                 } catch (IOException e) {

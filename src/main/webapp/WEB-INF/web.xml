@@ -30,8 +30,14 @@
 	
 	<servlet>
 		<servlet-name>HttpDownloadServlet</servlet-name>
-		<description>Access to the master controls</description>
+		<description>Provide downloads of session data</description>
 		<servlet-class>de.tubs.cs.ibr.hydra.webmanager.server.HttpDownloadServlet</servlet-class>
+	</servlet>
+	
+	<servlet>
+		<servlet-name>HttpUploadServlet</servlet-name>
+		<description>Allow upload of session data</description>
+		<servlet-class>de.tubs.cs.ibr.hydra.webmanager.server.HttpUploadServlet</servlet-class>
 	</servlet>
 	
 	<servlet-mapping>
@@ -47,6 +53,11 @@
 	<servlet-mapping>
 		<servlet-name>HttpDownloadServlet</servlet-name>
 		<url-pattern>/WebManager/download</url-pattern>
+	</servlet-mapping>
+	
+	<servlet-mapping>
+		<servlet-name>HttpUploadServlet</servlet-name>
+		<url-pattern>/WebManager/upload</url-pattern>
 	</servlet-mapping>
 	
 	<!-- Default page to serve -->

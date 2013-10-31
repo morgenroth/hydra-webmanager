@@ -92,7 +92,7 @@ public class HttpDownloadServlet extends HttpServlet {
                 sc.initialize(null);
                 
                 // create file object of the trace file
-                File trace = new File(sc.getTracePath(), filename);
+                File trace = new File(sc.getDataPath("traces"), filename);
                 
                 if (!trace.exists()) {
                     resp.sendError(HttpServletResponse.SC_NOT_FOUND);

@@ -1,5 +1,6 @@
 package de.tubs.cs.ibr.hydra.webmanager.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -18,7 +19,7 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session.Action;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
-import de.tubs.cs.ibr.hydra.webmanager.shared.TraceFile;
+import de.tubs.cs.ibr.hydra.webmanager.shared.DataFile;
 
 public class MasterControlServiceImpl extends RemoteServiceServlet implements MasterControlService {
 
@@ -246,8 +247,8 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     }
 
     @Override
-    public ArrayList<TraceFile> getTraceFiles(Session s) {
-        ArrayList<TraceFile> ret = null;
+    public ArrayList<DataFile> getSessionFiles(Session s, String tag) {
+        ArrayList<DataFile> ret = null;
         SessionContainer sc = SessionContainer.getContainer(s);
         
         try {
@@ -255,12 +256,28 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
             sc.initialize(null);
             
             // get all trace files
-            ret = sc.getTraceFiles();
+            ret = sc.getDataFiles(tag);
         } catch (IOException e) {
             // could not initialize session container
-            ret = new ArrayList<TraceFile>();
+            ret = new ArrayList<DataFile>();
         }
         
         return ret;
+    }
+
+    @Override
+    public void removeSessionFile(Session s, String tag, String filename) {
+        SessionContainer sc = SessionContainer.getContainer(s);
+        
+        try {
+            // initialize the container
+            sc.initialize(null);
+            
+            // trace files
+            File f = new File(sc.getDataPath(tag), filename);
+            f.delete();
+        } catch (IOException e) {
+            // could not initialize session container
+        }
     }
 }

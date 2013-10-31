@@ -28,7 +28,7 @@ import com.nikhaldimann.inieditor.IniEditor;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet.MobilityModel;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
-import de.tubs.cs.ibr.hydra.webmanager.shared.TraceFile;
+import de.tubs.cs.ibr.hydra.webmanager.shared.DataFile;
 
 public class SessionContainer {
     private Long mSessionId = null;
@@ -509,16 +509,16 @@ public class SessionContainer {
         }
     }
     
-    public File createTraceFile(String tag, String suffix) {
+    public File createDataFile(String tag, String prefix, String suffix) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
-        return new File(getTracePath(), sdf.format(new Date()) + "_" + tag + suffix);
+        return new File(getDataPath(tag), sdf.format(prefix + "_" + new Date()) + "_" + suffix);
     }
     
-    public ArrayList<TraceFile> getTraceFiles() {
-        ArrayList<TraceFile> ret = new ArrayList<TraceFile>();
+    public ArrayList<DataFile> getDataFiles(String tag) {
+        ArrayList<DataFile> ret = new ArrayList<DataFile>();
         
-        for (File f : getTracePath().listFiles()) {
-            TraceFile tf = new TraceFile(mSessionId);
+        for (File f : getDataPath(tag).listFiles()) {
+            DataFile tf = new DataFile(mSessionId);
             tf.filename = f.getName();
             tf.modified = f.lastModified();
             tf.size = f.length();
@@ -529,14 +529,14 @@ public class SessionContainer {
         return ret;
     }
     
-    public File getTracePath() {
-        File traces_path = new File(mPath, "traces");
+    public File getDataPath(String tag) {
+        File path = new File(mPath, tag);
         
-        if (!traces_path.exists()) {
-            traces_path.mkdirs();
+        if (!path.exists()) {
+            path.mkdirs();
         }
         
-        return traces_path;
+        return path;
     }
     
     private static void copy(SessionContainer source, File targetPath) throws IOException {

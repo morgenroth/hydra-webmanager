@@ -25,8 +25,10 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DeckPanel;
+import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.Widget;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.DataFile;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet;
@@ -88,7 +90,10 @@ public class SessionEditView extends View {
     @UiField TextBox textMovementRwpVmax;
     
     // ONE
-    @UiField FileUpload textMovementOneUpload;
+    @UiField FormPanel formMovementOneTrace;
+    @UiField FileUpload uploadMovementOneTrace;
+    @UiField ListBox listMovementOneTrace;
+    @UiField Button buttonMovementOneTrace;
     
     // STATIC
     @UiField TextArea textMovementStaticConnections;
@@ -127,8 +132,64 @@ public class SessionEditView extends View {
         // load session properties
         refreshSessionProperties(s);
         
+        // load data files
+        refreshDataFiles(s);
+        
         // load nodes
         nodesEditor.refresh(s);
+    }
+    
+    private void refreshDataFiles(Session session) {
+        // check for null session objects
+        if (session == null) return;
+        
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.getSessionFiles(session, "data", new AsyncCallback<ArrayList<DataFile>>() {
+            
+            @Override
+            public void onSuccess(ArrayList<DataFile> result) {
+                listMovementOneTrace.clear();
+                listMovementOneTrace.addItem("- no file selected -", "");
+                listMovementOneTrace.setSelectedIndex(0);
+                
+                for (DataFile f : result) {
+                    listMovementOneTrace.addItem(f.filename);
+                }
+                
+                if (result.size() > 0) {
+                    listMovementOneTrace.setEnabled(true);
+                    
+                    String selectedTraceFile = null;
+                    
+                    if ((mChangedSession != null) && (mChangedSession.mobility != null) && (mChangedSession.mobility.parameters != null))
+                    {
+                        if (mChangedSession.mobility.parameters.containsKey("tracefile")) {
+                            selectedTraceFile = mChangedSession.mobility.parameters.get("tracefile");
+                        }
+                    }
+                    
+                    if ((selectedTraceFile == null) && (mChangedSession != null) && (mSession.mobility != null) && (mSession.mobility.parameters != null))
+                    {
+                        if (mSession.mobility.parameters.containsKey("tracefile")) {
+                            selectedTraceFile = mSession.mobility.parameters.get("tracefile");
+                        }
+                    }
+                    
+                    if (selectedTraceFile != null) {
+                        listMovementOneTrace.setSelectedValue(selectedTraceFile);
+                        buttonMovementOneTrace.setEnabled(!listMovementOneTrace.getValue().isEmpty());
+                    }
+                } else {
+                    buttonMovementOneTrace.setEnabled(false);
+                    listMovementOneTrace.setEnabled(false);
+                }
+            }
+            
+            @Override
+            public void onFailure(Throwable caught) {
+                // error
+            }
+        });
     }
     
     private void refreshSessionProperties(Session session) {
@@ -530,10 +591,12 @@ public class SessionEditView extends View {
                 }
                 break;
             case THE_ONE:
-                if (mSession.mobility.parameters.containsKey("file")) {
-                    textMovementOneUpload.setText(mSession.mobility.parameters.get("file"));
+                if (mSession.mobility.parameters.containsKey("tracefile")) {
+                    listMovementOneTrace.setSelectedValue(mSession.mobility.parameters.get("tracefile"));
+                    buttonMovementOneTrace.setEnabled(true);
                 } else {
-                    textMovementOneUpload.setText(null);
+                    listMovementOneTrace.setSelectedIndex(0);
+                    buttonMovementOneTrace.setEnabled(false);
                 }
                 break;
             default:
@@ -597,10 +660,59 @@ public class SessionEditView extends View {
     }
     
     // ONE
-    @UiHandler("textMovementOneUpload")
-    void onMovementOneUploadChanged(ChangeEvent evt) {
+    @UiHandler("buttonMovementOneTrace")
+    void onMovementOneButtonClicked(ClickEvent e) {
         if (mChangedSession.mobility == null) return;
-        mChangedSession.mobility.parameters.put("file", textMovementOneUpload.getText());
+        mChangedSession.mobility.parameters.put("tracefile", "");
+        
+        buttonMovementOneTrace.setEnabled(false);
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.removeSessionFile(mSession, "data", listMovementOneTrace.getValue(), new AsyncCallback<Void>() {
+            
+            @Override
+            public void onSuccess(Void result) {
+                refreshDataFiles(mSession);
+            }
+            
+            @Override
+            public void onFailure(Throwable caught) {
+            }
+        });
+    }
+    
+    @UiHandler("formMovementOneTrace")
+    void onMovementOneTraceSubmit(FormPanel.SubmitEvent event) {
+        // TODO: show progress
+        formMovementOneTrace.setVisible(false);
+    }
+    
+    @UiHandler("formMovementOneTrace")
+    void onMovementOneTraceUploadCompleted(FormPanel.SubmitCompleteEvent event) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("tracefile", uploadMovementOneTrace.getText());
+        
+        uploadMovementOneTrace.setText(null);
+        formMovementOneTrace.setVisible(true);
+        
+        // refresh file listing
+        refreshDataFiles(mSession);
+    }
+    
+    @UiHandler("uploadMovementOneTrace")
+    void onMovementOneTraceChanged(ChangeEvent evt) {
+        formMovementOneTrace.setEncoding(FormPanel.ENCODING_MULTIPART);
+        formMovementOneTrace.setMethod(FormPanel.METHOD_POST);
+        formMovementOneTrace.setAction(GWT.getModuleBaseURL() + "upload?sid=" + mSession.id);
+        uploadMovementOneTrace.setName("tracedata");
+        formMovementOneTrace.submit();
+    }
+    
+    @UiHandler("listMovementOneTrace")
+    void onMovementOneTraceFileChanged(ChangeEvent evt) {
+        buttonMovementOneTrace.setEnabled(!listMovementOneTrace.getValue().isEmpty());
+        
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("tracefile", listMovementOneTrace.getValue());
     }
     
     // STATIC

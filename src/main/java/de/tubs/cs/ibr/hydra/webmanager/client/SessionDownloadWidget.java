@@ -30,7 +30,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
-import de.tubs.cs.ibr.hydra.webmanager.shared.TraceFile;
+import de.tubs.cs.ibr.hydra.webmanager.shared.DataFile;
 
 public class SessionDownloadWidget extends Composite {
 
@@ -47,12 +47,12 @@ public class SessionDownloadWidget extends Composite {
     
     static final SimpleCellTemplates cell = GWT.create(SimpleCellTemplates.class);
     
-    @UiField CellTable<TraceFile> traceTable;
+    @UiField CellTable<DataFile> traceTable;
     @UiField NavLink linkStatsDownload;
     
     private Session mSession = null;
     
-    private ListDataProvider<TraceFile> mDataProvider = new ListDataProvider<TraceFile>();
+    private ListDataProvider<DataFile> mDataProvider = new ListDataProvider<DataFile>();
 
     public SessionDownloadWidget() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -80,7 +80,7 @@ public class SessionDownloadWidget extends Composite {
     }
     
     private void createTraceTable() {
-        mDataProvider = new ListDataProvider<TraceFile>();
+        mDataProvider = new ListDataProvider<DataFile>();
         mDataProvider.addDataDisplay(traceTable);
         
         // set table name
@@ -89,9 +89,9 @@ public class SessionDownloadWidget extends Composite {
         /**
          * name column
          */
-        Column<TraceFile, SafeHtml> nameColumn = new Column<TraceFile, SafeHtml>(new SafeHtmlCell()) {
+        Column<DataFile, SafeHtml> nameColumn = new Column<DataFile, SafeHtml>(new SafeHtmlCell()) {
             @Override
-            public SafeHtml getValue(TraceFile obj)
+            public SafeHtml getValue(DataFile obj)
             {
                 String parameters = "?type=trace&session=" + mSession.id + "&filename=" + obj.filename;
                 SafeUri href = UriUtils.fromString(GWT.getModuleBaseURL() + "download" + parameters);
@@ -104,9 +104,9 @@ public class SessionDownloadWidget extends Composite {
         /**
          * modified column
          */
-        TextColumn<TraceFile> modifiedColumn = new TextColumn<TraceFile>() {
+        TextColumn<DataFile> modifiedColumn = new TextColumn<DataFile>() {
             @Override
-            public String getValue(TraceFile f) {
+            public String getValue(DataFile f) {
                 return formatDatetime(f.modified);
             }
         };
@@ -117,9 +117,9 @@ public class SessionDownloadWidget extends Composite {
         /**
          * size column
          */
-        TextColumn<TraceFile> sizeColumn = new TextColumn<TraceFile>() {
+        TextColumn<DataFile> sizeColumn = new TextColumn<DataFile>() {
             @Override
-            public String getValue(TraceFile f) {
+            public String getValue(DataFile f) {
                 return humanReadableByteCount(f.size, true);
             }
         };
@@ -130,18 +130,18 @@ public class SessionDownloadWidget extends Composite {
     
     private void refreshTraceTable(Session s) {
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.getTraceFiles(s, new AsyncCallback<ArrayList<TraceFile>>() {
+        mcs.getSessionFiles(s, "traces", new AsyncCallback<ArrayList<DataFile>>() {
 
             @Override
             public void onFailure(Throwable caught) {
             }
 
             @Override
-            public void onSuccess(ArrayList<TraceFile> result) {
-                List<TraceFile> list = mDataProvider.getList();
+            public void onSuccess(ArrayList<DataFile> result) {
+                List<DataFile> list = mDataProvider.getList();
                 Collections.sort(list);
                 list.clear();
-                for (TraceFile tf : result) {
+                for (DataFile tf : result) {
                     // update table data
                     list.add(tf);
                 }

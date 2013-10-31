@@ -607,7 +607,6 @@ public class MasterServer implements ServletContextListener {
     }
     
     public static MapDataSet getMapData(Session session) {
-        // TODO: combine both queries
         MapDataSet mds = new MapDataSet();
         mds.nodes = getNodes(session);
         mds.links = getLinks(session.id);

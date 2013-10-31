@@ -325,11 +325,15 @@
 								</g:FlowPanel>
 								<!-- ONE Traces -->
 								<g:FlowPanel>
-									<!-- TODO: upload mechanism for trace files -->
+									<!-- upload mechanism for trace files -->
 									<b:ControlGroup>
-										<b:ControlLabel for="textOneUpload">Trace</b:ControlLabel>
+										<b:ControlLabel for="listOneTrace">Trace</b:ControlLabel>
 										<b:Controls>
-											<b:FileUpload b:id="textOneUpload" ui:field="textMovementOneUpload"></b:FileUpload>
+											<b:ListBox alternateSize="XLARGE" b:id="listOneTrace" b:enabled="false" ui:field="listMovementOneTrace"></b:ListBox>
+											<b:Button ui:field="buttonMovementOneTrace" type="DANGER" b:enabled="false" b:icon="TRASH">Delete</b:Button>
+											<g:FormPanel ui:field="formMovementOneTrace">
+												<b:FileUpload ui:field="uploadMovementOneTrace" />
+											</g:FormPanel>
 										</b:Controls>
 									</b:ControlGroup>
 								</g:FlowPanel>
