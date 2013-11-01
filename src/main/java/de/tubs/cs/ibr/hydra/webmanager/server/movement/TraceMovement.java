@@ -166,8 +166,6 @@ public class TraceMovement extends MovementProvider implements Closeable {
     private void process(TraceMovement.Entry e) {
         Node n = null;
         
-        System.out.println("Processing " + e);
-        
         if (mNodeMap.containsKey(e.node)) {
             n = mNodeMap.get(e.node);
         } else {
