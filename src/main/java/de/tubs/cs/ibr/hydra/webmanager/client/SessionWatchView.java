@@ -166,6 +166,9 @@ public class SessionWatchView extends View {
                 }
                 break;
             case STATIC:
+                if (s.mobility.parameters.containsKey("duration")) {
+                    duration = Long.valueOf(s.mobility.parameters.get("duration"));
+                }
                 break;
             case TRACE:
                 break;
