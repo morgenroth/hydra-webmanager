@@ -383,7 +383,7 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
         if (selectedNode != null) {
             MapNode mn = mNodes.get(selectedNode);
             mn.setIcon(mRedIcon);
-            mMap.panTo(mn.getPosition());
+            if (mn.getPosition() != null) mMap.panTo(mn.getPosition());
         }
     }
     
