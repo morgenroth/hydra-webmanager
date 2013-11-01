@@ -123,6 +123,8 @@ public class SessionView extends View {
                       return formatDatetime(s.started);
                   case ABORTED:
                       return formatDatetime(s.aborted);
+                  case CANCELLED:
+                      return formatDatetime(s.aborted);
                   default:
                       return formatDatetime(s.created);
               }
@@ -151,6 +153,10 @@ public class SessionView extends View {
                 
                 switch (s.state) {
                     case ABORTED:
+                        button.setType(ButtonType.WARNING);
+                        button.setIcon(IconType.BACKWARD);
+                        return "Reset";
+                    case CANCELLED:
                         button.setType(ButtonType.WARNING);
                         button.setIcon(IconType.BACKWARD);
                         return "Reset";

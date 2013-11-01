@@ -43,7 +43,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
                         if (!Session.State.RUNNING.equals(session.state)) break;
                         
                         // set new state in database
-                        Database.getInstance().setState(session, Session.State.ABORTED);
+                        Database.getInstance().setState(session, Session.State.CANCELLED);
                         
                         break;
                         

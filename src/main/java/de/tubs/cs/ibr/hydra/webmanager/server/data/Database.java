@@ -986,7 +986,7 @@ public class Database {
         
         String query = null;
         
-        if (Session.State.ABORTED.equals(state)) {
+        if (Session.State.ABORTED.equals(state) || Session.State.CANCELLED.equals(state)) {
             query = UPDATE_SESSION_STATE_ABORTED;
         }
         else if (Session.State.RUNNING.equals(state)) {

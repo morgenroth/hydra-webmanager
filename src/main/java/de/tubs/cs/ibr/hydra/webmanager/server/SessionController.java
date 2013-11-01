@@ -131,27 +131,12 @@ public class SessionController {
         } catch (IOException e) {
             mLogger.severe(e.toString());
             
-            // error
-            error();
+            // switch state to error
+            setSessionState(Session.State.ERROR);
         }
     }
     
-    public void abort() {
-        // shutdown and clean-up waste
-        onDestroy();
-        
-        // wait until all task are done
-        try {
-            mExecutor.awaitTermination(5, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            mLogger.warning("Interrupted during abort()");
-        }
-    }
-    
-    public void cancel() {
-        // switch state to aborted
-        setSessionState(Session.State.ABORTED);
-        
+    public void close() {
         // shutdown and clean-up waste
         onDestroy();
         
@@ -161,26 +146,6 @@ public class SessionController {
         } catch (InterruptedException e) {
             mLogger.warning("Interrupted during cancel()");
         }
-    }
-    
-    public void error() {
-        if (isAborted()) return;
-        
-        // switch state to aborted
-        setSessionState(Session.State.ERROR);
-        
-        // shutdown and clean-up waste
-        onDestroy();
-    }
-    
-    public void finished() {
-        if (isAborted()) return;
-        
-        // switch state to aborted
-        setSessionState(Session.State.FINISHED);
-        
-        // shutdown and clean-up waste
-        onDestroy();
     }
     
     private void onDestroy() {
@@ -277,7 +242,9 @@ public class SessionController {
         @Override
         public void onTimeout() {
             mLogger.warning("preparation timed out");
-            error();
+            
+            // switch state to error
+            setSessionState(Session.State.ERROR);
         }
         
         @Override
@@ -314,7 +281,9 @@ public class SessionController {
         @Override
         public void onError(Exception e) {
             mLogger.severe("preparation failed " + e.toString());
-            error();
+
+            // switch state to error
+            setSessionState(Session.State.ERROR);
         }
     };
     
@@ -326,7 +295,9 @@ public class SessionController {
         @Override
         public void onTimeout() {
             mLogger.warning("session timed out");
-            error();
+            
+            // switch state to error
+            setSessionState(Session.State.ERROR);
         }
         
         @Override
@@ -349,7 +320,9 @@ public class SessionController {
         @Override
         public void onError(Exception e) {
             mLogger.severe(e.toString());
-            error();
+
+            // switch state to error
+            setSessionState(Session.State.ERROR);
         }
 
         @Override
@@ -395,7 +368,9 @@ public class SessionController {
         @Override
         public void onTimeout() {
             mLogger.warning("boot-up timed out");
-            error();
+            
+            // switch state to error
+            setSessionState(Session.State.ERROR);
         }
         
         @Override
@@ -417,7 +392,9 @@ public class SessionController {
         @Override
         public void onError(Exception e) {
             mLogger.warning("boot-up failed " + e.toString());
-            error();
+            
+            // switch state to error
+            setSessionState(Session.State.ERROR);
         }
     };
     
@@ -485,13 +462,17 @@ public class SessionController {
         @Override
         public void onTimeout() {
             mLogger.warning("stats collection timed out");
-            error();
+            
+            // switch state to error
+            setSessionState(Session.State.ERROR);
         }
 
         @Override
         public void onError(Exception e) {
             mLogger.warning("stats collection failed " + e.toString());
-            error();
+            
+            // switch state to error
+            setSessionState(Session.State.ERROR);
         }
         
     };
@@ -605,7 +586,7 @@ public class SessionController {
     }
     
     private boolean isAborted() {
-        return Session.State.ABORTED.equals( getSession().state );
+        return Session.State.ABORTED.equals( getSession().state ) || Session.State.CANCELLED.equals( getSession().state );
     }
     
     private synchronized void prepareSetup() {
@@ -693,7 +674,9 @@ public class SessionController {
                 @Override
                 public void onError(Exception e) {
                     mLogger.warning("position update on " + n + " failed, " + e);
-                    error();
+                    
+                    // switch state to error
+                    setSessionState(Session.State.ERROR);
                 }
                 
             });
@@ -746,7 +729,9 @@ public class SessionController {
                 @Override
                 public void onError(Exception e) {
                     mLogger.warning("link-up " + link.toString() + " failed, " + e);
-                    error();
+                    
+                    // switch state to error
+                    setSessionState(Session.State.ERROR);
                 }
                 
             });
@@ -797,7 +782,9 @@ public class SessionController {
                 @Override
                 public void onError(Exception e) {
                     mLogger.warning("link-down " + link.toString() + " failed, " + e);
-                    error();
+                    
+                    // switch state to error
+                    setSessionState(Session.State.ERROR);
                 }
                 
             });
@@ -821,7 +808,7 @@ public class SessionController {
                 mMovement.update();
             } catch (MovementFinishedException e) {
                 // switch session state to finished
-                finished();
+                setSessionState(Session.State.FINISHED);
             }
         }
     };

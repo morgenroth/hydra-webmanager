@@ -480,13 +480,16 @@ public class MasterServer implements ServletContextListener {
                         // create a session controller
                         sc = mControllers.get(s.id);
                     }
-
-                    // cancel the session
-                    sc.cancel();
+                    
+                    // close the session
+                    sc.close();
+                    
+                    // switch state to aborted
+                    Database.getInstance().setState(s, Session.State.ABORTED);
                 }
             });
         }
-        else if (Session.State.ABORTED.equals(s.state)) {
+        else if (Session.State.FINISHED.equals(s.state)) {
             mTaskLoop.execute(new Task() {
                 @Override
                 public void run() {
@@ -496,7 +499,7 @@ public class MasterServer implements ServletContextListener {
                         // check if the session controller for this session already exists
                         if (!mControllers.containsKey(s.id)) {
                             // ERROR
-                            logger.warning("Session changed to ABORTED, but no session controller found.");
+                            logger.warning("Session changed to FINISHED, but no session controller found.");
                             return;
                         }
                         
@@ -504,8 +507,31 @@ public class MasterServer implements ServletContextListener {
                         sc = mControllers.get(s.id);
                     }
                     
-                    // abort the session
-                    sc.abort();
+                    // close the session
+                    sc.close();
+                }
+            });
+        }
+        else if (Session.State.ERROR.equals(s.state)) {
+            mTaskLoop.execute(new Task() {
+                @Override
+                public void run() {
+                    SessionController sc = null;
+                    
+                    synchronized(mControllers) {
+                        // check if the session controller for this session already exists
+                        if (!mControllers.containsKey(s.id)) {
+                            // ERROR
+                            logger.warning("Session changed to ERROR, but no session controller found.");
+                            return;
+                        }
+                        
+                        // create a session controller
+                        sc = mControllers.get(s.id);
+                    }
+                    
+                    // close the session
+                    sc.close();
                 }
             });
         }
