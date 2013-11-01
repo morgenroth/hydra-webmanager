@@ -13,6 +13,7 @@ public abstract class MovementProvider {
         public void onMovement(Node n, Coordinates position, Double speed, Double heading);
     }
     
+    private Long mStartTime = null;
     private Long mLastUpdate = null;
     private HashMap<Long, Node> mNodes = new HashMap<Long, Node>();
     private HashSet<MovementHandler> mListener = new HashSet<MovementHandler>();
@@ -38,6 +39,13 @@ public abstract class MovementProvider {
         }
     }
     
+    public class MovementFinishedException extends Exception {
+        /**
+         * serial ID
+         */
+        private static final long serialVersionUID = 6273345401139835953L;
+    };
+    
     /**
      * Calculated the time interval since the last call
      * @return
@@ -52,6 +60,25 @@ public abstract class MovementProvider {
         }
 
         mLastUpdate = now;
+        
+        return ret;
+    }
+    
+    /**
+     * Returns the time elapsed since the first call of this method
+     * @return
+     */
+    protected Double getElapsedTime() {
+        Double ret = 0.0;
+        
+        Long now = System.nanoTime();
+        
+        if (mStartTime != null) {
+            ret = Double.valueOf(now - mStartTime) / Double.valueOf(TimeUnit.SECONDS.toNanos(1));
+        } else {
+            mStartTime = now;
+            ret = 0.0;
+        }
         
         return ret;
     }
@@ -92,11 +119,5 @@ public abstract class MovementProvider {
      * Updates the positions of all nodes according to the
      * time passed since the last call
      */
-    public abstract void update();
-    
-    /**
-     * Returns the duration of the simulation in seconds
-     * @return Duration in seconds
-     */
-    public abstract Long getDuration();
+    public abstract void update() throws MovementFinishedException;
 }

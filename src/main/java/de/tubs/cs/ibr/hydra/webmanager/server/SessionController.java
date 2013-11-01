@@ -1,5 +1,6 @@
 package de.tubs.cs.ibr.hydra.webmanager.server;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SessionContainer;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.ContactProvider;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.MovementProvider;
+import de.tubs.cs.ibr.hydra.webmanager.server.movement.MovementProvider.MovementFinishedException;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.NullMovement;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.RandomWalkMovement;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.StaticMovement;
@@ -60,7 +62,6 @@ public class SessionController {
     SlaveExecutor mSlaveExecutor = new SlaveExecutor(mExecutor);
     
     ScheduledFuture<?> scheduledDistribution = null;
-    ScheduledFuture<?> scheduledFinish = null;
     ScheduledFuture<?> scheduledStatsCollector = null;
     ScheduledFuture<?> scheduledMovement = null;
     ScheduledFuture<?> scheduledTrafficGeneration = null;
@@ -173,6 +174,8 @@ public class SessionController {
     }
     
     public void finished() {
+        if (isAborted()) return;
+        
         // switch state to aborted
         setSessionState(Session.State.FINISHED);
         
@@ -203,11 +206,6 @@ public class SessionController {
         if (scheduledDistribution != null) {
             // we are in distribution phase
             scheduledDistribution.cancel(false);
-        }
-        
-        // cancel scheduled finish
-        if (scheduledFinish != null) {
-            scheduledFinish.cancel(false);
         }
         
         try {
@@ -242,6 +240,16 @@ public class SessionController {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        
+        // close movement
+        if (mMovement instanceof Closeable) {
+            try {
+                ((Closeable)mMovement).close();
+            } catch (IOException e) {
+                // error on close
+                e.printStackTrace();
+            }
         }
         
         // clean-up from MasterServer
@@ -551,27 +559,7 @@ public class SessionController {
             Double msec = mSession.resolution * 1000.0;
             scheduledMovement = mExecutor.scheduleWithFixedDelay(mUpdateMovement, msec.longValue(), msec.longValue(), TimeUnit.MILLISECONDS);
             
-            // schedule a finish task - if duration is specified
-            Long duration = mMovement.getDuration();
-            if (duration != null) {
-                scheduledFinish = mExecutor.schedule(mRunableFinish, duration, TimeUnit.SECONDS);
-            }
-            
             mLogger.fine("running");
-        }
-    };
-    
-    /**
-     * This task finishes the session
-     */
-    private Runnable mRunableFinish = new Runnable() {
-        @Override
-        public void run() {
-            // unset global variable
-            scheduledFinish = null;
-            
-            // switch session state to finished
-            finished();
         }
     };
     
@@ -634,7 +622,7 @@ public class SessionController {
                 mMovement = new StaticMovement(mSession.mobility);
                 break;
             case TRACE:
-                mMovement = new TraceMovement(mSession.mobility);
+                mMovement = new TraceMovement(mSession.mobility, mContainer);
                 break;
             default:
                 mMovement = new NullMovement();
@@ -674,7 +662,12 @@ public class SessionController {
                 @Override
                 public void run(SlaveConnection c, Node n) throws OperationFailedException {
                     try {
-                        c.setPosition(n, position.getX(), position.getY(), position.getZ());
+                        if (position == null) {
+                            // TODO: set invisible
+                            c.setPosition(n, 0.0, 0.0, 0.0);
+                        } else {
+                            c.setPosition(n, position.getX(), position.getY(), position.getZ());
+                        }
                     } catch (Exception e) {
                         throw new OperationFailedException(e);
                     }
@@ -824,7 +817,12 @@ public class SessionController {
         @Override
         public void run() {
             // update movement
-            mMovement.update();
+            try {
+                mMovement.update();
+            } catch (MovementFinishedException e) {
+                // switch session state to finished
+                finished();
+            }
         }
     };
     

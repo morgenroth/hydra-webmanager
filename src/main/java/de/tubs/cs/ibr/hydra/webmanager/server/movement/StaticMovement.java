@@ -15,13 +15,22 @@ public class StaticMovement extends MovementProvider {
     
     private MobilityParameterSet mParams = null;
     private boolean initialized = false;
+    private Double mDuration = null;
     
     public StaticMovement(MobilityParameterSet p) {
         mParams = p;
+        
+        if (p.parameters.containsKey("duration")) {
+            mDuration = Double.valueOf(mParams.parameters.get("duration"));
+        }
     }
 
     @Override
-    public void update() {
+    public void update() throws MovementFinishedException {
+        // check if the movement has been completed
+        if ((mDuration != null) && (getElapsedTime() > mDuration))
+            throw new MovementFinishedException();
+        
         if (!initialized) {
             if (mParams.parameters.containsKey("positions")) {
                 String positions = mParams.parameters.get("positions");
@@ -71,14 +80,6 @@ public class StaticMovement extends MovementProvider {
             
             initialized = true;
         }
-    }
-
-    @Override
-    public Long getDuration() {
-        if (mParams.parameters.containsKey("duration")) {
-            return Long.valueOf(mParams.parameters.get("duration"));
-        }
-        return null;
     }
 
     private void arrangeInLine() {

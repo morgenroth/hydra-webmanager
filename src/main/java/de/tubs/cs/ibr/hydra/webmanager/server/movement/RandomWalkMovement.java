@@ -18,6 +18,7 @@ public class RandomWalkMovement extends MovementProvider {
     private Double mAreaHeight = null;
     private Double mVelocityMax = null;
     private Double mVelocityMin = null;
+    private Double mDuration = null;
     
     public RandomWalkMovement(MobilityParameterSet p) {
         mParams = p;
@@ -53,20 +54,20 @@ public class RandomWalkMovement extends MovementProvider {
             mVelocityMin = 10.0;
         }
         
+        if (p.parameters.containsKey("duration")) {
+            mDuration = Double.valueOf(mParams.parameters.get("duration"));
+        }
+        
         // initialize random number generator
         rand = new Random();
     }
 
     @Override
-    public Long getDuration() {
-        if (mParams.parameters.containsKey("duration")) {
-            return Long.valueOf(mParams.parameters.get("duration"));
-        }
-        return null;
-    }
-
-    @Override
-    public void update() {
+    public void update() throws MovementFinishedException {
+        // check if the movement has been completed
+        if ((mDuration != null) && (getElapsedTime() > mDuration))
+            throw new MovementFinishedException();
+        
         // get the time passed since the last call
         Double interval = getTimeInterval();
         
