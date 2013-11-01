@@ -514,7 +514,7 @@ public class SessionContainer {
     
     public File createDataFile(String tag, String prefix, String suffix) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
-        return new File(getDataPath(tag), sdf.format(prefix + "_" + new Date()) + "_" + suffix);
+        return new File(getDataPath(tag), prefix + "_" + sdf.format(new Date()) + "_" + suffix);
     }
     
     public ArrayList<DataFile> getDataFiles(String tag) {
