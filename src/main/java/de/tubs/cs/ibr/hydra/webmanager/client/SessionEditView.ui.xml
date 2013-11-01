@@ -261,7 +261,7 @@
 										ui:field="listMovementAlgorithm">
 										<b:item value="none">None</b:item>
 										<b:item value="randomwalk">Random Walk</b:item>
-										<b:item value="theone">The ONE Trace Player</b:item>
+										<b:item value="trace">Trace Playback</b:item>
 										<b:item value="static">Static Positions</b:item>
 									</b:ListBox>
 									<b:HelpBlock>The movement will be calculated using the selected
@@ -335,16 +335,16 @@
 										</b:Controls>
 									</b:ControlGroup>
 								</g:FlowPanel>
-								<!-- ONE Traces -->
+								<!-- Traces -->
 								<g:FlowPanel>
 									<!-- upload mechanism for trace files -->
 									<b:ControlGroup>
-										<b:ControlLabel for="listOneTrace">Trace</b:ControlLabel>
+										<b:ControlLabel for="listTrace">Trace</b:ControlLabel>
 										<b:Controls>
-											<b:ListBox alternateSize="XLARGE" b:id="listOneTrace" b:enabled="false" ui:field="listMovementOneTrace"></b:ListBox>
-											<b:Button ui:field="buttonMovementOneTrace" type="DANGER" b:enabled="false" b:icon="TRASH">Delete</b:Button>
-											<g:FormPanel ui:field="formMovementOneTrace">
-												<b:FileUpload ui:field="uploadMovementOneTrace" name="tracefile" />
+											<b:ListBox alternateSize="XLARGE" b:id="listTrace" b:enabled="false" ui:field="listMovementTrace"></b:ListBox>
+											<b:Button ui:field="buttonMovementTrace" type="DANGER" b:enabled="false" b:icon="TRASH">Delete</b:Button>
+											<g:FormPanel ui:field="formMovementTrace">
+												<b:FileUpload ui:field="uploadMovementTrace" name="tracefile" />
 											</g:FormPanel>
 										</b:Controls>
 									</b:ControlGroup>

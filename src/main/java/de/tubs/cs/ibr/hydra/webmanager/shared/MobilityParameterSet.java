@@ -9,7 +9,7 @@ public class MobilityParameterSet implements IsSerializable {
     
     public enum MobilityModel {
         RANDOM_WALK("randomwalk"),
-        THE_ONE("theone"),
+        TRACE("trace"),
         STATIC("static"),
         NONE("none");
         
@@ -28,8 +28,8 @@ public class MobilityParameterSet implements IsSerializable {
             if (RANDOM_WALK.toString().equals(tag)) {
                 return RANDOM_WALK;
             }
-            if (THE_ONE.toString().equals(tag)) {
-                return THE_ONE;
+            if (TRACE.toString().equals(tag)) {
+                return TRACE;
             }
             if (STATIC.toString().equals(tag)) {
                 return STATIC;

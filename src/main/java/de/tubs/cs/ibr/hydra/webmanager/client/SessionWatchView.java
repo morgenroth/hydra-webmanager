@@ -167,7 +167,7 @@ public class SessionWatchView extends View {
                 break;
             case STATIC:
                 break;
-            case THE_ONE:
+            case TRACE:
                 break;
             default:
                 duration = null;

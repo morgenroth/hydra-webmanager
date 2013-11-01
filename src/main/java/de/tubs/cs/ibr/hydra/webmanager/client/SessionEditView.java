@@ -94,11 +94,11 @@ public class SessionEditView extends View {
     @UiField TextBox textMovementRwpVmin;
     @UiField TextBox textMovementRwpVmax;
     
-    // ONE
-    @UiField FormPanel formMovementOneTrace;
-    @UiField FileUpload uploadMovementOneTrace;
-    @UiField ListBox listMovementOneTrace;
-    @UiField Button buttonMovementOneTrace;
+    // TRACE
+    @UiField FormPanel formMovementTrace;
+    @UiField FileUpload uploadMovementTrace;
+    @UiField ListBox listMovementTrace;
+    @UiField Button buttonMovementTrace;
     
     // STATIC
     @UiField TextArea textMovementStaticPositions;
@@ -153,16 +153,16 @@ public class SessionEditView extends View {
             
             @Override
             public void onSuccess(ArrayList<DataFile> result) {
-                listMovementOneTrace.clear();
-                listMovementOneTrace.addItem("- no file selected -", "");
-                listMovementOneTrace.setSelectedIndex(0);
+                listMovementTrace.clear();
+                listMovementTrace.addItem("- no file selected -", "");
+                listMovementTrace.setSelectedIndex(0);
                 
                 for (DataFile f : result) {
-                    listMovementOneTrace.addItem(f.filename);
+                    listMovementTrace.addItem(f.filename);
                 }
                 
                 if (result.size() > 0) {
-                    listMovementOneTrace.setEnabled(true);
+                    listMovementTrace.setEnabled(true);
                     
                     String selectedTraceFile = null;
                     
@@ -181,12 +181,12 @@ public class SessionEditView extends View {
                     }
                     
                     if (selectedTraceFile != null) {
-                        listMovementOneTrace.setSelectedValue(selectedTraceFile);
-                        buttonMovementOneTrace.setEnabled(!listMovementOneTrace.getValue().isEmpty());
+                        listMovementTrace.setSelectedValue(selectedTraceFile);
+                        buttonMovementTrace.setEnabled(!listMovementTrace.getValue().isEmpty());
                     }
                 } else {
-                    buttonMovementOneTrace.setEnabled(false);
-                    listMovementOneTrace.setEnabled(false);
+                    buttonMovementTrace.setEnabled(false);
+                    listMovementTrace.setEnabled(false);
                 }
             }
             
@@ -667,13 +667,13 @@ public class SessionEditView extends View {
                     textMovementStaticDuration.setText(null);
                 }
                 break;
-            case THE_ONE:
+            case TRACE:
                 if (mSession.mobility.parameters.containsKey("tracefile")) {
-                    listMovementOneTrace.setSelectedValue(mSession.mobility.parameters.get("tracefile"));
-                    buttonMovementOneTrace.setEnabled(true);
+                    listMovementTrace.setSelectedValue(mSession.mobility.parameters.get("tracefile"));
+                    buttonMovementTrace.setEnabled(true);
                 } else {
-                    listMovementOneTrace.setSelectedIndex(0);
-                    buttonMovementOneTrace.setEnabled(false);
+                    listMovementTrace.setSelectedIndex(0);
+                    buttonMovementTrace.setEnabled(false);
                 }
                 break;
             default:
@@ -736,15 +736,15 @@ public class SessionEditView extends View {
         }
     }
     
-    // ONE
-    @UiHandler("buttonMovementOneTrace")
-    void onMovementOneButtonClicked(ClickEvent e) {
+    // TRACE
+    @UiHandler("buttonMovementTrace")
+    void onMovementTraceButtonClicked(ClickEvent e) {
         if (mChangedSession.mobility == null) return;
         mChangedSession.mobility.parameters.put("tracefile", "");
         
-        buttonMovementOneTrace.setEnabled(false);
+        buttonMovementTrace.setEnabled(false);
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.removeSessionFile(mSession, "data", listMovementOneTrace.getValue(), new AsyncCallback<Void>() {
+        mcs.removeSessionFile(mSession, "data", listMovementTrace.getValue(), new AsyncCallback<Void>() {
             
             @Override
             public void onSuccess(Void result) {
@@ -757,38 +757,38 @@ public class SessionEditView extends View {
         });
     }
     
-    @UiHandler("formMovementOneTrace")
-    void onMovementOneTraceSubmit(FormPanel.SubmitEvent event) {
+    @UiHandler("formMovementTrace")
+    void onMovementTraceSubmit(FormPanel.SubmitEvent event) {
         // TODO: show progress
-        formMovementOneTrace.setVisible(false);
+        formMovementTrace.setVisible(false);
     }
     
-    @UiHandler("formMovementOneTrace")
-    void onMovementOneTraceUploadCompleted(FormPanel.SubmitCompleteEvent event) {
+    @UiHandler("formMovementTrace")
+    void onMovementTraceUploadCompleted(FormPanel.SubmitCompleteEvent event) {
         if (mChangedSession.mobility == null) return;
-        mChangedSession.mobility.parameters.put("tracefile", uploadMovementOneTrace.getText());
+        mChangedSession.mobility.parameters.put("tracefile", uploadMovementTrace.getText());
         
-        uploadMovementOneTrace.setText(null);
-        formMovementOneTrace.setVisible(true);
+        uploadMovementTrace.setText(null);
+        formMovementTrace.setVisible(true);
         
         // refresh file listing
         refreshDataFiles(mSession);
     }
     
-    @UiHandler("uploadMovementOneTrace")
-    void onMovementOneTraceChanged(ChangeEvent evt) {
-        formMovementOneTrace.setEncoding(FormPanel.ENCODING_MULTIPART);
-        formMovementOneTrace.setMethod(FormPanel.METHOD_POST);
-        formMovementOneTrace.setAction(GWT.getModuleBaseURL() + "upload?sid=" + mSession.id);
-        formMovementOneTrace.submit();
+    @UiHandler("uploadMovementTrace")
+    void onMovementTraceChanged(ChangeEvent evt) {
+        formMovementTrace.setEncoding(FormPanel.ENCODING_MULTIPART);
+        formMovementTrace.setMethod(FormPanel.METHOD_POST);
+        formMovementTrace.setAction(GWT.getModuleBaseURL() + "upload?sid=" + mSession.id);
+        formMovementTrace.submit();
     }
     
-    @UiHandler("listMovementOneTrace")
-    void onMovementOneTraceFileChanged(ChangeEvent evt) {
-        buttonMovementOneTrace.setEnabled(!listMovementOneTrace.getValue().isEmpty());
+    @UiHandler("listMovementTrace")
+    void onMovementTraceFileChanged(ChangeEvent evt) {
+        buttonMovementTrace.setEnabled(!listMovementTrace.getValue().isEmpty());
         
         if (mChangedSession.mobility == null) return;
-        mChangedSession.mobility.parameters.put("tracefile", listMovementOneTrace.getValue());
+        mChangedSession.mobility.parameters.put("tracefile", listMovementTrace.getValue());
     }
     
     // STATIC

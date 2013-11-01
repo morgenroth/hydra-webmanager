@@ -24,6 +24,7 @@ import de.tubs.cs.ibr.hydra.webmanager.server.movement.MovementProvider;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.NullMovement;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.RandomWalkMovement;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.StaticMovement;
+import de.tubs.cs.ibr.hydra.webmanager.server.movement.TraceMovement;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
@@ -632,8 +633,9 @@ public class SessionController {
             case STATIC:
                 mMovement = new StaticMovement(mSession.mobility);
                 break;
-//            case THE_ONE:
-//                break;
+            case TRACE:
+                mMovement = new TraceMovement(mSession.mobility);
+                break;
             default:
                 mMovement = new NullMovement();
                 break;

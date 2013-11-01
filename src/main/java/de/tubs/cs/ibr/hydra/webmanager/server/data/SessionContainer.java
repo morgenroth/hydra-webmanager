@@ -223,8 +223,8 @@ public class SessionContainer {
                         }
                         
                         break;
-                    case THE_ONE:
-                        section = "onetrace";
+                    case TRACE:
+                        section = "trace";
                         
                         break;
                     default:
@@ -426,8 +426,8 @@ public class SessionContainer {
                     case STATIC:
                         section = "static";
                         break;
-                    case THE_ONE:
-                        section = "onetrace";
+                    case TRACE:
+                        section = "trace";
                         break;
                     default:
                         break;
