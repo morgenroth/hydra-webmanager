@@ -69,9 +69,6 @@ public class ContactProvider implements MovementProvider.MovementHandler {
 
     @Override
     public void onMovement(Node n, Coordinates position, Double speed, Double heading) {
-        // no position, no action!
-        if (n.position == null) return;
-        
         // check distance for all nodes
         for (Node other : getNodes()) {
             // do not loopback
@@ -80,11 +77,27 @@ public class ContactProvider implements MovementProvider.MovementHandler {
             // no position, no action!
             if (other.position == null) continue;
             
+            Link uplink = new Link(n, other);
+            Link downlink = new Link(other, n);
+            
+            // no position, shutdown all links
+            if (n.position == null) {
+                // separation uplink
+                if (mLinkSet.remove(uplink)) {
+                    fireOnSeparationEvent(uplink);
+                }
+                
+                // separation downlink
+                if (mLinkSet.remove(downlink)) {
+                    fireOnSeparationEvent(downlink);
+                }
+                continue;
+            }
+            
             // check distance to the other node
             Double distance = n.position.distance(other.position);
             
-            Link uplink = new Link(n, other);
-            Link downlink = new Link(other, n);
+
             
             if ((n.range > 0.0) && (distance <= n.range)) {
                 // contact
