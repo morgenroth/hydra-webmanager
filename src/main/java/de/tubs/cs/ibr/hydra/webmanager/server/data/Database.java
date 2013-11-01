@@ -502,7 +502,7 @@ public class Database {
             // disable auto-commit
             conn.setAutoCommit(false);
             
-            try (PreparedStatement st = conn.prepareStatement(INSERT_NODE)) {
+            try (PreparedStatement st = conn.prepareStatement(INSERT_NODE, Statement.RETURN_GENERATED_KEYS)) {
                 // set the name
                 st.setLong(1, sessionId);
                 
@@ -701,7 +701,7 @@ public class Database {
         Connection conn = getConnection();
         if (conn == null) return null;
 
-        try (PreparedStatement st = conn.prepareStatement(INSERT_SLAVE)) {
+        try (PreparedStatement st = conn.prepareStatement(INSERT_SLAVE, Statement.RETURN_GENERATED_KEYS)) {
             // set the name
             st.setString(1, name);
             
@@ -814,7 +814,7 @@ public class Database {
         Connection conn = getConnection();
         if (conn == null) return null;
 
-        try (PreparedStatement st = conn.prepareStatement(INSERT_SESSION)) {
+        try (PreparedStatement st = conn.prepareStatement(INSERT_SESSION, Statement.RETURN_GENERATED_KEYS)) {
             // TODO: set right user id
             st.setLong(1, 1);
             
