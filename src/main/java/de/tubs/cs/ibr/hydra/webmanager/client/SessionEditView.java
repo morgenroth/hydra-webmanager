@@ -99,6 +99,7 @@ public class SessionEditView extends View {
     @UiField FileUpload uploadMovementTrace;
     @UiField ListBox listMovementTrace;
     @UiField Button buttonMovementTrace;
+    @UiField CheckBox checkMovementTraceRepetition;
     
     // STATIC
     @UiField TextArea textMovementStaticPositions;
@@ -675,6 +676,12 @@ public class SessionEditView extends View {
                     listMovementTrace.setSelectedIndex(0);
                     buttonMovementTrace.setEnabled(false);
                 }
+                
+                if (mSession.mobility.parameters.containsKey("repeat")) {
+                    checkMovementTraceRepetition.setValue("yes".equals(mSession.mobility.parameters.get("repeat")));
+                } else {
+                    checkMovementTraceRepetition.setValue(false);
+                }
                 break;
             default:
                 break;
@@ -789,6 +796,12 @@ public class SessionEditView extends View {
         
         if (mChangedSession.mobility == null) return;
         mChangedSession.mobility.parameters.put("tracefile", listMovementTrace.getValue());
+    }
+    
+    @UiHandler("checkMovementTraceRepetition")
+    void onMovementTraceRepetitionChanged(ClickEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("repeat", checkMovementTraceRepetition.getValue() ? "yes" : "no");
     }
     
     // STATIC

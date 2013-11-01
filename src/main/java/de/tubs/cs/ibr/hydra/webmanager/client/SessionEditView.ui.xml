@@ -348,6 +348,12 @@
 											</g:FormPanel>
 										</b:Controls>
 									</b:ControlGroup>
+									<b:ControlGroup>
+										<b:ControlLabel for="checkTraceRepetition">Repetition</b:ControlLabel>
+										<b:Controls>
+											<b:CheckBox b:id="checkTraceRepetition" ui:field="checkMovementTraceRepetition">Repeat the trace playback until the session is stopped manually.</b:CheckBox>
+										</b:Controls>
+									</b:ControlGroup>
 								</g:FlowPanel>
 								<!-- Static -->
 								<g:FlowPanel>

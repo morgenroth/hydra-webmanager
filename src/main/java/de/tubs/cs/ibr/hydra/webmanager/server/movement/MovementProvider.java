@@ -83,6 +83,13 @@ public abstract class MovementProvider {
         return ret;
     }
     
+    /**
+     * Reset the elapsed time
+     */
+    protected void resetElapsedTime() {
+        mStartTime = null;
+    }
+    
     public void addMovementHandler(MovementHandler m) {
         synchronized(mListener) {
             mListener.add(m);

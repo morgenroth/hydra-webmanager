@@ -27,6 +27,7 @@ public class TraceMovement extends MovementProvider implements Closeable {
     
     private File mTraceFile = null;
     private BufferedReader mReader = null;
+    private boolean mRepeat = false;
     
     private TraceMovement.Entry mLastEntry = null;
     private Queue<Node> mNodePool = new LinkedList<Node>();
@@ -36,27 +37,16 @@ public class TraceMovement extends MovementProvider implements Closeable {
         mParams = p;
         mContainer = sc;
         
+        if (mParams.parameters.containsKey("repeat")) {
+            mRepeat = "yes".equals(mParams.parameters.get("repeat"));
+        }
+        
         if (mParams.parameters.containsKey("tracefile")) {
             mTraceFile = new File(mContainer.getDataPath("data"), mParams.parameters.get("tracefile"));
             
             try {
-                InputStream input = null;
-                
-                if (mTraceFile.getName().endsWith(".gz")) {
-                    // open as GZIPStream
-                    input = new GZIPInputStream(new FileInputStream(mTraceFile));
-                } else {
-                    // open as standard stream
-                    input = new FileInputStream(mTraceFile);
-                }
-                
-                // create file-reader
-                mReader = new BufferedReader(new InputStreamReader(input));
-
-                // read header line of the trace
-                String header = mReader.readLine();
-                
-                // TODO: process header
+                // open the trace file
+                mReader = TraceMovement.openTrace(mTraceFile);
             } catch (FileNotFoundException e) {
                 // error
                 e.printStackTrace();
@@ -146,8 +136,23 @@ public class TraceMovement extends MovementProvider implements Closeable {
             }
             
             if (data == null) {
-                // if there is no more data, we are done
-                throw new MovementFinishedException();
+                // if there is no more data, check repeat variable
+                if (mRepeat) {
+                    // close trace and start over
+                    mReader.close();
+                    
+                    // reset global variables
+                    mLastEntry = null;
+                    
+                    // reset the elapsed time
+                    resetElapsedTime();
+                    
+                    // open the trace file again
+                    mReader = TraceMovement.openTrace(mTraceFile);
+                } else {
+                    // we are done
+                    throw new MovementFinishedException();
+                }
             }
         } catch (IOException e) {
             // error
@@ -202,5 +207,25 @@ public class TraceMovement extends MovementProvider implements Closeable {
         
         // add node to the mapping pool
         mNodePool.offer(n);
+    }
+    
+    private static BufferedReader openTrace(File f) throws FileNotFoundException, IOException {
+        InputStream input = null;
+        
+        if (f.getName().endsWith(".gz")) {
+            // open as GZIPStream
+            input = new GZIPInputStream(new FileInputStream(f));
+        } else {
+            // open as standard stream
+            input = new FileInputStream(f);
+        }
+        
+        // create file-reader
+        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+        
+        // read header line of the trace
+        String header = reader.readLine();
+        
+        return reader;
     }
 }
