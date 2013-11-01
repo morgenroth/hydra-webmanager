@@ -1,5 +1,6 @@
 package de.tubs.cs.ibr.hydra.webmanager.server;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -11,7 +12,7 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 
-public class TraceRecorder {
+public class TraceRecorder implements Closeable {
     private OutputStream mOutput = null;
     private File mFile = null;
     private Long mStarted = null;
@@ -28,7 +29,7 @@ public class TraceRecorder {
     }
     
     public void logMovement(Node n, Coordinates position, Double speed, Double heading) throws IOException {
-        String record = getTimestamp() + "\t" + n.id + "\t" + position.getX() + "\t" + position.getY() + "\t" + position.getZ() + "\t" + speed + "\t" + heading + "\n";
+        String record = getTimestamp() + "\t" + n.id + "\t" + ((position == null) ? "0.0\t0.0\t0.0" : position.getX() + "\t" + position.getY() + "\t" + position.getZ()) + "\t" + speed + "\t" + heading + "\n";
         mOutput.write(record.getBytes());
     }
     
