@@ -533,7 +533,13 @@ public class SessionContainer {
     }
     
     public File getDataPath(String tag) {
-        File path = new File(mPath, tag);
+        File path = null;
+        
+        if ("packages".equals(tag)) {
+            path = new File(mBasePath, tag);
+        } else {
+            path = new File(mPath, tag);
+        }
         
         if (!path.exists()) {
             path.mkdirs();

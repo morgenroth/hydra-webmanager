@@ -73,11 +73,21 @@ public class HttpUploadServlet extends HttpServlet {
                     if (item.isFormField()) {
                         // TODO: process form field
                     } else {
+                        String tag = item.getFieldName();
+                        
                         // logging
                         logger.info("Store file '" + item.getName() + "' (" + item.getFieldName() + ") in session " + sessionId);
                         
+                        // target file
+                        File file = null;
+                        
+                        if ("packagefile".equals(tag)) {
+                            file = new File(sc.getDataPath("packages"), item.getName());
+                        } else {
+                            file = new File(sc.getDataPath("data"), item.getName());
+                        }
+                        
                         // process upload
-                        File file = new File(sc.getDataPath("data"), item.getName());
                         item.write(file);
                     }
                 }

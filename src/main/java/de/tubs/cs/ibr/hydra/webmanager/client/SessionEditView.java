@@ -58,13 +58,18 @@ public class SessionEditView extends View {
     
     @UiField ListBox listBaseImage;
     @UiField TextBox textBaseRepository;
-    @UiField TextArea textBasePackages;
+    @UiField TextArea textBaseInstall;
     
     @UiField TextArea textBaseQemuTemplate;
     @UiField TextArea textBaseVboxTemplate;
     
     @UiField TextArea textBaseSetupScript;
     @UiField TextArea textBaseIndividualSetupScript;
+    
+    @UiField ListBox listBasePackages;
+    @UiField Button buttonBasePackages;
+    @UiField FormPanel formBasePackages;
+    @UiField FileUpload uploadBasePackages;
     
     @UiField TextBox textNetworkNodeAddressMin;
     @UiField TextBox textNetworkNodeAddressMax;
@@ -190,6 +195,30 @@ public class SessionEditView extends View {
                 // error
             }
         });
+        
+        mcs.getSessionFiles(session, "packages", new AsyncCallback<ArrayList<DataFile>>() {
+            
+            @Override
+            public void onSuccess(ArrayList<DataFile> result) {
+                listBasePackages.clear();
+                
+                for (DataFile f : result) {
+                    listBasePackages.addItem(f.filename);
+                }
+                
+                if (result.size() > 0) {
+                    listBasePackages.setEnabled(true);
+                } else {
+                    buttonBasePackages.setEnabled(false);
+                    listBasePackages.setEnabled(false);
+                }
+            }
+            
+            @Override
+            public void onFailure(Throwable caught) {
+                // error
+            }
+        });
     }
     
     private void refreshSessionProperties(Session session) {
@@ -255,7 +284,7 @@ public class SessionEditView extends View {
         
         // load base
         textBaseRepository.setText(result.repository);
-        textBasePackages.setText(result.packages);
+        textBaseInstall.setText(result.packages);
         textBaseQemuTemplate.setText(result.qemu_template);
         textBaseVboxTemplate.setText(result.vbox_template);
         textBaseSetupScript.setText(result.script_generic);
@@ -468,9 +497,9 @@ public class SessionEditView extends View {
         mChangedSession.repository = textBaseRepository.getText();
     }
     
-    @UiHandler("textBasePackages")
-    void onBasePackagesChanged(ChangeEvent evt) {
-        mChangedSession.packages = textBasePackages.getText();
+    @UiHandler("textBaseInstall")
+    void onBaseInstallChanged(ChangeEvent evt) {
+        mChangedSession.packages = textBaseInstall.getText();
     }
     
     @UiHandler("textNetworkNodeAddressMax")
@@ -513,6 +542,54 @@ public class SessionEditView extends View {
     @UiHandler("textBaseIndividualSetupScript")
     void onBaseIndividualSetupScriptChanged(ChangeEvent evt) {
         mChangedSession.script_individual = textBaseIndividualSetupScript.getText();
+    }
+    
+    @UiHandler("buttonBasePackages")
+    void onBasePackagesButtonClicked(ClickEvent e) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("tracefile", "");
+        
+        buttonBasePackages.setEnabled(false);
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.removeSessionFile(mSession, "packages", listBasePackages.getValue(), new AsyncCallback<Void>() {
+            
+            @Override
+            public void onSuccess(Void result) {
+                refreshDataFiles(mSession);
+            }
+            
+            @Override
+            public void onFailure(Throwable caught) {
+            }
+        });
+    }
+    
+    @UiHandler("formBasePackages")
+    void onBasePackagesSubmit(FormPanel.SubmitEvent event) {
+        // TODO: show progress
+        formBasePackages.setVisible(false);
+    }
+    
+    @UiHandler("formBasePackages")
+    void onBasePackagesUploadCompleted(FormPanel.SubmitCompleteEvent event) {
+        uploadBasePackages.setText(null);
+        formBasePackages.setVisible(true);
+        
+        // refresh file listing
+        refreshDataFiles(mSession);
+    }
+    
+    @UiHandler("uploadBasePackages")
+    void onBasePackagesChanged(ChangeEvent evt) {
+        formBasePackages.setEncoding(FormPanel.ENCODING_MULTIPART);
+        formBasePackages.setMethod(FormPanel.METHOD_POST);
+        formBasePackages.setAction(GWT.getModuleBaseURL() + "upload?sid=" + mSession.id);
+        formBasePackages.submit();
+    }
+    
+    @UiHandler("listBasePackages")
+    void onBasePackagesFileChanged(ChangeEvent evt) {
+        buttonBasePackages.setEnabled(!listBasePackages.getValue().isEmpty());
     }
     
     @UiHandler("textStatsInterval")
@@ -703,7 +780,6 @@ public class SessionEditView extends View {
         formMovementOneTrace.setEncoding(FormPanel.ENCODING_MULTIPART);
         formMovementOneTrace.setMethod(FormPanel.METHOD_POST);
         formMovementOneTrace.setAction(GWT.getModuleBaseURL() + "upload?sid=" + mSession.id);
-        uploadMovementOneTrace.setName("tracedata");
         formMovementOneTrace.submit();
     }
     

@@ -99,16 +99,28 @@
 
 							<!-- packages.install -->
 							<b:ControlGroup>
-								<b:ControlLabel for="textPackages">Packages</b:ControlLabel>
+								<b:ControlLabel for="textInstall">Install list</b:ControlLabel>
 								<b:Controls>
-									<b:TextArea alternateSize="XLARGE" b:id="textPackages" addStyleNames="{style.monospaced}"
-										ui:field="textBasePackages" visibleLines="5"></b:TextArea>
+									<b:TextArea alternateSize="XLARGE" b:id="textInstall" addStyleNames="{style.monospaced}"
+										ui:field="textBaseInstall" visibleLines="5"></b:TextArea>
 									<b:HelpBlock>These packages are installed during the base
 										preparation. Put each package into a separate line.</b:HelpBlock>
 								</b:Controls>
 							</b:ControlGroup>
 
-							<!-- TODO: additional packages (GwtUpload) -->
+							<!-- additional packages upload/remove -->
+							<b:ControlGroup>
+								<b:ControlLabel for="listPackages">Packages</b:ControlLabel>
+								<b:Controls>
+									<b:ListBox alternateSize="XLARGE" b:id="listPackages" b:enabled="false" visibleItemCount="4" ui:field="listBasePackages"></b:ListBox>
+									<b:Button ui:field="buttonBasePackages" type="DANGER" b:enabled="false" b:icon="TRASH">Delete</b:Button>
+									<g:FormPanel ui:field="formBasePackages">
+										<b:FileUpload ui:field="uploadBasePackages" name="packagefile" />
+									</g:FormPanel>
+									<b:HelpBlock>These uploaded packages are installed during the base
+										preparation.</b:HelpBlock>
+								</b:Controls>
+							</b:ControlGroup>
 
 							<!-- Node Template (qemu) -->
 							<b:ControlGroup>
@@ -332,7 +344,7 @@
 											<b:ListBox alternateSize="XLARGE" b:id="listOneTrace" b:enabled="false" ui:field="listMovementOneTrace"></b:ListBox>
 											<b:Button ui:field="buttonMovementOneTrace" type="DANGER" b:enabled="false" b:icon="TRASH">Delete</b:Button>
 											<g:FormPanel ui:field="formMovementOneTrace">
-												<b:FileUpload ui:field="uploadMovementOneTrace" />
+												<b:FileUpload ui:field="uploadMovementOneTrace" name="tracefile" />
 											</g:FormPanel>
 										</b:Controls>
 									</b:ControlGroup>
