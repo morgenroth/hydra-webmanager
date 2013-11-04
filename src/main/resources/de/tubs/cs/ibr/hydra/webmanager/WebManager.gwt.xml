@@ -8,7 +8,6 @@
   <inherits name="javax.validation.Validation"/>
   <inherits name='com.google.gwt.visualization.Visualization'/>
   <inherits name="com.google.gwt.json.JSON" />
-  <inherits name="com.google.maps.gwt.GoogleMaps" />
   <inherits name="com.google.gwt.ajaxloader.AjaxLoader" />
   
   <set-property name="gwt.logging.logLevel" value="FINEST"/>
@@ -36,7 +35,14 @@
   <inherits name='com.github.gwtbootstrap.datepicker.Datepicker' />
   <!--  end of inherit the GWT-Bootstrap  datepicker library --> 
   
+  <!-- Include atmosphere framework -->
   <inherits name="org.atmosphere.gwt20.AtmosphereGwt20"/>
+  
+  <!--                                           -->
+  <!-- Include google maps API via SSL           -->
+  <!--                                           -->
+  <inherits name="com.google.maps.gwt.GoogleMaps" />
+  <script src="https://maps.googleapis.com/maps/api/js?sensor=false" />
 
   <!-- Specify the app entry point class.                         -->
   <entry-point class='de.tubs.cs.ibr.hydra.webmanager.client.WebManager' />

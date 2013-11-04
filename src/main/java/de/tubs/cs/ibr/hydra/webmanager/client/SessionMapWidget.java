@@ -6,8 +6,6 @@ import java.util.HashSet;
 
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.ListBox;
-import com.google.gwt.ajaxloader.client.AjaxLoader;
-import com.google.gwt.ajaxloader.client.AjaxLoader.AjaxLoaderOptions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -73,6 +71,7 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     // animation (interpolation) variables
     private int mAnimationRound = 0;
     private int mAnimationMax = 10;
+    private final int mAnimationInterval = 100;
     
     // selected node
     private Long selectedNode = null;
@@ -113,42 +112,40 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     }
     
     private void initializeMaps() {
-        AjaxLoaderOptions options = AjaxLoaderOptions.newInstance();
-        options.setOtherParms("sensor=false");
-        Runnable callback = new Runnable() {
-          public void run() {
-              LatLng center = LatLng.create(mFix.getLat(), mFix.getLon());
-              
-              // create map options
-              mOptions = MapOptions.create();
-              mOptions.setZoom(14.0);
-              mOptions.setCenter(center);
-              mOptions.setMapTypeId(MapTypeId.ROADMAP);
-              
-              // create the map widget
-              mMap = GoogleMap.create(panelMap.getElement(), mOptions);
-              
-              // instantiate the node marker resources
-              MapMarker res = GWT.create(MapMarker.class);
-              
-              // define anchor point for the markers
-              Point anchor = Point.create(res.blue().getWidth() / 2, res.blue().getHeight() / 2);
-              
-              mBlueIcon = MarkerImage.create(res.blue().getSafeUri().asString(), null, null, anchor);
-              mRedIcon = MarkerImage.create(res.red().getSafeUri().asString(), null, null, anchor);
-              mGreenIcon = MarkerImage.create(res.green().getSafeUri().asString(), null, null, anchor);
-              
-              // set maps to initialized
-              mInitialized = true;
-              
-              // resize the map frame
-              onResize(null);
-              
-              // update the data for the first time
-              update();
-          }
-        };
-        AjaxLoader.loadApi("maps", "3", callback, options);
+        LatLng center = LatLng.create(mFix.getLat(), mFix.getLon());
+
+        // create map options
+        mOptions = MapOptions.create();
+        mOptions.setCenter(center);
+        mOptions.setMapTypeId(MapTypeId.ROADMAP);
+        mOptions.setMapTypeControl(true);
+        mOptions.setPanControl(true);
+        mOptions.setScaleControl(true);
+        mOptions.setZoom(14) ;
+        mOptions.setDraggable(true);
+        mOptions.setScrollwheel(true) ;
+
+        // create the map widget
+        mMap = GoogleMap.create(panelMap.getElement(), mOptions);
+
+        // instantiate the node marker resources
+        MapMarker res = GWT.create(MapMarker.class);
+
+        // define anchor point for the markers
+        Point anchor = Point.create(res.blue().getWidth() / 2, res.blue().getHeight() / 2);
+
+        mBlueIcon = MarkerImage.create(res.blue().getSafeUri().asString(), null, null, anchor);
+        mRedIcon = MarkerImage.create(res.red().getSafeUri().asString(), null, null, anchor);
+        mGreenIcon = MarkerImage.create(res.green().getSafeUri().asString(), null, null, anchor);
+
+        // set maps to initialized
+        mInitialized = true;
+
+        // resize the map frame
+        onResize(null);
+
+        // update the data for the first time
+        update();
     }
     
     private void animate() {
@@ -344,7 +341,7 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
         
         mVisible = visible;
         
-        if (!mInitTriggered) {
+        if (!mInitTriggered && mVisible) {
             mInitTriggered = true;
             
             // load map library
@@ -403,7 +400,7 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
         }
         else if ((newViewMode == 2) && mVisible) {
             // animated
-            mRefreshTimer.scheduleRepeating(100);
+            mRefreshTimer.scheduleRepeating(mAnimationInterval);
         }
         
         mViewMode = newViewMode;
