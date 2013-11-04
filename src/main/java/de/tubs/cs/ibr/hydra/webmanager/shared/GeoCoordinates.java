@@ -73,7 +73,7 @@ public class GeoCoordinates implements Comparable<GeoCoordinates>, IsSerializabl
         // earth radius
         double R = 6378137;
 
-        double dLat = c.getY() / R;
+        double dLat = (-1 * c.getY()) / R;
         double dLon = c.getX() / (R * Math.cos(Math.PI * fix.getLat() / 180 ));
         
         double lat = fix.getLat() + dLat * 180 / Math.PI;
