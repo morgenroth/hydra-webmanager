@@ -2,6 +2,7 @@
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
 	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui"
+	xmlns:base="urn:import:com.github.gwtbootstrap.client.ui.base"
 	xmlns:viz="urn:import:com.google.gwt.visualization.client.visualizations">
 	<ui:style>
 		.formButton {
@@ -33,6 +34,15 @@
 					</g:SimplePanel>
 					<g:SimplePanel>
 						<b:Button type="DEFAULT" ui:field="buttonAutoFit" addStyleNames="{style.formButton}">Auto-Fit</b:Button>
+					</g:SimplePanel>
+					<g:SimplePanel>
+						<b:InputAddOn prependText="Latitude" appendIcon="MAP_MARKER" addStyleNames="{style.formButton}">
+							<b:TextBox alternateSize="SMALL" b:id="textCoordLat"
+								ui:field="textCoordLat" b:placeholder="52.123456" />
+							<base:AddOn text="Longitude" />
+							<b:TextBox alternateSize="SMALL" b:id="textCoordLng"
+								ui:field="textCoordLng" b:placeholder="10.123456" />
+						</b:InputAddOn>
 					</g:SimplePanel>
 				</g:HorizontalPanel>
 			</b:Column>

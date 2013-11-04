@@ -6,6 +6,7 @@ import java.util.HashSet;
 
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.ListBox;
+import com.github.gwtbootstrap.client.ui.TextBox;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -28,6 +29,7 @@ import com.google.maps.gwt.client.MapTypeId;
 import com.google.maps.gwt.client.MarkerImage;
 import com.google.maps.gwt.client.Point;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.GeoCoordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MapDataSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
@@ -45,8 +47,12 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     @UiField ListBox listViewType;
     @UiField Button buttonRefresh;
     @UiField Button buttonAutoFit;
+    
+    @UiField TextBox textCoordLat;
+    @UiField TextBox textCoordLng;
 
     private Session mSession = null;
+    private GeoCoordinates mFix = null;
     
     private MarkerImage mBlueIcon = null;
     private MarkerImage mRedIcon = null;
@@ -222,7 +228,11 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
                         }
     
                         // set / update nodes position
-                        mn.setPosition(n.position.getGeoCoordinates());
+                        if (mFix == null) {
+                            mn.setPosition(n.position.getGeoCoordinates());
+                        } else {
+                            mn.setPosition(n.position.getGeoCoordinates(mFix));
+                        }
 
                         if (n.id.equals(selectedNode)) {
                             // show red marker if selected
@@ -428,5 +438,33 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
         }
         
         mViewMode = newViewMode;
+    }
+    
+    @UiHandler("textCoordLat")
+    public void onCoordLatChanged(ChangeEvent e) {
+        if (textCoordLat.getValue().isEmpty() || textCoordLng.getValue().isEmpty()) return;
+        
+        double lat = Double.valueOf(textCoordLat.getValue());
+        double lng = Double.valueOf(textCoordLng.getValue());
+        
+        if (mFix == null) {
+            mFix = new GeoCoordinates(lat, lng);
+        } else {
+            mFix.setLocation(lat, lng);
+        }
+    }
+    
+    @UiHandler("textCoordLng")
+    public void onCoordLngChanged(ChangeEvent e) {
+        if (textCoordLat.getValue().isEmpty() || textCoordLng.getValue().isEmpty()) return;
+        
+        double lat = Double.valueOf(textCoordLat.getValue());
+        double lng = Double.valueOf(textCoordLng.getValue());
+        
+        if (mFix == null) {
+            mFix = new GeoCoordinates(lat, lng);
+        } else {
+            mFix.setLocation(lat, lng);
+        }
     }
 }
