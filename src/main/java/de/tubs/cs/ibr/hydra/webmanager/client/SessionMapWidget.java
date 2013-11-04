@@ -21,6 +21,8 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.maps.gwt.client.GoogleMap;
+import com.google.maps.gwt.client.LatLng;
+import com.google.maps.gwt.client.LatLngBounds;
 import com.google.maps.gwt.client.MapOptions;
 import com.google.maps.gwt.client.MapTypeId;
 import com.google.maps.gwt.client.MarkerImage;
@@ -42,6 +44,7 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     @UiField ListBox listSelectedNode;
     @UiField ListBox listViewType;
     @UiField Button buttonRefresh;
+    @UiField Button buttonAutoFit;
 
     private Session mSession = null;
     
@@ -59,7 +62,6 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     GoogleMap mMap = null;
     MapOptions mOptions = null;
     
-    // is true if all charts are initialized
     boolean mInitialized = false;
     boolean mInitTriggered = false;
     
@@ -75,6 +77,9 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     
     // 0 = static, 1 = refresh, 2 = animated
     private int mViewMode = 0;
+    
+    // is set to true, if the map was centered once to the visible nodes
+    private boolean mFitted = false;
 
     public SessionMapWidget() {
         initWidget(uiBinder.createAndBindUi(this));
@@ -105,15 +110,18 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     }
     
     private void initializeMaps() {
+        LatLng center = LatLng.create(52.123456, 10.123456);
+        
         // create map options
         mOptions = MapOptions.create();
+        mOptions.setCenter(center);
         mOptions.setMapTypeId(MapTypeId.ROADMAP);
         mOptions.setMapTypeControl(true);
         mOptions.setPanControl(true);
         mOptions.setScaleControl(true);
         mOptions.setZoom(14) ;
         mOptions.setDraggable(true);
-        mOptions.setScrollwheel(true) ;
+        mOptions.setScrollwheel(true);
 
         // create the map widget
         mMap = GoogleMap.create(panelMap.getElement(), mOptions);
@@ -136,6 +144,29 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
 
         // update the data for the first time
         update();
+    }
+    
+    @UiHandler("buttonAutoFit")
+    void onAutoFitButtonClick(ClickEvent e) {
+        doAutoFit();
+    }
+    
+    private void doAutoFit() {
+        boolean hasValidPositions = false;
+        
+        LatLngBounds bounds = LatLngBounds.create();
+        
+        for (MapNode n : mNodes.values()) {
+            if (n.getPosition() != null) {
+                bounds.extend(n.getPosition());
+                hasValidPositions = true;
+            }
+        }
+        
+        if (hasValidPositions) {
+            mMap.fitBounds(bounds);
+            mFitted = true;
+        }
     }
     
     private void animate() {
@@ -283,6 +314,9 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
                         ml.animate(mAnimationMax, mAnimationMax);
                     }
                 }
+                
+                // if the map was never centered, do it now
+                if (!mFitted) doAutoFit();
             }
             
             @Override

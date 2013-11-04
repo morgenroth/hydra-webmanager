@@ -68,6 +68,8 @@ public class GeoCoordinates implements Comparable<GeoCoordinates>, IsSerializabl
 
     // simplified algorithm
     public static GeoCoordinates fromCoordinates(Coordinates c, GeoCoordinates fix) {
+        if (c.isInvalid()) return null;
+        
         // earth radius
         double R = 6378137;
 

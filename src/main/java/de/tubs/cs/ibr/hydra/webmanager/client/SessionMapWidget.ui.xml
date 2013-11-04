@@ -29,7 +29,10 @@
 						</b:InputAddOn>
 					</g:SimplePanel>
 					<g:SimplePanel>
-						<b:Button type="DEFAULT" ui:field="buttonRefresh">Refresh</b:Button>
+						<b:Button type="DEFAULT" ui:field="buttonRefresh" addStyleNames="{style.formButton}">Refresh</b:Button>
+					</g:SimplePanel>
+					<g:SimplePanel>
+						<b:Button type="DEFAULT" ui:field="buttonAutoFit" addStyleNames="{style.formButton}">Auto-Fit</b:Button>
 					</g:SimplePanel>
 				</g:HorizontalPanel>
 			</b:Column>

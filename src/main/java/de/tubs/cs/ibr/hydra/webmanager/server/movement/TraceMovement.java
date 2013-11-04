@@ -47,6 +47,47 @@ public class TraceMovement extends MovementProvider implements Closeable {
         }
     }
     
+    private static class Header {
+        public Long beginTimestamp = 0L;
+        public Long endTimestamp = 0L;
+        
+        public Double areaWidth = 0.0;
+        public Double areaHeight = 0.0;
+        
+        public GeoCoordinates reference = new GeoCoordinates();
+        
+        private Header() {
+        }
+        
+        public static TraceMovement.Header parse(String data) {
+            if (data == null) return null;
+            
+            // split up data into pieces
+            String[] dataset = data.split(" ");
+            
+            // only decode if there are at least four data values
+            if (dataset.length < 8) return null;
+            
+            TraceMovement.Header header = new TraceMovement.Header();
+            
+            header.beginTimestamp = Long.valueOf(dataset[0]);
+            header.endTimestamp = Long.valueOf(dataset[1]);
+            
+            header.areaWidth = Double.valueOf(dataset[3]);
+            header.areaHeight = Double.valueOf(dataset[5]);
+            
+            // only decode if there are at least four data values
+            if (dataset.length < 10) return header;
+            
+            Double lat = Double.valueOf(dataset[8]);
+            Double lng = Double.valueOf(dataset[9]);
+            
+            header.reference.setLocation(lat, lng);
+            
+            return header;
+        }
+    };
+    
     private static class Entry {
         public Double timestamp = null;
         public Long node = null;
@@ -188,10 +229,10 @@ public class TraceMovement extends MovementProvider implements Closeable {
         
         try {
             // open the trace file
-            String header = openTrace(mTraceFile);
+            TraceMovement.Header header = TraceMovement.Header.parse( openTrace(mTraceFile) );
             
-            // TODO: parse header for map reference
-            ref = new GeoCoordinates(52.123456, 10.123456);
+            // set map reference
+            ref = header.reference;
         } catch (FileNotFoundException e) {
             // error
             e.printStackTrace();
@@ -232,6 +273,20 @@ public class TraceMovement extends MovementProvider implements Closeable {
         mReader = new BufferedReader(new InputStreamReader(input));
         
         // read header line of the trace
-        return mReader.readLine();
+        return readLine();
+    }
+    
+    private String readLine() throws IOException {
+        String data = mReader.readLine();
+        
+        if (data == null) return null;
+        
+        // skip comment lines
+        while (data.startsWith("#")) {
+            data = mReader.readLine();
+            if (data == null) return null;
+        }
+        
+        return data;
     }
 }

@@ -10,7 +10,7 @@ public class Coordinates implements Comparable<Coordinates>, IsSerializable {
     private GeoCoordinates georeference = null;
     
     public Coordinates() {
-        this(0.0, 0.0, null);
+        this(null, null, null);
     }
     
     public Coordinates(Double x, Double y) {
@@ -24,6 +24,12 @@ public class Coordinates implements Comparable<Coordinates>, IsSerializable {
     }
     
     public void setLocation(Coordinates c) {
+        if (c == null) {
+            this.x = null;
+            this.y = null;
+            this.z = null;
+            return;
+        }
         this.x = c.x;
         this.y = c.y;
         this.z = c.z;
@@ -41,25 +47,31 @@ public class Coordinates implements Comparable<Coordinates>, IsSerializable {
     }
     
     public void move(double dx, double dy) {
+        if (isInvalid()) return;
         this.x += dx;
         this.y += dy;
     }
     
     public void move(double dx, double dy, double dz) {
+        if (isInvalid()) return;
         this.x += dx;
         this.y += dy;
         this.z += dz;
     }
     
     public void flipX() {
+        if (isInvalid()) return;
         this.x *= -1.0;
     }
     
     public void flipY() {
+        if (isInvalid()) return;
         this.y *= -1.0;
     }
     
     public double distance(Coordinates other) {
+        if (isInvalid()) return 0.0;
+        
         double dx = this.x - other.x;
         double dy = this.y - other.y;
 
@@ -72,11 +84,18 @@ public class Coordinates implements Comparable<Coordinates>, IsSerializable {
     }
     
     public double getX() {
+        if (x == null) return 0.0;
         return x;
     }
     
     public double getY() {
+        if (y == null) return 0.0;
         return y;
+    }
+    
+    public double getZ() {
+        if (z == null) return 0.0;
+        return z;
     }
     
     public void setReference(GeoCoordinates ref) {
@@ -92,13 +111,10 @@ public class Coordinates implements Comparable<Coordinates>, IsSerializable {
         return GeoCoordinates.fromCoordinates(this, fix);
     }
     
-    public double getZ() {
-        if (z == null) return 0.0;
-        return z;
-    }
-    
     @Override
     public String toString() {
+        if (isInvalid()) return "(invalid)";
+        
         if (z == null)
             return "(" + x.toString() + ", " + y.toString() + ")";
         else
@@ -137,5 +153,9 @@ public class Coordinates implements Comparable<Coordinates>, IsSerializable {
         else {
             return 0;
         }
+    }
+    
+    public boolean isInvalid() {
+        return (this.x == null) || (this.y == null);
     }
 }

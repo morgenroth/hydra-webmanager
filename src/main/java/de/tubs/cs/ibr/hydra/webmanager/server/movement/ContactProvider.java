@@ -75,13 +75,13 @@ public class ContactProvider implements MovementProvider.MovementHandler {
             if (other == n) continue;
             
             // no position, no action!
-            if (other.position == null) continue;
+            if (other.position.isInvalid()) continue;
             
             Link uplink = new Link(n, other);
             Link downlink = new Link(other, n);
             
             // no position, shutdown all links
-            if (n.position == null) {
+            if (n.position.isInvalid()) {
                 // separation uplink
                 if (mLinkSet.remove(uplink)) {
                     fireOnSeparationEvent(uplink);

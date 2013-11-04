@@ -86,7 +86,7 @@ public class RandomWalkMovement extends MovementProvider {
         // iterate through all nodes
         for (Node n : this.getNodes()) {
             // if no position is set
-            if (n.position == null) {
+            if (n.position.isInvalid()) {
                 // set initial random coordinates
                 double x = randomUniform(0.0, mAreaWidth);
                 double y = randomUniform(0.0, mAreaHeight);
