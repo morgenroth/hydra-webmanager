@@ -9,7 +9,6 @@ import com.google.maps.gwt.client.Marker.ClickHandler;
 import com.google.maps.gwt.client.MarkerImage;
 import com.google.maps.gwt.client.MouseEvent;
 
-import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 import de.tubs.cs.ibr.hydra.webmanager.shared.GeoCoordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
@@ -92,15 +91,7 @@ public class MapNode {
         return LatLng.create(lat, lng);
     }
     
-    public void setPosition(Coordinates c, GeoCoordinates fix) {
-        // translate coordinates
-        setPosition(c == null ? null : c.getGeoCoordinates(fix));
-        
-        // set node coordinates
-        mNode.position = c;
-    }
-
-    private void setPosition(GeoCoordinates g) {
+    public void setPosition(GeoCoordinates g) {
         mGeo = g;
         mPosition = mNextPosition;
         

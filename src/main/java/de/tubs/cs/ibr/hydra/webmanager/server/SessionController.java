@@ -30,6 +30,7 @@ import de.tubs.cs.ibr.hydra.webmanager.server.movement.TraceMovement;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
+import de.tubs.cs.ibr.hydra.webmanager.shared.GeoCoordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
@@ -632,22 +633,27 @@ public class SessionController {
             // add node to the contact provider
             mContactProvider.add(n);
         }
+        
+        // initialize the movement provider
+        mMovement.initialize();
     }
     
     private MovementProvider.MovementHandler mMovementHandler = new MovementProvider.MovementHandler() {
         @Override
         public void onMovement(final Node n, final Coordinates position, Double speed, Double heading) {
+            final GeoCoordinates coord = position.getGeoCoordinates();
+            
             // update position on the node
             mSlaveExecutor.execute(n, new SlaveExecutor.NodeRunnable() {
 
                 @Override
                 public void run(SlaveConnection c, Node n) throws OperationFailedException {
                     try {
-                        if (position == null) {
-                            // TODO: set invisible
+                        if (coord == null) {
+                            // set invisible
                             c.setPosition(n, 0.0, 0.0, 0.0);
                         } else {
-                            c.setPosition(n, position.getX(), position.getY(), position.getZ());
+                            c.setPosition(n, coord.getLat(), coord.getLon(), 0.0);
                         }
                     } catch (Exception e) {
                         throw new OperationFailedException(e);

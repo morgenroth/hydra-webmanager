@@ -17,6 +17,7 @@ import java.util.zip.GZIPInputStream;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SessionContainer;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
+import de.tubs.cs.ibr.hydra.webmanager.shared.GeoCoordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 
@@ -43,23 +44,6 @@ public class TraceMovement extends MovementProvider implements Closeable {
         
         if (mParams.parameters.containsKey("tracefile")) {
             mTraceFile = new File(mContainer.getDataPath("data"), mParams.parameters.get("tracefile"));
-            
-            try {
-                // open the trace file
-                mReader = TraceMovement.openTrace(mTraceFile);
-            } catch (FileNotFoundException e) {
-                // error
-                e.printStackTrace();
-                
-                // reset the reader object
-                mReader = null;
-            } catch (IOException e) {
-                // error
-                e.printStackTrace();
-                
-                // reset the reader object
-                mReader = null;
-            }
         }
     }
     
@@ -148,7 +132,7 @@ public class TraceMovement extends MovementProvider implements Closeable {
                     resetElapsedTime();
                     
                     // open the trace file again
-                    mReader = TraceMovement.openTrace(mTraceFile);
+                    openTrace(mTraceFile);
                 } else {
                     // we are done
                     throw new MovementFinishedException();
@@ -185,7 +169,7 @@ public class TraceMovement extends MovementProvider implements Closeable {
         if (n == null) return;
         
         // assign new node position
-        n.position = e.position;
+        n.position.setLocation(e.position);
         
         // fire moved event
         fireOnMovementEvent(n, n.position, n.speed, n.heading);
@@ -199,15 +183,41 @@ public class TraceMovement extends MovementProvider implements Closeable {
     }
 
     @Override
-    public void add(Node n) {
-        // add node to the super-class
-        super.add(n);
+    public void initialize() {
+        GeoCoordinates ref = null;
         
-        // add node to the mapping pool
-        mNodePool.offer(n);
+        try {
+            // open the trace file
+            String header = openTrace(mTraceFile);
+            
+            // TODO: parse header for map reference
+            ref = new GeoCoordinates(52.123456, 10.123456);
+        } catch (FileNotFoundException e) {
+            // error
+            e.printStackTrace();
+            
+            // reset the reader object
+            mReader = null;
+        } catch (IOException e) {
+            // error
+            e.printStackTrace();
+            
+            // reset the reader object
+            mReader = null;
+        }
+        
+        for (Node n : getNodes()) {
+            if (ref != null) {
+                // set map reference coordinates
+                n.position.setReference(ref);
+            }
+            
+            // add node to the mapping pool
+            mNodePool.offer(n);
+        }
     }
     
-    private static BufferedReader openTrace(File f) throws FileNotFoundException, IOException {
+    private String openTrace(File f) throws FileNotFoundException, IOException {
         InputStream input = null;
         
         if (f.getName().endsWith(".gz")) {
@@ -219,11 +229,9 @@ public class TraceMovement extends MovementProvider implements Closeable {
         }
         
         // create file-reader
-        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+        mReader = new BufferedReader(new InputStreamReader(input));
         
         // read header line of the trace
-        String header = reader.readLine();
-        
-        return reader;
+        return mReader.readLine();
     }
 }

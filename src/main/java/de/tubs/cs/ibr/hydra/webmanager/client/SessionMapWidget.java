@@ -21,13 +21,11 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.maps.gwt.client.GoogleMap;
-import com.google.maps.gwt.client.LatLng;
 import com.google.maps.gwt.client.MapOptions;
 import com.google.maps.gwt.client.MapTypeId;
 import com.google.maps.gwt.client.MarkerImage;
 import com.google.maps.gwt.client.Point;
 
-import de.tubs.cs.ibr.hydra.webmanager.shared.GeoCoordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Link;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MapDataSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
@@ -45,7 +43,6 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     @UiField ListBox listViewType;
     @UiField Button buttonRefresh;
 
-    private GeoCoordinates mFix = null;
     private Session mSession = null;
     
     private MarkerImage mBlueIcon = null;
@@ -105,18 +102,11 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
     public void initialize(final Session session) {
         // store session globally
         mSession = session;
-        
-        // generate a fix coordinate for map projection (Arktis)
-        //mFix = new GeoCoordinates(-82.142451, 93.779297);
-        mFix = new GeoCoordinates(52.16, 10.32);
     }
     
     private void initializeMaps() {
-        LatLng center = LatLng.create(mFix.getLat(), mFix.getLon());
-
         // create map options
         mOptions = MapOptions.create();
-        mOptions.setCenter(center);
         mOptions.setMapTypeId(MapTypeId.ROADMAP);
         mOptions.setMapTypeControl(true);
         mOptions.setPanControl(true);
@@ -201,7 +191,7 @@ public class SessionMapWidget extends Composite implements ResizeHandler {
                         }
     
                         // set / update nodes position
-                        mn.setPosition(n.position, mFix);
+                        mn.setPosition(n.position.getGeoCoordinates());
 
                         if (n.id.equals(selectedNode)) {
                             // show red marker if selected

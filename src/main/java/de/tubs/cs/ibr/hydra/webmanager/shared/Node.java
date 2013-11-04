@@ -62,7 +62,7 @@ public class Node implements IsSerializable, Comparable<Node> {
     /**
      * Contains the coordinates of this node.
      */
-    public Coordinates position = null;
+    public Coordinates position = new Coordinates();
     
     /**
      * Heading and speed for movement

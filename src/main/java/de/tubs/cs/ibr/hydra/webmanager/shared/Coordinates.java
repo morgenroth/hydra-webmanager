@@ -7,6 +7,8 @@ public class Coordinates implements Comparable<Coordinates>, IsSerializable {
     private Double y;
     private Double z;
     
+    private GeoCoordinates georeference = null;
+    
     public Coordinates() {
         this(0.0, 0.0, null);
     }
@@ -75,6 +77,15 @@ public class Coordinates implements Comparable<Coordinates>, IsSerializable {
     
     public double getY() {
         return y;
+    }
+    
+    public void setReference(GeoCoordinates ref) {
+        georeference = ref;
+    }
+    
+    public GeoCoordinates getGeoCoordinates() {
+        if (georeference == null) return null;
+        return GeoCoordinates.fromCoordinates(this, georeference);
     }
     
     public GeoCoordinates getGeoCoordinates(GeoCoordinates fix) {

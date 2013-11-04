@@ -3,7 +3,7 @@ package de.tubs.cs.ibr.hydra.webmanager.server.movement;
 import java.util.HashMap;
 import java.util.Random;
 
-import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
+import de.tubs.cs.ibr.hydra.webmanager.shared.GeoCoordinates;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MobilityParameterSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 
@@ -19,6 +19,7 @@ public class RandomWalkMovement extends MovementProvider {
     private Double mVelocityMax = null;
     private Double mVelocityMin = null;
     private Double mDuration = null;
+    private GeoCoordinates mGeoRef = null;
     
     public RandomWalkMovement(MobilityParameterSet p) {
         mParams = p;
@@ -58,6 +59,17 @@ public class RandomWalkMovement extends MovementProvider {
             mDuration = Double.valueOf(mParams.parameters.get("duration"));
         }
         
+        if (p.parameters.containsKey("lat") && p.parameters.containsKey("lng")) {
+            Double lat = Double.valueOf(mParams.parameters.get("lat"));
+            Double lon = Double.valueOf(mParams.parameters.get("lng"));
+            
+            // create geo reference from settings
+            mGeoRef = new GeoCoordinates(lat, lon);
+        } else {
+            // create default geo reference from settings
+            mGeoRef = new GeoCoordinates(52.123456, 10.123456);
+        }
+        
         // initialize random number generator
         rand = new Random();
     }
@@ -78,7 +90,7 @@ public class RandomWalkMovement extends MovementProvider {
                 // set initial random coordinates
                 double x = randomUniform(0.0, mAreaWidth);
                 double y = randomUniform(0.0, mAreaHeight);
-                n.position = new Coordinates(x, y);
+                n.position.setLocation(x, y);
             }
             
             // move the node
@@ -190,5 +202,15 @@ public class RandomWalkMovement extends MovementProvider {
     
     private double randomUniform(Double min, Double max) {
         return min + (rand.nextDouble() * (max - min));
+    }
+
+    @Override
+    public void initialize() {
+        for (Node n : getNodes()) {
+            if (mGeoRef != null) {
+                // set map reference coordinates
+                n.position.setReference(mGeoRef);
+            }
+        }
     }
 }

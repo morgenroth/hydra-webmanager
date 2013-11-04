@@ -8,4 +8,9 @@ public class NullMovement extends MovementProvider {
         // nobody moves!
     }
 
+    @Override
+    public void initialize() {
+        // nothing to initialize
+    }
+    
 }

@@ -93,6 +93,8 @@ public class SessionEditView extends View {
     @UiField TextBox textMovementRwpMovetime;
     @UiField TextBox textMovementRwpVmin;
     @UiField TextBox textMovementRwpVmax;
+    @UiField TextBox textMovementRwpCoordLat;
+    @UiField TextBox textMovementRwpCoordLng;
     
     // TRACE
     @UiField FormPanel formMovementTrace;
@@ -104,6 +106,8 @@ public class SessionEditView extends View {
     // STATIC
     @UiField TextArea textMovementStaticPositions;
     @UiField TextBox textMovementStaticDuration;
+    @UiField TextBox textMovementStaticCoordLat;
+    @UiField TextBox textMovementStaticCoordLng;
     
     @UiField SessionNodesEditor nodesEditor;
     
@@ -655,6 +659,18 @@ public class SessionEditView extends View {
                 } else {
                     textMovementRwpVmax.setText(null);
                 }
+                
+                if (mSession.mobility.parameters.containsKey("lat")) {
+                    textMovementRwpCoordLat.setText(mSession.mobility.parameters.get("lat"));
+                } else {
+                    textMovementRwpCoordLat.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("lng")) {
+                    textMovementRwpCoordLng.setText(mSession.mobility.parameters.get("lng"));
+                } else {
+                    textMovementRwpCoordLng.setText(null);
+                }
                 break;
             case STATIC:
                 if (mSession.mobility.parameters.containsKey("positions")) {
@@ -666,6 +682,17 @@ public class SessionEditView extends View {
                     textMovementStaticDuration.setText(mSession.mobility.parameters.get("duration"));
                 } else {
                     textMovementStaticDuration.setText(null);
+                }
+                if (mSession.mobility.parameters.containsKey("lat")) {
+                    textMovementStaticCoordLat.setText(mSession.mobility.parameters.get("lat"));
+                } else {
+                    textMovementStaticCoordLat.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("lng")) {
+                    textMovementStaticCoordLng.setText(mSession.mobility.parameters.get("lng"));
+                } else {
+                    textMovementStaticCoordLng.setText(null);
                 }
                 break;
             case TRACE:
@@ -732,6 +759,18 @@ public class SessionEditView extends View {
     void onMovementRwpVmaxChanged(ChangeEvent evt) {
         if (mChangedSession.mobility == null) return;
         mChangedSession.mobility.parameters.put("vmax", textMovementRwpVmax.getText());
+    }
+    
+    @UiHandler("textMovementRwpCoordLat")
+    void onMovementRwpCoordLatChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("lat", textMovementRwpCoordLat.getText());
+    }
+    
+    @UiHandler("textMovementRwpCoordLng")
+    void onMovementRwpCoordLngChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("lng", textMovementRwpCoordLng.getText());
     }
     
     @UiHandler("textSimulationRange")
@@ -815,6 +854,18 @@ public class SessionEditView extends View {
     void onMovementStaticDurationChanged(ChangeEvent evt) {
         if (mChangedSession.mobility == null) return;
         mChangedSession.mobility.parameters.put("duration", textMovementStaticDuration.getText());
+    }
+    
+    @UiHandler("textMovementStaticCoordLat")
+    void onMovementStaticoordLatChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("lat", textMovementStaticCoordLat.getText());
+    }
+    
+    @UiHandler("textMovementStaticCoordLng")
+    void onMovementStaticCoordLngChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("lng", textMovementStaticCoordLng.getText());
     }
     
     @UiHandler("panelTabs")

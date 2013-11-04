@@ -127,4 +127,9 @@ public abstract class MovementProvider {
      * time passed since the last call
      */
     public abstract void update() throws MovementFinishedException;
+    
+    /**
+     * This method is called after all nodes are added
+     */
+    public abstract void initialize();
 }

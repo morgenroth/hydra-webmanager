@@ -334,6 +334,23 @@
 											</b:HelpBlock>
 										</b:Controls>
 									</b:ControlGroup>
+									
+									<!-- GPS Reference Coordinates -->
+									<b:ControlGroup>
+										<b:ControlLabel for="textRwpCoordLat">Reference coordinate</b:ControlLabel>
+										<b:Controls>
+											<b:InputAddOn prependText="Latitude" appendIcon="MAP_MARKER">
+												<b:TextBox alternateSize="SMALL" b:id="textRwpCoordLat"
+													ui:field="textMovementRwpCoordLat" b:placeholder="52.123456" />
+												<base:AddOn text="Longitude" />
+												<b:TextBox alternateSize="SMALL" b:id="textRwpCoordLng"
+													ui:field="textMovementRwpCoordLng" b:placeholder="10.123456" />
+											</b:InputAddOn>
+											<b:HelpBlock>
+												This coordinates are used to map node positions to GPS coordinates.
+											</b:HelpBlock>
+										</b:Controls>
+									</b:ControlGroup>
 								</g:FlowPanel>
 								<!-- Traces -->
 								<g:FlowPanel>
@@ -379,6 +396,23 @@
 											<b:HelpBlock>Each line defines an position of one node on the map.
 											    One line consists of 'x', 'y' and 'z' position. Use '0.0' for empty values.
 												If not positions are defined all nodes are arranged in a straight line.</b:HelpBlock>
+										</b:Controls>
+									</b:ControlGroup>
+									
+									<!-- GPS Reference Coordinates -->
+									<b:ControlGroup>
+										<b:ControlLabel for="textStaticCoordLat">Reference coordinate</b:ControlLabel>
+										<b:Controls>
+											<b:InputAddOn prependText="Latitude" appendIcon="MAP_MARKER">
+												<b:TextBox alternateSize="SMALL" b:id="textStaticCoordLat"
+													ui:field="textMovementStaticCoordLat" b:placeholder="52.123456" />
+												<base:AddOn text="Longitude" />
+												<b:TextBox alternateSize="SMALL" b:id="textStaticCoordLng"
+													ui:field="textMovementStaticCoordLng" b:placeholder="10.123456" />
+											</b:InputAddOn>
+											<b:HelpBlock>
+												This coordinates are used to map node positions to GPS coordinates.
+											</b:HelpBlock>
 										</b:Controls>
 									</b:ControlGroup>
 								</g:FlowPanel>
