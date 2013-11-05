@@ -61,7 +61,7 @@ public class Database {
     private final static String QUERY_ADDRESS_ALLOCS = "SELECT DISTINCT `address` FROM nodes WHERE `address` != NULL ORDER BY `address`;";
     private final static String QUERY_SLAVE_ALLOCS = "SELECT `slaves`.`id`, `slaves`.`capacity`, COUNT(`slaves`.`id`) as allocation, `nodes`.`assigned_slave` FROM `slaves` LEFT JOIN `nodes` ON (`slaves`.`id` = `nodes`.`assigned_slave`) WHERE `slaves`.`state` != 'disconnected' GROUP BY `slaves`.`id`;";
     
-    private final static String QUERY_STATS = "SELECT `timestamp`, `data` FROM stats WHERE session = ?;";
+    private final static String QUERY_STATS = "SELECT `timestamp`, `node`, `data` FROM stats WHERE session = ? ORDER BY `timestamp`;";
     private final static String QUERY_STATS_BY_NODE = "SELECT `timestamp`, `data` FROM stats WHERE session = ? AND node = ? AND (`timestamp` > ?) AND (`timestamp` <= ?) ORDER BY timestamp DESC LIMIT 0,100;";
     private final static String QUERY_STATS_LATEST = "SELECT `id`, `s`.`timestamp`, `s`.`data` FROM `nodes` RIGHT JOIN (SELECT `timestamp`, `node`, `data` FROM `stats` WHERE `session` = ? ORDER BY `timestamp` DESC) as s ON (`s`.`node` = `nodes`.`id`) WHERE `session` = ? GROUP BY `id` ORDER BY `id`;";
     
@@ -1168,13 +1168,39 @@ public class Database {
             // set session id
             st.setLong(1, session.id);
             
+            long currentTimestamp = -1;
+            
+            out.write("{".getBytes());
+            
             // execute query
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
-                    String line = rs.getTimestamp(1).getTime() + " " + rs.getString(2) + "\n";
-                    out.write(line.getBytes());
+                    if (currentTimestamp < rs.getTimestamp(1).getTime()) {
+                        // close timestamp array if not initial
+                        if (currentTimestamp >= 0) {
+                            out.write("},".getBytes());
+                        }
+                        
+                        // switch to next timestamp
+                        currentTimestamp = rs.getTimestamp(1).getTime();
+                        
+                        // open timestamp array
+                        out.write(("\"" + currentTimestamp + "\":{").getBytes());
+                    } else {
+                        out.write(",".getBytes());
+                    }
+                    
+                    // write node data
+                    out.write(("\"" + rs.getLong(2) + "\": " + rs.getString(3)).getBytes());
                 }
             }
+            
+            // close timestamp array if not initial
+            if (currentTimestamp >= 0) {
+                out.write("}".getBytes());
+            }
+            
+            out.write("}".getBytes());
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
