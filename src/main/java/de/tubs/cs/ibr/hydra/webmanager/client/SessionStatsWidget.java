@@ -25,6 +25,7 @@ import com.google.gwt.visualization.client.LegendPosition;
 import com.google.gwt.visualization.client.VisualizationUtils;
 import com.google.gwt.visualization.client.visualizations.ColumnChart;
 
+import de.tubs.cs.ibr.hydra.webmanager.client.stats.StatsJso;
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
@@ -47,9 +48,6 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     // chart data
     DataTable mDataChartTraffic = null;
     DataTable mDataChartBundles = null;
-    
-    // interface mapping
-    HashMap<String, Integer> mInterfaceMap = new HashMap<String, Integer>();
     
     // list of visible node stats
     HashSet<Long> mVisibleNodes = new HashSet<Long>();
@@ -172,6 +170,10 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
             public void run() {
                 mDataChartTraffic = DataTable.create();
                 mDataChartTraffic.addColumn(ColumnType.STRING, "Nodes");
+                mDataChartTraffic.addColumn(ColumnType.NUMBER, "TCP (in)");
+                mDataChartTraffic.addColumn(ColumnType.NUMBER, "TCP (out)");
+                //mDataChartTraffic.addColumn(ColumnType.NUMBER, "UDP (in)");
+                //mDataChartTraffic.addColumn(ColumnType.NUMBER, "UDP (out)");
                 
                 mChartTraffic = new ColumnChart(mDataChartTraffic, mOptionsChart);
                 panelTraffic.add(mChartTraffic);
@@ -241,33 +243,19 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
             Long nodeId = e.getKey();
             DataPoint data = e.getValue();
             
-            mDataChartTraffic.setValue(row, 0, mNodes.get(nodeId).name);
+            // convert json to object
+            StatsJso stats = StatsJso.create(data.json);
             
-            for (DataPoint.InterfaceStats iface : data.ifaces.values()) {
-                // skip "lo" and "eth0" interface
-                if (iface.name.equals("lo") || iface.name.equals("eth0")) continue;
-                
-                // get columns for rx and tx
-                int rx_index = 0, tx_index = 1;
-                
-                if (mInterfaceMap.containsKey(iface.name + "_rx")) {
-                    rx_index = mInterfaceMap.get(iface.name + "_rx");
-                    tx_index = mInterfaceMap.get(iface.name + "_tx");
-                } else {
-                    rx_index = mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (rx)");
-                    tx_index = mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (tx)");
-                    mInterfaceMap.put(iface.name + "_rx", rx_index);
-                    mInterfaceMap.put(iface.name + "_tx", tx_index);
-                }
-
-                mDataChartTraffic.setValue(row, rx_index, iface.rx);
-                mDataChartTraffic.setValue(row, tx_index, iface.tx);
-            }
+            mDataChartTraffic.setValue(row, 0, mNodes.get(nodeId).name);
+            mDataChartTraffic.setValue(row, 1, stats.getTraffic().getInTcpByte());
+            mDataChartTraffic.setValue(row, 2, stats.getTraffic().getOutTcpByte());
+            //mDataChartTraffic.setValue(row, 3, stats.getTraffic().getInUdpByte());
+            //mDataChartTraffic.setValue(row, 4, stats.getTraffic().getOutUdpByte());
             
             mDataChartBundles.setValue(row, 0, mNodes.get(nodeId).name);
-            mDataChartBundles.setValue(row, 1, data.bundlestats.received);
-            mDataChartBundles.setValue(row, 2, data.bundlestats.transmitted);
-            mDataChartBundles.setValue(row, 3, data.bundlestats.generated);
+            mDataChartBundles.setValue(row, 1, stats.getDtnd().getBundles().getReceived());
+            mDataChartBundles.setValue(row, 2, stats.getDtnd().getBundles().getTransmitted());
+            mDataChartBundles.setValue(row, 3, stats.getDtnd().getBundles().getGenerated());
             
             row++;
         }

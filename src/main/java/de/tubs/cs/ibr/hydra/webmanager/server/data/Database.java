@@ -1253,10 +1253,13 @@ public class Database {
             // execute query
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
-                    DataPoint data = JsonStats.decode(rs.getTimestamp(1), rs.getString(2));
-    
+                    DataPoint dp = new DataPoint();
+                    dp.node = n.id;
+                    dp.time = rs.getTimestamp(1);
+                    dp.json = rs.getString(2);
+                    
                     // put data into the data-set
-                    ret.add(data);
+                    ret.add(dp);
                 }
             }
         } catch (SQLException e) {
@@ -1294,20 +1297,14 @@ public class Database {
             // execute query
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
-                    DataPoint data = null;
+                    DataPoint dp = new DataPoint();
                     
-                    Long nodeId = rs.getLong(1);
-                    Timestamp ts = rs.getTimestamp(2);
-                    String json = rs.getString(3);
-                    
-                    if (rs.wasNull()) {
-                        data = new DataPoint();
-                    } else {
-                        data = JsonStats.decode(ts, json);
-                    }
-    
+                    dp.node = rs.getLong(1);
+                    dp.time = rs.getTimestamp(2);
+                    dp.json = rs.getString(3);
+
                     // put data into the data-set
-                    ret.put(nodeId, data);
+                    ret.put(dp.node, dp);
                 }
             }
         } catch (SQLException e) {

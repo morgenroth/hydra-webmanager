@@ -2,8 +2,6 @@ package de.tubs.cs.ibr.hydra.webmanager.client;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.github.gwtbootstrap.client.ui.Heading;
 import com.github.gwtbootstrap.client.ui.base.IconAnchor;
@@ -26,6 +24,7 @@ import com.google.gwt.visualization.client.LegendPosition;
 import com.google.gwt.visualization.client.VisualizationUtils;
 import com.google.gwt.visualization.client.visualizations.LineChart;
 
+import de.tubs.cs.ibr.hydra.webmanager.client.stats.StatsJso;
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
@@ -62,9 +61,6 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     // variables for incremental data processing
     DataPoint mLastObj = null;
     Integer mLastRow = 0;
-    
-    // interface mapping
-    HashMap<String, Integer> mInterfaceMap = new HashMap<String, Integer>();
     
     // is true if all charts are initialized
     boolean initialized = false;
@@ -122,6 +118,10 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
                 // generate data table for 'traffic'
                 mDataChartTraffic = DataTable.create();
                 mDataChartTraffic.addColumn(ColumnType.STRING, "Time");
+                mDataChartTraffic.addColumn(ColumnType.NUMBER, "TCP (in)");
+                mDataChartTraffic.addColumn(ColumnType.NUMBER, "TCP (out)");
+                mDataChartTraffic.addColumn(ColumnType.NUMBER, "UDP (in)");
+                mDataChartTraffic.addColumn(ColumnType.NUMBER, "UDP (out)");
                 
                 // create and add traffic chart to panel
                 mChartTraffic = new LineChart();
@@ -219,52 +219,32 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
             
             // skip the first data element
             if (mLastObj != null) {
+                // convert json to object
+                StatsJso stats = StatsJso.create(data.json);
+                StatsJso last_stats = StatsJso.create(mLastObj.json);
+                
                 /**
                  * process traffic stats
                  */
-                // set timestamp
                 mDataChartTraffic.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
-                
-                for (Map.Entry<String, DataPoint.InterfaceStats> e : data.ifaces.entrySet()) {
-                    DataPoint.InterfaceStats iface = e.getValue();
-                    
-                    // skip "lo" and "eth0" interface
-                    if (iface.name.equals("lo") || iface.name.equals("eth0")) continue;
-                    
-                    // get columns for rx and tx
-                    int rx_index = 0, tx_index = 1;
-                    
-                    if (mInterfaceMap.containsKey(iface.name + "_rx")) {
-                        rx_index = mInterfaceMap.get(iface.name + "_rx");
-                        tx_index = mInterfaceMap.get(iface.name + "_tx");
-                    } else {
-                        rx_index = mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (rx)");
-                        tx_index = mDataChartTraffic.addColumn(ColumnType.NUMBER, iface.name + " (tx)");
-                        mInterfaceMap.put(iface.name + "_rx", rx_index);
-                        mInterfaceMap.put(iface.name + "_tx", tx_index);
-                    }
-    
-                    // calculate relative data values
-                    Long rx = iface.rx - mLastObj.ifaces.get(e.getKey()).rx;
-                    Long tx = iface.tx - mLastObj.ifaces.get(e.getKey()).tx;
-    
-                    mDataChartTraffic.setValue(mLastRow, rx_index, rx);
-                    mDataChartTraffic.setValue(mLastRow, tx_index, tx);
-                }
+                mDataChartTraffic.setValue(mLastRow, 1, stats.getTraffic().getInTcpByte() - last_stats.getTraffic().getInTcpByte());
+                mDataChartTraffic.setValue(mLastRow, 2, stats.getTraffic().getOutTcpByte() - last_stats.getTraffic().getOutTcpByte());
+                mDataChartTraffic.setValue(mLastRow, 3, stats.getTraffic().getInUdpByte() - last_stats.getTraffic().getInUdpByte());
+                mDataChartTraffic.setValue(mLastRow, 4, stats.getTraffic().getOutUdpByte() - last_stats.getTraffic().getOutUdpByte());
                 
                 /**
                  * process dtn stats
                  */
                 mDataChartBundles.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
-                mDataChartBundles.setValue(mLastRow, 1, data.bundlestats.received - mLastObj.bundlestats.received);
-                mDataChartBundles.setValue(mLastRow, 2, data.bundlestats.transmitted - mLastObj.bundlestats.transmitted);
-                mDataChartBundles.setValue(mLastRow, 3, data.bundlestats.generated - mLastObj.bundlestats.generated);
+                mDataChartBundles.setValue(mLastRow, 1, stats.getDtnd().getBundles().getReceived() - last_stats.getDtnd().getBundles().getReceived());
+                mDataChartBundles.setValue(mLastRow, 2, stats.getDtnd().getBundles().getTransmitted() - last_stats.getDtnd().getBundles().getTransmitted());
+                mDataChartBundles.setValue(mLastRow, 3, stats.getDtnd().getBundles().getGenerated() - last_stats.getDtnd().getBundles().getTransmitted());
                 
                 /**
                  * process clock stats
                  */
                 mDataChartClock.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
-                mDataChartClock.setValue(mLastRow, 1, data.clock.offset);
+                mDataChartClock.setValue(mLastRow, 1, stats.getClock().getOffset());
                 
                 // increment row number
                 mLastRow++;
