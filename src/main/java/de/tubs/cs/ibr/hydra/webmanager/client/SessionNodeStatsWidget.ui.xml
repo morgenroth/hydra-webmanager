@@ -41,6 +41,10 @@
 				<b:Heading size="4" ui:field="headingClock">Clock</b:Heading>
 				<g:SimplePanel ui:field="panelClock" />
 			</b:Column>
+			<b:Column size="6">
+				<b:Heading size="4" ui:field="headingTimeSync">Time-Sync</b:Heading>
+				<g:SimplePanel ui:field="panelTimeSync" />
+			</b:Column>
 		</b:Row>
     	<b:Row>
 	    	<b:Column size="12">

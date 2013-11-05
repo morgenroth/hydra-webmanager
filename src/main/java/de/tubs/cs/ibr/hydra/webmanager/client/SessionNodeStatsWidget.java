@@ -34,11 +34,13 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     @UiField SimplePanel panelTraffic;
     @UiField SimplePanel panelBundles;
     @UiField SimplePanel panelClock;
+    @UiField SimplePanel panelTimeSync;
     
     @UiField Heading headingNode;
     @UiField Heading headingTraffic;
     @UiField Heading headingBundles;
     @UiField Heading headingClock;
+    @UiField Heading headingTimeSync;
     
     @UiField IconAnchor buttonRemove;
     
@@ -49,11 +51,13 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     LineChart mChartTraffic = null;
     LineChart mChartBundles = null;
     LineChart mChartClock = null;
+    LineChart mChartTimeSync = null;
     
     // chart data
     DataTable mDataChartTraffic = null;
     DataTable mDataChartBundles = null;
     DataTable mDataChartClock = null;
+    DataTable mDataChartTimeSync = null;
     
     // chart options
     LineChart.Options mOptionsChart = null;
@@ -147,6 +151,15 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
                 mChartClock = new LineChart();
                 panelClock.add(mChartClock);
                 
+                // generate data table for 'timesync'
+                mDataChartTimeSync = DataTable.create();
+                mDataChartTimeSync.addColumn(ColumnType.STRING, "Time");
+                mDataChartTimeSync.addColumn(ColumnType.NUMBER, "Rating");
+
+                // create and add timesync chart to panel
+                mChartTimeSync = new LineChart();
+                panelTimeSync.add(mChartTimeSync);
+                
                 // set charts to initialized
                 initialized = true;
                 
@@ -204,6 +217,7 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
             mDataChartBundles.addRows(rowsToAdd);
             mDataChartTraffic.addRows(rowsToAdd);
             mDataChartClock.addRows(rowsToAdd);
+            mDataChartTimeSync.addRows(rowsToAdd);
         }
         
         // iterate through all the data
@@ -246,6 +260,12 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
                 mDataChartClock.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
                 mDataChartClock.setValue(mLastRow, 1, stats.getClock().getOffset());
                 
+                /**
+                 * process time-sync stats
+                 */
+                mDataChartTimeSync.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
+                mDataChartTimeSync.setValue(mLastRow, 1, stats.getDtnd().getTimeSync().getRating());
+                
                 // increment row number
                 mLastRow++;
             }
@@ -285,6 +305,9 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         
         // redraw clock chart
         mChartClock.draw(mDataChartClock, mOptionsChart);
+        
+        // redraw time-sync chart
+        mChartTimeSync.draw(mDataChartTimeSync, mOptionsChart);
     }
     
     @UiHandler("buttonRemove")
