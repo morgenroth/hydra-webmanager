@@ -42,9 +42,9 @@ public class Database {
     private final static String SESSIONS_FIELDS = "sessions.id, sessions.user, users.name, sessions.name, sessions.created, sessions.started, sessions.aborted, sessions.finished, sessions.state";
     private final static String USERS_FIELDS = "id, name";
     
-    private final static String QUERY_NODES = "SELECT " + NODES_FIELDS + " FROM nodes;";
-    private final static String QUERY_NODES_SESSION = "SELECT " + NODES_FIELDS + " FROM nodes WHERE session = ?;";
-    private final static String QUERY_NODES_SESSION_SLAVE = "SELECT " + NODES_FIELDS + " FROM nodes WHERE session = ? AND slave = ?;";
+    private final static String QUERY_NODES = "SELECT " + NODES_FIELDS + " FROM nodes ORDER BY id;";
+    private final static String QUERY_NODES_SESSION = "SELECT " + NODES_FIELDS + " FROM nodes WHERE session = ? ORDER BY id;";
+    private final static String QUERY_NODES_SESSION_SLAVE = "SELECT " + NODES_FIELDS + " FROM nodes WHERE session = ? AND slave = ? ORDER BY id;";
     
     private final static String QUERY_NODE = "SELECT " + NODES_FIELDS + " FROM nodes WHERE id = ?;";
     

@@ -1,8 +1,10 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map.Entry;
 
 import com.github.gwtbootstrap.client.ui.Container;
@@ -153,9 +155,12 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
         // clear the nodes list box
         listNodes.clear();
         listNodes.addItem("- select a node to add -", "-");
+
+        LinkedList<Node> nodes = new LinkedList<Node>(mNodes.values());
+        Collections.sort(nodes);
         
         // store the list of nodes
-        for (Node n : mNodes.values()) {
+        for (Node n : nodes) {
             if (!mVisibleNodes.contains(n.id)) {
                 listNodes.addItem(n.name, n.id.toString());
             }
