@@ -62,7 +62,7 @@ public class Database {
     private final static String QUERY_SLAVE_ALLOCS = "SELECT `slaves`.`id`, `slaves`.`capacity`, COUNT(`slaves`.`id`) as allocation, `nodes`.`assigned_slave` FROM `slaves` LEFT JOIN `nodes` ON (`slaves`.`id` = `nodes`.`assigned_slave`) WHERE `slaves`.`state` != 'disconnected' GROUP BY `slaves`.`id`;";
     
     private final static String QUERY_STATS = "SELECT `timestamp`, `node`, `data` FROM stats WHERE session = ? ORDER BY `timestamp`;";
-    private final static String QUERY_STATS_BY_NODE = "SELECT `timestamp`, `data` FROM stats WHERE session = ? AND node = ? AND (`timestamp` > ?) AND (`timestamp` <= ?) ORDER BY timestamp DESC LIMIT 0,100;";
+    private final static String QUERY_STATS_BY_NODE = "SELECT `timestamp`, `data` FROM stats WHERE session = ? AND node = ? AND (`timestamp` > ?) AND (`timestamp` <= ?) ORDER BY timestamp DESC LIMIT 0,60;";
     private final static String QUERY_STATS_LATEST = "SELECT `id`, `s`.`timestamp`, `s`.`data` FROM `nodes` RIGHT JOIN (SELECT `timestamp`, `node`, `data` FROM `stats` WHERE `session` = ? ORDER BY `timestamp` DESC) as s ON (`s`.`node` = `nodes`.`id`) WHERE `session` = ? GROUP BY `id` ORDER BY `id`;";
     
     private final static String UPDATE_NODE_ADDRESS = "UPDATE nodes SET `address` = ? WHERE id = ?;";
