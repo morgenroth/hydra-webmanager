@@ -1,14 +1,12 @@
 package webmanager;
 
 import java.util.HashMap;
-import java.util.Map.Entry;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.data.JsonStats;
-import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 
 public class JsonStatsTest {
     
@@ -53,27 +51,11 @@ public class JsonStatsTest {
                 + "\"clock\": {\"Delay\": 0.02614, \"Timex-tick\": 10000, \"Timex-offset\": 0, \"Timex-freq\": 0, \"Offset\": 1.07629}"
             + "}"
         + "}";
-
-    @Test
-    public void testDecode() {
-        DataPoint dp = JsonStats.decode(null, TEST_DATA);
-        Assert.assertEquals(0.02614, dp.clock.delay);
-    }
     
     @Test
     public void testSplitAll() {
         HashMap<Long, String> data = JsonStats.splitAll(MULTI_TEST_DATA);
         Assert.assertEquals(2, data.size());
-    }
-    
-    @Test
-    public void testDecodeAll() {
-        HashMap<Long, DataPoint> points = JsonStats.decodeAll(null, MULTI_TEST_DATA);
-        Assert.assertEquals(2, points.size());
-
-        for (Entry<Long, DataPoint> e : points.entrySet()) {
-            Assert.assertEquals(0.02614, e.getValue().clock.delay);
-        }
     }
 
 }
