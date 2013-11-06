@@ -23,6 +23,7 @@ import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.visualization.client.AbstractDataTable.ColumnType;
 import com.google.gwt.visualization.client.DataTable;
+import com.google.gwt.visualization.client.DataView;
 import com.google.gwt.visualization.client.LegendPosition;
 import com.google.gwt.visualization.client.VisualizationUtils;
 import com.google.gwt.visualization.client.visualizations.ColumnChart;
@@ -48,8 +49,11 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     ColumnChart mChartBundles = null;
 
     // chart data
-    DataTable mDataChartTraffic = null;
-    DataTable mDataChartBundles = null;
+    DataTable mData = null;
+    
+    // chart views
+    DataView mViewTraffic = null;
+    DataView mViewBundles = null;
     
     // list of visible node stats
     HashSet<Long> mVisibleNodes = new HashSet<Long>();
@@ -113,10 +117,10 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
         if (!initialized) return;
 
         // redraw traffic chart
-        mChartTraffic.draw(mDataChartTraffic, mOptionsChart);
+        mChartTraffic.draw(mViewTraffic, mOptionsChart);
     
         // redraw bundles chart
-        mChartBundles.draw(mDataChartBundles, mOptionsChart);
+        mChartBundles.draw(mViewBundles, mOptionsChart);
     }
     
     public void initialize(final Session session) {
@@ -173,27 +177,29 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
         Runnable onLoadCallbackColumn = new Runnable() {
             @Override
             public void run() {
-                mDataChartTraffic = DataTable.create();
-                mDataChartTraffic.addColumn(ColumnType.STRING, "Nodes");
-                mDataChartTraffic.addColumn(ColumnType.NUMBER, "TCP (in)");
-                mDataChartTraffic.addColumn(ColumnType.NUMBER, "TCP (out)");
-                //mDataChartTraffic.addColumn(ColumnType.NUMBER, "UDP (in)");
-                //mDataChartTraffic.addColumn(ColumnType.NUMBER, "UDP (out)");
+                mData = DataTable.create();
+                mData.addColumn(ColumnType.STRING, "Nodes");
+                mData.addColumn(ColumnType.NUMBER, "TCP (in)");
+                mData.addColumn(ColumnType.NUMBER, "TCP (out)");
+                mData.addColumn(ColumnType.NUMBER, "UDP (in)");
+                mData.addColumn(ColumnType.NUMBER, "UDP (out)");
+                mData.addColumn(ColumnType.NUMBER, "Received");
+                mData.addColumn(ColumnType.NUMBER, "Transmitted");
+                mData.addColumn(ColumnType.NUMBER, "Generated");
+                mData.addColumn(ColumnType.NUMBER, "Uptime");
                 
-                mChartTraffic = new ColumnChart(mDataChartTraffic, mOptionsChart);
+                mChartTraffic = new ColumnChart();
                 panelTraffic.add(mChartTraffic);
-                //mChartTraffic.addSelectHandler(createSelectHandler(mChartTraffic));
                 
-                mDataChartBundles = DataTable.create();
-                mDataChartBundles.addColumn(ColumnType.STRING, "Nodes");
-                mDataChartBundles.addColumn(ColumnType.NUMBER, "Received");
-                mDataChartBundles.addColumn(ColumnType.NUMBER, "Transmitted");
-                mDataChartBundles.addColumn(ColumnType.NUMBER, "Generated");
-                
-                mChartBundles = new ColumnChart(mDataChartBundles, mOptionsChart);
-                
+                mChartBundles = new ColumnChart();
                 panelBundles.add(mChartBundles);
-                //mChartBundles.addSelectHandler(createSelectHandler(mChartBundles));
+                
+                // create different views
+                mViewTraffic = DataView.create(mData);
+                mViewTraffic.setColumns(new int[] { 0, 1, 2 });
+                
+                mViewBundles = DataView.create(mData);
+                mViewBundles.setColumns(new int[] { 0, 5, 6, 7 });
                 
                 // set charts to initialized
                 initialized = true;
@@ -236,10 +242,9 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     
     private void transformStatsData(HashMap<Long, DataPoint> result) {
         // add more rows if necessary
-        int nor = mDataChartBundles.getNumberOfRows();
+        int nor = mData.getNumberOfRows();
         if (nor < result.size()) {
-            mDataChartBundles.addRows(result.size() - nor);
-            mDataChartTraffic.addRows(result.size() - nor);
+            mData.addRows(result.size() - nor);
         }
         
         Integer row = 0;
@@ -251,16 +256,17 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
             // convert json to object
             StatsJso stats = StatsJso.create(data.json);
             
-            mDataChartTraffic.setValue(row, 0, mNodes.get(nodeId).name);
-            mDataChartTraffic.setValue(row, 1, stats.getTraffic().getInTcpByte());
-            mDataChartTraffic.setValue(row, 2, stats.getTraffic().getOutTcpByte());
-            //mDataChartTraffic.setValue(row, 3, stats.getTraffic().getInUdpByte());
-            //mDataChartTraffic.setValue(row, 4, stats.getTraffic().getOutUdpByte());
+            mData.setValue(row, 0, mNodes.get(nodeId).name);
+            mData.setValue(row, 1, stats.getTraffic().getInTcpByte());
+            mData.setValue(row, 2, stats.getTraffic().getOutTcpByte());
+            mData.setValue(row, 3, stats.getTraffic().getInUdpByte());
+            mData.setValue(row, 4, stats.getTraffic().getOutUdpByte());
+
+            mData.setValue(row, 5, stats.getDtnd().getBundles().getReceived());
+            mData.setValue(row, 6, stats.getDtnd().getBundles().getTransmitted());
+            mData.setValue(row, 7, stats.getDtnd().getBundles().getGenerated());
             
-            mDataChartBundles.setValue(row, 0, mNodes.get(nodeId).name);
-            mDataChartBundles.setValue(row, 1, stats.getDtnd().getBundles().getReceived());
-            mDataChartBundles.setValue(row, 2, stats.getDtnd().getBundles().getTransmitted());
-            mDataChartBundles.setValue(row, 3, stats.getDtnd().getBundles().getGenerated());
+            mData.setValue(row, 8, stats.getDtnd().getInfo().getUptime());
             
             row++;
         }

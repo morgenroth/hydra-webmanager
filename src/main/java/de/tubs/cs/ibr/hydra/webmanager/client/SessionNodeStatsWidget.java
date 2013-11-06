@@ -20,6 +20,7 @@ import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.visualization.client.AbstractDataTable.ColumnType;
 import com.google.gwt.visualization.client.DataTable;
+import com.google.gwt.visualization.client.DataView;
 import com.google.gwt.visualization.client.LegendPosition;
 import com.google.gwt.visualization.client.VisualizationUtils;
 import com.google.gwt.visualization.client.visualizations.LineChart;
@@ -54,10 +55,13 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     LineChart mChartTimeSync = null;
     
     // chart data
-    DataTable mDataChartTraffic = null;
-    DataTable mDataChartBundles = null;
-    DataTable mDataChartClock = null;
-    DataTable mDataChartTimeSync = null;
+    DataTable mData = null;
+    
+    // chart views
+    DataView mViewTraffic = null;
+    DataView mViewBundles = null;
+    DataView mViewClock = null;
+    DataView mViewTimeSync = null;
     
     // chart options
     LineChart.Options mOptionsChart = null;
@@ -120,45 +124,46 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
             @Override
             public void run() {
                 // generate data table for 'traffic'
-                mDataChartTraffic = DataTable.create();
-                mDataChartTraffic.addColumn(ColumnType.STRING, "Time");
-                mDataChartTraffic.addColumn(ColumnType.NUMBER, "TCP (in)");
-                mDataChartTraffic.addColumn(ColumnType.NUMBER, "TCP (out)");
-                mDataChartTraffic.addColumn(ColumnType.NUMBER, "UDP (in)");
-                mDataChartTraffic.addColumn(ColumnType.NUMBER, "UDP (out)");
-                
+                mData = DataTable.create();
+                mData.addColumn(ColumnType.STRING, "Time");
+                mData.addColumn(ColumnType.NUMBER, "TCP (in)");
+                mData.addColumn(ColumnType.NUMBER, "TCP (out)");
+                mData.addColumn(ColumnType.NUMBER, "UDP (in)");
+                mData.addColumn(ColumnType.NUMBER, "UDP (out)");
+                mData.addColumn(ColumnType.NUMBER, "Received");
+                mData.addColumn(ColumnType.NUMBER, "Transmitted");
+                mData.addColumn(ColumnType.NUMBER, "Generated");
+                mData.addColumn(ColumnType.NUMBER, "Offset");
+                mData.addColumn(ColumnType.NUMBER, "Rating");
+
                 // create and add traffic chart to panel
                 mChartTraffic = new LineChart();
                 panelTraffic.add(mChartTraffic);
                 
-                // generate data table for 'bundles'
-                mDataChartBundles = DataTable.create();
-                mDataChartBundles.addColumn(ColumnType.STRING, "Time");
-                mDataChartBundles.addColumn(ColumnType.NUMBER, "Received");
-                mDataChartBundles.addColumn(ColumnType.NUMBER, "Transmitted");
-                mDataChartBundles.addColumn(ColumnType.NUMBER, "Generated");
-
                 // create and add bundles chart to panel
                 mChartBundles = new LineChart();
                 panelBundles.add(mChartBundles);
-                
-                // generate data table for 'clock'
-                mDataChartClock = DataTable.create();
-                mDataChartClock.addColumn(ColumnType.STRING, "Time");
-                mDataChartClock.addColumn(ColumnType.NUMBER, "Offset");
 
                 // create and add clock chart to panel
                 mChartClock = new LineChart();
                 panelClock.add(mChartClock);
-                
-                // generate data table for 'timesync'
-                mDataChartTimeSync = DataTable.create();
-                mDataChartTimeSync.addColumn(ColumnType.STRING, "Time");
-                mDataChartTimeSync.addColumn(ColumnType.NUMBER, "Rating");
 
                 // create and add timesync chart to panel
                 mChartTimeSync = new LineChart();
                 panelTimeSync.add(mChartTimeSync);
+                
+                // create different views
+                mViewTraffic = DataView.create(mData);
+                mViewTraffic.setColumns(new int[] { 0, 1, 2, 3, 4 });
+                
+                mViewBundles = DataView.create(mData);
+                mViewBundles.setColumns(new int[] { 0, 5, 6, 7 });
+
+                mViewClock = DataView.create(mData);
+                mViewClock.setColumns(new int[] { 0, 8 });
+
+                mViewTimeSync = DataView.create(mData);
+                mViewTimeSync.setColumns(new int[] { 0, 9 });
                 
                 // set charts to initialized
                 initialized = true;
@@ -214,10 +219,7 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         // add more rows if necessary
         int rowsToAdd = (mLastObj == null) ? result.size() - 1 : result.size();
         if (rowsToAdd > 0) {
-            mDataChartBundles.addRows(rowsToAdd);
-            mDataChartTraffic.addRows(rowsToAdd);
-            mDataChartClock.addRows(rowsToAdd);
-            mDataChartTimeSync.addRows(rowsToAdd);
+            mData.addRows(rowsToAdd);
         }
         
         // iterate through all the data
@@ -240,31 +242,28 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
                 /**
                  * process traffic stats
                  */
-                mDataChartTraffic.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
-                mDataChartTraffic.setValue(mLastRow, 1, stats.getTraffic().getInTcpByte() - last_stats.getTraffic().getInTcpByte());
-                mDataChartTraffic.setValue(mLastRow, 2, stats.getTraffic().getOutTcpByte() - last_stats.getTraffic().getOutTcpByte());
-                mDataChartTraffic.setValue(mLastRow, 3, stats.getTraffic().getInUdpByte() - last_stats.getTraffic().getInUdpByte());
-                mDataChartTraffic.setValue(mLastRow, 4, stats.getTraffic().getOutUdpByte() - last_stats.getTraffic().getOutUdpByte());
+                mData.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
+                mData.setValue(mLastRow, 1, stats.getTraffic().getInTcpByte() - last_stats.getTraffic().getInTcpByte());
+                mData.setValue(mLastRow, 2, stats.getTraffic().getOutTcpByte() - last_stats.getTraffic().getOutTcpByte());
+                mData.setValue(mLastRow, 3, stats.getTraffic().getInUdpByte() - last_stats.getTraffic().getInUdpByte());
+                mData.setValue(mLastRow, 4, stats.getTraffic().getOutUdpByte() - last_stats.getTraffic().getOutUdpByte());
                 
                 /**
                  * process dtn stats
                  */
-                mDataChartBundles.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
-                mDataChartBundles.setValue(mLastRow, 1, stats.getDtnd().getBundles().getReceived() - last_stats.getDtnd().getBundles().getReceived());
-                mDataChartBundles.setValue(mLastRow, 2, stats.getDtnd().getBundles().getTransmitted() - last_stats.getDtnd().getBundles().getTransmitted());
-                mDataChartBundles.setValue(mLastRow, 3, stats.getDtnd().getBundles().getGenerated() - last_stats.getDtnd().getBundles().getTransmitted());
+                mData.setValue(mLastRow, 5, stats.getDtnd().getBundles().getReceived() - last_stats.getDtnd().getBundles().getReceived());
+                mData.setValue(mLastRow, 6, stats.getDtnd().getBundles().getTransmitted() - last_stats.getDtnd().getBundles().getTransmitted());
+                mData.setValue(mLastRow, 7, stats.getDtnd().getBundles().getGenerated() - last_stats.getDtnd().getBundles().getTransmitted());
                 
                 /**
                  * process clock stats
                  */
-                mDataChartClock.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
-                mDataChartClock.setValue(mLastRow, 1, stats.getClock().getOffset());
+                mData.setValue(mLastRow, 8, stats.getClock().getOffset());
                 
                 /**
                  * process time-sync stats
                  */
-                mDataChartTimeSync.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
-                mDataChartTimeSync.setValue(mLastRow, 1, stats.getDtnd().getTimeSync().getRating());
+                mData.setValue(mLastRow, 9, stats.getDtnd().getTimeSync().getRating());
                 
                 // increment row number
                 mLastRow++;
@@ -298,16 +297,16 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         if (!initialized) return;
     
         // redraw traffic chart
-        mChartTraffic.draw(mDataChartTraffic, mOptionsChart);
+        mChartTraffic.draw(mViewTraffic, mOptionsChart);
     
         // redraw bundles chart
-        mChartBundles.draw(mDataChartBundles, mOptionsChart);
+        mChartBundles.draw(mViewBundles, mOptionsChart);
         
         // redraw clock chart
-        mChartClock.draw(mDataChartClock, mOptionsChart);
+        mChartClock.draw(mViewClock, mOptionsChart);
         
         // redraw time-sync chart
-        mChartTimeSync.draw(mDataChartTimeSync, mOptionsChart);
+        mChartTimeSync.draw(mViewTimeSync, mOptionsChart);
     }
     
     @UiHandler("buttonRemove")
