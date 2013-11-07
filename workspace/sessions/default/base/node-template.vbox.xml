@@ -1,0 +1,43 @@
+<domain type='vbox'>
+  <name>hydra-base0</name>
+  <memory>131072</memory>
+  <currentMemory>131072</currentMemory>
+  <vcpu>1</vcpu>
+  <os>
+    <type arch='i686'>hvm</type>
+    <boot dev='hd'/>
+  </os>
+  <features>
+    <acpi/>
+  </features>
+  <clock offset='localtime'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>destroy</on_reboot>
+  <on_crash>destroy</on_crash>
+  <devices>
+    <disk type='file' device='disk'>
+      <source file='/home/morgenro/VirtualBox VMs/hydra-base0/hydra-base0.vdi'/>
+      <target dev='hda' bus='ide'/>
+    </disk>
+    <interface type='bridge'>
+      <mac/>
+      <source bridge='sim-br0'/>
+      <model type='82540EM'/>
+    </interface>
+    <serial type='null'>
+      <target port='0'/>
+    </serial>
+    <console type='null'>
+      <target type='serial' port='0'/>
+    </console>
+    <input type='mouse' bus='ps2'/>
+    <graphics type='rdp' autoport='yes' />
+    <!-- <graphics type='desktop' display='localhost:10.0'/> -->
+    <video>
+      <model type='vbox' vram='10' heads='1'>
+        <acceleration accel3d='no' accel2d='no'/>
+      </model>
+    </video>
+  </devices>
+</domain>
+

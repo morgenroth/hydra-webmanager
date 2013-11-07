@@ -1,0 +1,19 @@
+config defaults
+        option input            ACCEPT
+        option output           ACCEPT
+        option forward          REJECT
+
+config zone
+        option name             hydra
+        option network          'hydra'
+        option input            ACCEPT
+        option output           ACCEPT
+        option forward          REJECT
+
+config zone
+        option name             p2p
+        option network          'lan'
+        option input            REJECT
+        option output           ACCEPT
+        option forward          REJECT
+

@@ -1,11 +1,6 @@
--- phpMyAdmin SQL Dump
--- version 3.4.11.1deb2
--- http://www.phpmyadmin.net
 --
--- Host: localhost
--- Erstellungszeit: 25. Okt 2013 um 15:58
--- Server Version: 5.5.31
--- PHP-Version: 5.4.4-14+deb7u5
+-- Hydra WebManager Database
+--
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -17,13 +12,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8 */;
 
 --
--- Datenbank: `hydra`
+-- Database: `hydra`
 --
 
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `nodes`
+-- table `nodes`
 --
 
 CREATE TABLE IF NOT EXISTS `nodes` (
@@ -47,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `nodes` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `sessions`
+-- table `sessions`
 --
 
 CREATE TABLE IF NOT EXISTS `sessions` (
@@ -67,7 +62,7 @@ CREATE TABLE IF NOT EXISTS `sessions` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `slaves`
+-- table `slaves`
 --
 
 CREATE TABLE IF NOT EXISTS `slaves` (
@@ -85,7 +80,7 @@ CREATE TABLE IF NOT EXISTS `slaves` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `stats`
+-- table `stats`
 --
 
 CREATE TABLE IF NOT EXISTS `stats` (
@@ -102,7 +97,7 @@ CREATE TABLE IF NOT EXISTS `stats` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `users`
+-- table `users`
 --
 
 CREATE TABLE IF NOT EXISTS `users` (
@@ -112,6 +107,13 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1;
+
+--
+-- data for table `users`
+--
+
+INSERT INTO `users` (`id`, `name`, `passwd`) VALUES
+(1, 'admin', NULL);
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
