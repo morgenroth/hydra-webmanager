@@ -10,6 +10,7 @@ import com.github.gwtbootstrap.client.ui.ProgressBar;
 import com.github.gwtbootstrap.client.ui.Tab;
 import com.github.gwtbootstrap.client.ui.TabPanel.ShownEvent;
 import com.github.gwtbootstrap.client.ui.TextBox;
+import com.github.gwtbootstrap.client.ui.base.ProgressBarBase.Color;
 import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
@@ -196,22 +197,87 @@ public class SessionWatchView extends View {
             elapsedSeconds = (now.getTime() - s.started.getTime()) / 1000;
         }
         
-        if (Session.State.RUNNING.equals(s.state)) {
-            // animate the progress bar in RUNNING state
-            progressDetails.setType(ProgressBar.Style.ANIMATED);
-        } else if (Session.State.PENDING.equals(s.state)) {
-            // animate the progress bar in PENDING state
-            progressDetails.setType(ProgressBar.Style.ANIMATED);
-        } else if (Session.State.DRAFT.equals(s.state)) {
-            // set progress bar to zero in DRAFT state
-            progressDetails.setPercent(0);
-        } else {
-            // do not animate the progress bar in other states
-            progressDetails.setType(ProgressBar.Style.STRIPED);
+        // set progress color according to the session state
+        switch (s.state) {
+            case ERROR:
+                // animate the progress bar in PENDING state
+                progressDetails.setType(ProgressBar.Style.STRIPED);
+                progressDetails.setColor(Color.DANGER);
+                break;
+            case FINISHED:
+                // set progress bar to full in FINISHED state
+                progressDetails.setPercent(100);
+                
+                // animate the progress bar in PENDING state
+                progressDetails.setType(ProgressBar.Style.STRIPED);
+                progressDetails.setColor(Color.SUCCESS);
+                break;
+            case PENDING:
+                // animate the progress bar in PENDING state
+                progressDetails.setType(ProgressBar.Style.ANIMATED);
+                progressDetails.setColor(Color.WARNING);
+                
+                // update pending progress
+                updatePendingProgress();
+                break;
+            case RUNNING:
+                // animate the progress bar in RUNNING state
+                progressDetails.setType(ProgressBar.Style.ANIMATED);
+                progressDetails.setColor(Color.SUCCESS);
+                
+                // set progress to 100% if no duration is known
+                if (duration == null) progressDetails.setPercent(100);
+                break;
+            default:
+                // set progress bar to zero in DRAFT state
+                progressDetails.setPercent(0);
+                
+                // do not animate the progress bar in other states
+                progressDetails.setType(ProgressBar.Style.STRIPED);
+                progressDetails.setColor(Color.DEFAULT);
+                break;
         }
         
+        // update elapsed seconds
+        updateElapsedSeconds(duration, elapsedSeconds);
+    }
+    
+    private void updatePendingProgress() {
+        // get list of all nodes
+        List<Node> nodes = mDataProvider.getList();
+        
+        if (nodes.size() <= 0) {
+            progressDetails.setPercent(0);
+            return;
+        }
+        
+        // create counter for the different node states
+        int[] state = { 0, 0, 0, 0 };
+        
+        for (Node n : nodes) {
+            switch (n.state) {
+                case CONNECTED:
+                    state[3]++;
+                    break;
+                case CREATED:
+                    state[2]++;
+                    break;
+                case SCHEDULED:
+                    state[1]++;
+                    break;
+                default:
+                    state[0]++;
+                    break;
+            }
+        }
+        
+        int progress_points = (state[1] + (state[2] * 2) + (state[3] * 3));
+        int percent = progress_points * 100 / (3 * nodes.size());
+        progressDetails.setPercent(percent);
+    }
+    
+    private void updateElapsedSeconds(Long duration, Long elapsedSeconds) {
         if (duration == null) {
-            progressDetails.setPercent(100);
             if (elapsedSeconds == null) {
                 textDetailsElapsedTime.setText(getDurationString(0));
             } else {
@@ -219,7 +285,6 @@ public class SessionWatchView extends View {
             }
         } else {
             if (elapsedSeconds == null) {
-                progressDetails.setPercent(100);
                 textDetailsElapsedTime.setText(getDurationString(0) + " / " + getDurationString(duration));
             } else {
                 progressDetails.setPercent(Long.valueOf((elapsedSeconds * 100) / duration).intValue());
@@ -308,6 +373,8 @@ public class SessionWatchView extends View {
                 for (Node n : result) {
                     list.add(n);
                 }
+                
+                updateProgress(mSession);
             }
             
         });
