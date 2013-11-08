@@ -72,6 +72,9 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     Long mLastTime = null;
     Integer mLastRow = 0;
     
+    // maximum number of rows to display
+    private static final int MAX_ROWS = 60;
+    
     // is true if all charts are initialized
     boolean initialized = false;
     
@@ -355,6 +358,11 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     private void redraw(int i) {
         // do not redraw until the chart library has been initialized
         if (!initialized) return;
+        
+        // adjust views to show only last X entries
+        int dataRows = mData.getNumberOfRows() - 1;
+        int offset = (dataRows < MAX_ROWS) ? 0 : dataRows - MAX_ROWS;
+        mView[i].setRows(offset, dataRows);
 
         // redraw charts
         mChart.draw(mView[i], mOptions[i]);
