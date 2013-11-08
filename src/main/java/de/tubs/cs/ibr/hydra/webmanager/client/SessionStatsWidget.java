@@ -264,11 +264,11 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
                 switch (i) {
                     case 0:
                         mOptions[i].setTitle("IP Traffic");
-                        vAxisOptions.setTitle("bytes per second");
+                        vAxisOptions.setTitle("bytes");
                         break;
                     case 1:
                         mOptions[i].setTitle("DTN Traffic");
-                        vAxisOptions.setTitle("bundles per second");
+                        vAxisOptions.setTitle("bundles");
                         break;
                     case 2:
                         mOptions[i].setTitle("Clock Offset");
