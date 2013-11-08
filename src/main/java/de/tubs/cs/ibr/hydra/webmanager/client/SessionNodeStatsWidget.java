@@ -303,9 +303,11 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
                 
                 switch (i) {
                     case 0:
+                        mOptions[i].setTitle("IP Traffic");
                         vAxisOptions.setTitle("bytes per second");
                         break;
                     case 1:
+                        mOptions[i].setTitle("DTN Traffic");
                         vAxisOptions.setTitle("bundles per second");
                         break;
                     case 2:
