@@ -8,8 +8,20 @@ Hydra is a distributed emulation framework for large-scale software testing in d
 
 #### Build The WebManager
 
-To build the webmanager module you need to install maven2 first. Then
-call the build process from your source directory.
+To build the webmanager module you need to install maven2 first. As long as the `gwt-visualization` library (version 1.1.2) is not available in public maven repositories,
+you must add it to your local repository manually. Download the release from here:
+
+`http://code.google.com/p/gwt-google-apis/downloads/detail?name=gwt-visualization-1.1.2.zip`
+
+Then add the jar files to your local repository:
+
+```
+mvn install:install-file -Dfile=gwt-visualization.jar \
+-DgroupId=com.google.gwt.google-apis -DartifactId=gwt-visualization \
+-Dversion=1.1.2 -Dpackaging=jar -Djavadoc=gwt-visualization-javadoc.jar
+```
+
+To compile the WebManager call the build process from your source directory.
 
 ```
 mvn package
