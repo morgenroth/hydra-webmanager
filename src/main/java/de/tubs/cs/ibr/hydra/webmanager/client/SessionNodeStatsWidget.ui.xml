@@ -29,21 +29,21 @@
 			</b:Column>
 		</b:Row>
 		<b:Row>
-			<b:Column size="6">
-				<b:Heading size="4" ui:field="headingTraffic">Traffic</b:Heading>
-				<g:SimplePanel ui:field="panelTraffic" />
+			<b:Column size="2">
+				<b:WellNavList>
+					<b:NavHeader>Common</b:NavHeader>
+					<b:NavLink ui:field="linkIpTraffic">IP Traffic</b:NavLink>
+					<b:NavLink ui:field="linkClockOffset">Clock Offset</b:NavLink>
+					<b:NavHeader>DTN</b:NavHeader>
+					<b:NavLink ui:field="linkDtnTraffic">Traffic</b:NavLink>
+					<b:NavLink ui:field="linkDtnClockOffset">Clock Offset</b:NavLink>
+					<b:NavLink ui:field="linkClockRating">Clock Rating</b:NavLink>
+					<b:NavLink ui:field="linkUptime">Uptime</b:NavLink>
+					<b:NavLink ui:field="linkStorageSize">Storage Size</b:NavLink>
+				</b:WellNavList>
 			</b:Column>
-			<b:Column size="6">
-				<b:Heading size="4" ui:field="headingBundles">Bundles</b:Heading>
-				<g:SimplePanel ui:field="panelBundles" />
-			</b:Column>
-			<b:Column size="6">
-				<b:Heading size="4" ui:field="headingClock">Clock</b:Heading>
-				<g:SimplePanel ui:field="panelClock" />
-			</b:Column>
-			<b:Column size="6">
-				<b:Heading size="4" ui:field="headingTimeSync">Time-Sync</b:Heading>
-				<g:SimplePanel ui:field="panelTimeSync" />
+			<b:Column size="10">
+				<g:SimplePanel ui:field="panelChart" />
 			</b:Column>
 		</b:Row>
     	<b:Row>

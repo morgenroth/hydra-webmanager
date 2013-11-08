@@ -5,12 +5,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Map.Entry;
 
 import com.github.gwtbootstrap.client.ui.Container;
 import com.github.gwtbootstrap.client.ui.ListBox;
+import com.github.gwtbootstrap.client.ui.NavLink;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.logical.shared.ResizeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -26,7 +27,10 @@ import com.google.gwt.visualization.client.DataTable;
 import com.google.gwt.visualization.client.DataView;
 import com.google.gwt.visualization.client.LegendPosition;
 import com.google.gwt.visualization.client.VisualizationUtils;
-import com.google.gwt.visualization.client.visualizations.ColumnChart;
+import com.google.gwt.visualization.client.visualizations.corechart.AxisOptions;
+import com.google.gwt.visualization.client.visualizations.corechart.ColumnChart;
+import com.google.gwt.visualization.client.visualizations.corechart.LineChart;
+import com.google.gwt.visualization.client.visualizations.corechart.Options;
 
 import de.tubs.cs.ibr.hydra.webmanager.client.stats.StatsJso;
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
@@ -37,23 +41,30 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
 
     private static SessionStatsViewUiBinder uiBinder = GWT.create(SessionStatsViewUiBinder.class);
     
-    @UiField SimplePanel panelTraffic;
-    @UiField SimplePanel panelBundles;
+    @UiField SimplePanel panelChart;
     
     @UiField Container containerNodeStats;
     
     @UiField ListBox listNodes;
     
+    @UiField NavLink linkIpTraffic;
+    @UiField NavLink linkDtnTraffic;
+    @UiField NavLink linkClockOffset;
+    @UiField NavLink linkClockRating;
+    @UiField NavLink linkUptime;
+    @UiField NavLink linkStorageSize;
+    
     // chart objects
-    ColumnChart mChartTraffic = null;
-    ColumnChart mChartBundles = null;
+    ColumnChart mChart = null;
 
     // chart data
     DataTable mData = null;
     
     // chart views
-    DataView mViewTraffic = null;
-    DataView mViewBundles = null;
+    DataView[] mView = { null, null, null, null, null, null };
+    
+    // currently selected chart
+    int mCurrentView = 0;
     
     // list of visible node stats
     HashSet<Long> mVisibleNodes = new HashSet<Long>();
@@ -62,7 +73,7 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     boolean initialized = false;
 
     // chart options
-    ColumnChart.Options mOptionsChart = null;
+    Options[] mOptions = { null, null, null, null, null, null };
     
     private ArrayList<SessionNodeStatsWidget> mNodeStats = new ArrayList<SessionNodeStatsWidget>();
     
@@ -75,11 +86,8 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     public SessionStatsWidget() {
         initWidget(uiBinder.createAndBindUi(this));
         
-        // create chart options
-        mOptionsChart = ColumnChart.Options.create();
-        mOptionsChart.setLegend(LegendPosition.BOTTOM);
-        mOptionsChart.setWidth(640);
-        mOptionsChart.setHeight(480);
+        // initialize chart options
+        updateChartOptions();
         
         // add resize handler
         Window.addResizeHandler(this);
@@ -87,15 +95,10 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     
     @Override
     public void onResize(ResizeEvent event) {
-        Integer width = panelTraffic.getOffsetWidth();
-        Double height = Double.valueOf(width) * Double.valueOf(9.0 / 16.0);
+        updateChartOptions();
         
-        if (width > 0) {
-            mOptionsChart.setSize(width, height.intValue());
-        
-            // redraw local charts
-            redraw();
-        }
+        // redraw local charts
+        redraw(mCurrentView);
         
         // reload stats of nodes
         for (SessionNodeStatsWidget w : mNodeStats) {
@@ -112,15 +115,12 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
         }
     }
     
-    private void redraw() {
+    private void redraw(int i) {
         // do not redraw until the chart library has been initialized
         if (!initialized) return;
 
-        // redraw traffic chart
-        mChartTraffic.draw(mViewTraffic, mOptionsChart);
-    
-        // redraw bundles chart
-        mChartBundles.draw(mViewBundles, mOptionsChart);
+        // redraw charts
+        mChart.draw(mView[i], mOptions[i]);
     }
     
     public void initialize(final Session session) {
@@ -187,19 +187,26 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
                 mData.addColumn(ColumnType.NUMBER, "Transmitted");
                 mData.addColumn(ColumnType.NUMBER, "Generated");
                 mData.addColumn(ColumnType.NUMBER, "Uptime");
-                
-                mChartTraffic = new ColumnChart();
-                panelTraffic.add(mChartTraffic);
-                
-                mChartBundles = new ColumnChart();
-                panelBundles.add(mChartBundles);
+                mData.addColumn(ColumnType.NUMBER, "Storage size");
+                mData.addColumn(ColumnType.NUMBER, "Clock Offset");
+                mData.addColumn(ColumnType.NUMBER, "DTN Clock Offset");
+                mData.addColumn(ColumnType.NUMBER, "DTN Clock Rating");
                 
                 // create different views
-                mViewTraffic = DataView.create(mData);
-                mViewTraffic.setColumns(new int[] { 0, 1, 2 });
+                for (int i = 0; i < mOptions.length; i++) {
+                    mView[i] = DataView.create(mData);
+                }
                 
-                mViewBundles = DataView.create(mData);
-                mViewBundles.setColumns(new int[] { 0, 5, 6, 7 });
+                mView[0].setColumns(new int[] { 0, 1, 2, 3, 4 });
+                mView[1].setColumns(new int[] { 0, 5, 6, 7 });
+                mView[2].setColumns(new int[] { 0, 10, 11 });
+                mView[3].setColumns(new int[] { 0, 12 });
+                mView[4].setColumns(new int[] { 0, 8 });
+                mView[5].setColumns(new int[] { 0, 9 });
+                
+                // create default chart
+                mChart = new ColumnChart(mView[0], mOptions[0]);
+                panelChart.add(mChart);
                 
                 // set charts to initialized
                 initialized = true;
@@ -220,7 +227,7 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
             @Override
             public void onSuccess(HashMap<Long, DataPoint> result) {
                 transformStatsData(result);
-                redraw();
+                redraw(mCurrentView);
             }
             
             @Override
@@ -240,7 +247,71 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
         }
     }
     
+    private void updateChartOptions() {
+        // create chart options
+        for (int i = 0; i < mOptions.length; i++) {
+            if (mOptions[i] == null) {
+                mOptions[i] = LineChart.createOptions();
+                
+                AxisOptions hAxisOptions = AxisOptions.create();
+                hAxisOptions.set("slantedText", "true");
+                
+                mOptions[i].setHAxisOptions(hAxisOptions);
+                mOptions[i].setLegend(LegendPosition.BOTTOM);
+                
+                AxisOptions vAxisOptions = AxisOptions.create();
+                
+                switch (i) {
+                    case 0:
+                        mOptions[i].setTitle("IP Traffic");
+                        vAxisOptions.setTitle("bytes per second");
+                        break;
+                    case 1:
+                        mOptions[i].setTitle("DTN Traffic");
+                        vAxisOptions.setTitle("bundles per second");
+                        break;
+                    case 2:
+                        mOptions[i].setTitle("Clock Offset");
+                        vAxisOptions.setTitle("seconds");
+                        break;
+                    case 3:
+                        mOptions[i].setTitle("Clock Rating");
+                        break;
+                    case 4:
+                        mOptions[i].setTitle("Uptime");
+                        vAxisOptions.setTitle("seconds");
+                        break;
+                    case 5:
+                        mOptions[i].setTitle("Storage size");
+                        vAxisOptions.setTitle("bytes");
+                        break;
+                    default:
+                        // no title
+                        break;
+                }
+                
+                mOptions[i].setVAxisOptions(vAxisOptions);
+                //mOptions[i].setChartArea(area);
+            }
+        }
+        
+        Double width = Double.valueOf(panelChart.getOffsetWidth());
+        Double height = Double.valueOf(width) * Double.valueOf(9.0 / 16.0);
+        
+        for (int i = 0; i < mOptions.length; i++) {
+            if (width > 0) {
+                mOptions[i].setWidth(width.intValue());
+                mOptions[i].setHeight(height.intValue());
+            } else {
+                mOptions[i].setWidth(360);
+                mOptions[i].setHeight(480);
+            }
+        }
+    }
+    
     private void transformStatsData(HashMap<Long, DataPoint> result) {
+        if (result == null) return;
+        
         // add more rows if necessary
         int nor = mData.getNumberOfRows();
         if (nor < result.size()) {
@@ -249,9 +320,12 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
         
         Integer row = 0;
         
-        for (Entry<Long,DataPoint> e : result.entrySet()) {
-            Long nodeId = e.getKey();
-            DataPoint data = e.getValue();
+        // sort the nodes
+        LinkedList<Long> nodeids = new LinkedList<Long>(result.keySet());
+        Collections.sort(nodeids);
+        
+        for (Long nodeId : nodeids) {
+            DataPoint data = result.get(nodeId);
             
             // convert json to object
             StatsJso stats = StatsJso.create(data.json);
@@ -267,6 +341,11 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
             mData.setValue(row, 7, stats.getDtnd().getBundles().getGenerated());
             
             mData.setValue(row, 8, stats.getDtnd().getInfo().getUptime());
+            mData.setValue(row, 9, stats.getDtnd().getInfo().getStorageSize());
+            
+            mData.setValue(row, 10, stats.getClock().getOffset());
+            mData.setValue(row, 11, stats.getDtnd().getTimeSync().getOffset());
+            mData.setValue(row, 12, stats.getDtnd().getTimeSync().getRating());
             
             row++;
         }
@@ -298,4 +377,40 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
             rebuildNodeList();
         }
     };
+    
+    @UiHandler("linkIpTraffic")
+    public void onNavIpTrafficClick(ClickEvent evt) {
+        mCurrentView = 0;
+        redraw(mCurrentView);
+    }
+    
+    @UiHandler("linkDtnTraffic")
+    public void onNavDtnTrafficClick(ClickEvent evt) {
+        mCurrentView = 1;
+        redraw(mCurrentView);
+    }
+    
+    @UiHandler("linkClockOffset")
+    public void onNavClockOffsetClick(ClickEvent evt) {
+        mCurrentView = 2;
+        redraw(mCurrentView);
+    }
+    
+    @UiHandler("linkClockRating")
+    public void onNavClockRatingClick(ClickEvent evt) {
+        mCurrentView = 3;
+        redraw(mCurrentView);
+    }
+    
+    @UiHandler("linkUptime")
+    public void onNavUptimeClick(ClickEvent evt) {
+        mCurrentView = 4;
+        redraw(mCurrentView);
+    }
+    
+    @UiHandler("linkStorageSize")
+    public void onNavStorageSizeClick(ClickEvent evt) {
+        mCurrentView = 5;
+        redraw(mCurrentView);
+    }
 }

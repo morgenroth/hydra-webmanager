@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import com.github.gwtbootstrap.client.ui.Heading;
+import com.github.gwtbootstrap.client.ui.NavLink;
 import com.github.gwtbootstrap.client.ui.base.IconAnchor;
 import com.github.gwtbootstrap.client.ui.constants.IconSize;
 import com.google.gwt.core.client.GWT;
@@ -23,7 +24,9 @@ import com.google.gwt.visualization.client.DataTable;
 import com.google.gwt.visualization.client.DataView;
 import com.google.gwt.visualization.client.LegendPosition;
 import com.google.gwt.visualization.client.VisualizationUtils;
-import com.google.gwt.visualization.client.visualizations.LineChart;
+import com.google.gwt.visualization.client.visualizations.corechart.AxisOptions;
+import com.google.gwt.visualization.client.visualizations.corechart.LineChart;
+import com.google.gwt.visualization.client.visualizations.corechart.Options;
 
 import de.tubs.cs.ibr.hydra.webmanager.client.stats.StatsJso;
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
@@ -32,42 +35,41 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 
 public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     
-    @UiField SimplePanel panelTraffic;
-    @UiField SimplePanel panelBundles;
-    @UiField SimplePanel panelClock;
-    @UiField SimplePanel panelTimeSync;
+    @UiField SimplePanel panelChart;
     
     @UiField Heading headingNode;
-    @UiField Heading headingTraffic;
-    @UiField Heading headingBundles;
-    @UiField Heading headingClock;
-    @UiField Heading headingTimeSync;
     
     @UiField IconAnchor buttonRemove;
+    
+    @UiField NavLink linkIpTraffic;
+    @UiField NavLink linkDtnTraffic;
+    @UiField NavLink linkClockOffset;
+    @UiField NavLink linkDtnClockOffset;
+    @UiField NavLink linkClockRating;
+    @UiField NavLink linkUptime;
+    @UiField NavLink linkStorageSize;
     
     private Session mSession = null;
     private Node mNode = null;
     
     // chart objects
-    LineChart mChartTraffic = null;
-    LineChart mChartBundles = null;
-    LineChart mChartClock = null;
-    LineChart mChartTimeSync = null;
+    LineChart mChart = null;
     
     // chart data
     DataTable mData = null;
     
     // chart views
-    DataView mViewTraffic = null;
-    DataView mViewBundles = null;
-    DataView mViewClock = null;
-    DataView mViewTimeSync = null;
+    DataView[] mView = { null, null, null, null, null, null, null };
+    
+    // currently selected chart
+    int mCurrentView = 0;
     
     // chart options
-    LineChart.Options mOptionsChart = null;
+    Options[] mOptions = { null, null, null, null, null, null, null };
     
     // variables for incremental data processing
     DataPoint mLastObj = null;
+    Long mLastTime = null;
     Integer mLastRow = 0;
     
     // is true if all charts are initialized
@@ -92,11 +94,8 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         mSession = session;
         mNode = node;
         
-        // create chart options
-        mOptionsChart = LineChart.Options.create();
-        mOptionsChart.setLegend(LegendPosition.BOTTOM);
-        mOptionsChart.setWidth(360);
-        mOptionsChart.setHeight(480);
+        // initialize chart options
+        updateChartOptions();
         
         if (mNode == null) {
             headingNode.setText("Average");
@@ -133,37 +132,28 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
                 mData.addColumn(ColumnType.NUMBER, "Received");
                 mData.addColumn(ColumnType.NUMBER, "Transmitted");
                 mData.addColumn(ColumnType.NUMBER, "Generated");
-                mData.addColumn(ColumnType.NUMBER, "Offset");
-                mData.addColumn(ColumnType.NUMBER, "Rating");
-
-                // create and add traffic chart to panel
-                mChartTraffic = new LineChart();
-                panelTraffic.add(mChartTraffic);
-                
-                // create and add bundles chart to panel
-                mChartBundles = new LineChart();
-                panelBundles.add(mChartBundles);
-
-                // create and add clock chart to panel
-                mChartClock = new LineChart();
-                panelClock.add(mChartClock);
-
-                // create and add timesync chart to panel
-                mChartTimeSync = new LineChart();
-                panelTimeSync.add(mChartTimeSync);
+                mData.addColumn(ColumnType.NUMBER, "Uptime");
+                mData.addColumn(ColumnType.NUMBER, "Storage size");
+                mData.addColumn(ColumnType.NUMBER, "Clock Offset");
+                mData.addColumn(ColumnType.NUMBER, "DTN Clock Offset");
+                mData.addColumn(ColumnType.NUMBER, "DTN Clock Rating");
                 
                 // create different views
-                mViewTraffic = DataView.create(mData);
-                mViewTraffic.setColumns(new int[] { 0, 1, 2, 3, 4 });
+                for (int i = 0; i < mOptions.length; i++) {
+                    mView[i] = DataView.create(mData);
+                }
                 
-                mViewBundles = DataView.create(mData);
-                mViewBundles.setColumns(new int[] { 0, 5, 6, 7 });
+                mView[0].setColumns(new int[] { 0, 1, 2, 3, 4 });
+                mView[1].setColumns(new int[] { 0, 5, 6, 7 });
+                mView[2].setColumns(new int[] { 0, 10 });
+                mView[3].setColumns(new int[] { 0, 12 });
+                mView[4].setColumns(new int[] { 0, 8 });
+                mView[5].setColumns(new int[] { 0, 9 });
+                mView[6].setColumns(new int[] { 0, 11 });
 
-                mViewClock = DataView.create(mData);
-                mViewClock.setColumns(new int[] { 0, 8 });
-
-                mViewTimeSync = DataView.create(mData);
-                mViewTimeSync.setColumns(new int[] { 0, 9 });
+                // create default chart
+                mChart = new LineChart(mView[0], mOptions[0]);
+                panelChart.add(mChart);
                 
                 // set charts to initialized
                 initialized = true;
@@ -190,7 +180,7 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
                 public void onSuccess(ArrayList<DataPoint> result) {
                     // transform result into data-table
                     transformStatsData(result);
-                    redraw();
+                    redraw(mCurrentView);
                 }
     
                 @Override
@@ -206,13 +196,21 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         if (initialized) updateStatsData();
     }
     
-    private String getDurationString(long duration) {
+    private static String formatDuration(long duration) {
         long hours = duration / 3600;
         long minutes = (duration % 3600) / 60;
         long seconds = duration % 60;
         
         NumberFormat f = NumberFormat.getFormat("#00");
         return f.format(hours) + ":" + f.format(minutes) + ":" + f.format(seconds);
+    }
+    
+    private static Double normalize(Double currentValue, Double previousValue, long interval) {
+        return (currentValue - previousValue) / Double.valueOf(interval);
+    }
+    
+    private static Double normalize(int currentValue, int previousValue, long interval) {
+        return normalize(Double.valueOf(currentValue), Double.valueOf(previousValue), interval);
     }
     
     private void transformStatsData(ArrayList<DataPoint> result) {
@@ -239,31 +237,33 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
                 StatsJso stats = StatsJso.create(data.json);
                 StatsJso last_stats = StatsJso.create(mLastObj.json);
                 
+                long diffSeconds = elapsedSeconds - mLastTime;
+                
                 /**
                  * process traffic stats
                  */
-                mData.setValue(mLastRow, 0, getDurationString(elapsedSeconds));
-                mData.setValue(mLastRow, 1, stats.getTraffic().getInTcpByte() - last_stats.getTraffic().getInTcpByte());
-                mData.setValue(mLastRow, 2, stats.getTraffic().getOutTcpByte() - last_stats.getTraffic().getOutTcpByte());
-                mData.setValue(mLastRow, 3, stats.getTraffic().getInUdpByte() - last_stats.getTraffic().getInUdpByte());
-                mData.setValue(mLastRow, 4, stats.getTraffic().getOutUdpByte() - last_stats.getTraffic().getOutUdpByte());
+                mData.setValue(mLastRow, 0, formatDuration(elapsedSeconds));
+                mData.setValue(mLastRow, 1, normalize(stats.getTraffic().getInTcpByte(), last_stats.getTraffic().getInTcpByte(), diffSeconds));
+                mData.setValue(mLastRow, 2, normalize(stats.getTraffic().getOutTcpByte(), last_stats.getTraffic().getOutTcpByte(), diffSeconds));
+                mData.setValue(mLastRow, 3, normalize(stats.getTraffic().getInUdpByte(),last_stats.getTraffic().getInUdpByte(), diffSeconds));
+                mData.setValue(mLastRow, 4, normalize(stats.getTraffic().getOutUdpByte(), last_stats.getTraffic().getOutUdpByte(), diffSeconds));
                 
                 /**
                  * process dtn stats
                  */
-                mData.setValue(mLastRow, 5, stats.getDtnd().getBundles().getReceived() - last_stats.getDtnd().getBundles().getReceived());
-                mData.setValue(mLastRow, 6, stats.getDtnd().getBundles().getTransmitted() - last_stats.getDtnd().getBundles().getTransmitted());
-                mData.setValue(mLastRow, 7, stats.getDtnd().getBundles().getGenerated() - last_stats.getDtnd().getBundles().getTransmitted());
+                mData.setValue(mLastRow, 5, normalize(stats.getDtnd().getBundles().getReceived(), last_stats.getDtnd().getBundles().getReceived(), diffSeconds));
+                mData.setValue(mLastRow, 6, normalize(stats.getDtnd().getBundles().getTransmitted(), last_stats.getDtnd().getBundles().getTransmitted(), diffSeconds));
+                mData.setValue(mLastRow, 7, normalize(stats.getDtnd().getBundles().getGenerated(), last_stats.getDtnd().getBundles().getTransmitted(), diffSeconds));
+                
+                mData.setValue(mLastRow, 8, stats.getDtnd().getInfo().getUptime());
+                mData.setValue(mLastRow, 9, stats.getDtnd().getInfo().getStorageSize());
                 
                 /**
                  * process clock stats
                  */
-                mData.setValue(mLastRow, 8, stats.getClock().getOffset());
-                
-                /**
-                 * process time-sync stats
-                 */
-                mData.setValue(mLastRow, 9, stats.getDtnd().getTimeSync().getRating());
+                mData.setValue(mLastRow, 10, stats.getClock().getOffset());
+                mData.setValue(mLastRow, 11, stats.getDtnd().getTimeSync().getOffset());
+                mData.setValue(mLastRow, 12, stats.getDtnd().getTimeSync().getRating());
                 
                 // increment row number
                 mLastRow++;
@@ -271,6 +271,7 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
 
             // store data of the last item for incremental processing
             mLastObj = data;
+            mLastTime = elapsedSeconds;
         }
     }
     
@@ -281,32 +282,80 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
 
     @Override
     public void onResize(ResizeEvent event) {
-        Integer width = panelTraffic.getOffsetWidth();
-        Double height = Double.valueOf(width) * Double.valueOf(11.0 / 16.0);
+        updateChartOptions();
         
-        if (width > 0) {
-            mOptionsChart.setSize(width, height.intValue());
+        // redraw local charts
+        redraw(mCurrentView);
+    }
     
-            // redraw local charts
-            redraw();
+    private void updateChartOptions() {
+        // create chart options
+        for (int i = 0; i < mOptions.length; i++) {
+            if (mOptions[i] == null) {
+                mOptions[i] = LineChart.createOptions();
+                
+                AxisOptions hAxisOptions = AxisOptions.create();
+                hAxisOptions.set("slantedText", "true");
+                
+                mOptions[i].setHAxisOptions(hAxisOptions);
+                mOptions[i].setLegend(LegendPosition.BOTTOM);
+                AxisOptions vAxisOptions = AxisOptions.create();
+                
+                switch (i) {
+                    case 0:
+                        vAxisOptions.setTitle("bytes per second");
+                        break;
+                    case 1:
+                        vAxisOptions.setTitle("bundles per second");
+                        break;
+                    case 2:
+                        mOptions[i].setTitle("Clock Offset");
+                        vAxisOptions.setTitle("seconds");
+                        break;
+                    case 3:
+                        mOptions[i].setTitle("Clock Rating");
+                        break;
+                    case 4:
+                        mOptions[i].setTitle("Uptime");
+                        vAxisOptions.setTitle("seconds");
+                        break;
+                    case 5:
+                        mOptions[i].setTitle("Storage size");
+                        vAxisOptions.setTitle("bytes");
+                        break;
+                    case 6:
+                        mOptions[i].setTitle("DTN Clock Offset");
+                        vAxisOptions.setTitle("seconds");
+                        break;
+                    default:
+                        // no title
+                        break;
+                }
+                
+                mOptions[i].setVAxisOptions(vAxisOptions);
+            }
+        }
+        
+        Double width = Double.valueOf(panelChart.getOffsetWidth());
+        Double height = Double.valueOf(width) * Double.valueOf(9.0 / 16.0);
+        
+        for (int i = 0; i < mOptions.length; i++) {
+            if (width > 0) {
+                mOptions[i].setWidth(width.intValue());
+                mOptions[i].setHeight(height.intValue());
+            } else {
+                mOptions[i].setWidth(360);
+                mOptions[i].setHeight(480);
+            }
         }
     }
 
-    private void redraw() {
+    private void redraw(int i) {
         // do not redraw until the chart library has been initialized
         if (!initialized) return;
-    
-        // redraw traffic chart
-        mChartTraffic.draw(mViewTraffic, mOptionsChart);
-    
-        // redraw bundles chart
-        mChartBundles.draw(mViewBundles, mOptionsChart);
-        
-        // redraw clock chart
-        mChartClock.draw(mViewClock, mOptionsChart);
-        
-        // redraw time-sync chart
-        mChartTimeSync.draw(mViewTimeSync, mOptionsChart);
+
+        // redraw charts
+        mChart.draw(mView[i], mOptions[i]);
     }
     
     @UiHandler("buttonRemove")
@@ -314,5 +363,47 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         this.removeFromParent();
         if (mRemovedListener != null)
             mRemovedListener.onStatsRemoved(mNode);
+    }
+    
+    @UiHandler("linkIpTraffic")
+    public void onNavIpTrafficClick(ClickEvent evt) {
+        mCurrentView = 0;
+        redraw(mCurrentView);
+    }
+    
+    @UiHandler("linkDtnTraffic")
+    public void onNavDtnTrafficClick(ClickEvent evt) {
+        mCurrentView = 1;
+        redraw(mCurrentView);
+    }
+    
+    @UiHandler("linkClockOffset")
+    public void onNavClockOffsetClick(ClickEvent evt) {
+        mCurrentView = 2;
+        redraw(mCurrentView);
+    }
+    
+    @UiHandler("linkClockRating")
+    public void onNavClockRatingClick(ClickEvent evt) {
+        mCurrentView = 3;
+        redraw(mCurrentView);
+    }
+    
+    @UiHandler("linkUptime")
+    public void onNavUptimeClick(ClickEvent evt) {
+        mCurrentView = 4;
+        redraw(mCurrentView);
+    }
+    
+    @UiHandler("linkStorageSize")
+    public void onNavStorageSizeClick(ClickEvent evt) {
+        mCurrentView = 5;
+        redraw(mCurrentView);
+    }
+    
+    @UiHandler("linkDtnClockOffset")
+    public void onNavDtnClockOffsetClick(ClickEvent evt) {
+        mCurrentView = 6;
+        redraw(mCurrentView);
     }
 }
