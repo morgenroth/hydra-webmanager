@@ -85,7 +85,7 @@ public class Database {
     private final static String UPDATE_NODES_CLEAR = "UPDATE nodes SET `assigned_slave` = NULL, `address` = NULL, `state` = 'draft';";
     private final static String UPDATE_NODES_CLEAR_SESSION = "UPDATE nodes SET `assigned_slave` = NULL, `address` = NULL, `state` = 'draft' WHERE session = ?;";
     
-    private final static String UPDATE_SESSIONS_RESET = "UPDATE sessions SET `state` = 'draft', `started` = NULL, `aborted` = NULL, `finished` = NULL WHERE `state` != 'finished' AND `state` != 'error' AND `state` != 'aborted'";
+    private final static String UPDATE_SESSIONS_RESET = "UPDATE sessions SET `state` = 'error' WHERE `state` = 'pending' OR `state` = 'running' OR `state` = 'cancelled' OR `state` = 'initial'";
     
     private final static String DELETE_NODE = "DELETE FROM nodes WHERE id = ?;";
     private final static String DELETE_SESSION_NODES = "DELETE FROM nodes WHERE session = ?;";
@@ -462,7 +462,7 @@ public class Database {
         if (conn == null) return;
         
         try (Statement st = conn.createStatement()) {
-            // reset all sessions to 'draft' state
+            // reset all sessions
             st.executeUpdate(UPDATE_SESSIONS_RESET);
         } catch (SQLException e) {
             e.printStackTrace();
