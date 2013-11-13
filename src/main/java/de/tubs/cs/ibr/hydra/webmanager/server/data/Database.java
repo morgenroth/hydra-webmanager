@@ -58,7 +58,7 @@ public class Database {
     private final static String QUERY_USER = "SELECT " + USERS_FIELDS + " FROM users WHERE id = ?;";
     private final static String QUERY_USER_BY_NAME = "SELECT " + USERS_FIELDS + " FROM users WHERE name = ?;";
     
-    private final static String QUERY_ADDRESS_ALLOCS = "SELECT DISTINCT `address` FROM nodes WHERE `address` != NULL ORDER BY `address`;";
+    private final static String QUERY_ADDRESS_ALLOCS = "SELECT DISTINCT `address` FROM nodes WHERE `address` IS NOT NULL ORDER BY `address`;";
     private final static String QUERY_SLAVE_ALLOCS = "SELECT `slaves`.`id`, `slaves`.`capacity`, COUNT(`slaves`.`id`) as allocation, `nodes`.`assigned_slave` FROM `slaves` LEFT JOIN `nodes` ON (`slaves`.`id` = `nodes`.`assigned_slave`) WHERE `slaves`.`state` != 'disconnected' GROUP BY `slaves`.`id`;";
     
     private final static String QUERY_STATS = "SELECT `timestamp`, `node`, `data` FROM stats WHERE session = ? ORDER BY `timestamp`;";
