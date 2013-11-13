@@ -13,6 +13,7 @@ import de.tubs.cs.ibr.hydra.webmanager.client.MasterControlService;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Configuration;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SessionContainer;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Credentials;
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MapDataSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
@@ -279,5 +280,15 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         } catch (IOException e) {
             // could not initialize session container
         }
+    }
+
+    @Override
+    public Credentials getCredentials() {
+        String username = this.getThreadLocalRequest().getRemoteUser();
+        if (username == null) return null;
+        
+        Credentials c = new Credentials();
+        c.setUsername(username);
+        return c;
     }
 }

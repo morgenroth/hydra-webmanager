@@ -21,10 +21,12 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Widget;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.Credentials;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 
@@ -41,6 +43,7 @@ public class HydraApp extends Composite {
     @UiField NavLink navSession;
     @UiField NavLink navSlaves;
     @UiField NavLink navNodes;
+    @UiField NavLink navLogin;
     
     @UiField Column alertColumn;
     final Alert mAlert = new Alert();
@@ -85,6 +88,27 @@ public class HydraApp extends Composite {
     @Override
     protected void onAttach() {
         super.onAttach();
+        
+        // request user credentials
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.getCredentials(new AsyncCallback<Credentials>() {
+            
+            @Override
+            public void onSuccess(Credentials result) {
+                if (result == null) {
+                    // no credentials received - show login link
+                    navLogin.setText("Not logged in");
+                } else {
+                    // show username
+                    navLogin.setText("Logged in as '" + result.getUsername() + "'");
+                }
+            }
+            
+            @Override
+            public void onFailure(Throwable caught) {
+                // no credentials received
+            }
+        });
         
         // create a new atmosphere client
         atmosphere = Atmosphere.create();

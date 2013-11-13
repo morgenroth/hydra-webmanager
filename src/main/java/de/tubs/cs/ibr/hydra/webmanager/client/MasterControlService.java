@@ -7,15 +7,21 @@ import java.util.HashMap;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.Credentials;
+import de.tubs.cs.ibr.hydra.webmanager.shared.DataFile;
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MapDataSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
-import de.tubs.cs.ibr.hydra.webmanager.shared.DataFile;
 
 @RemoteServiceRelativePath("master")
 public interface MasterControlService extends RemoteService {
+    /**
+     * Get user credentials
+     */
+    public Credentials getCredentials();
+    
     /**
      * Create a new session
      * @return A session object with a unique key

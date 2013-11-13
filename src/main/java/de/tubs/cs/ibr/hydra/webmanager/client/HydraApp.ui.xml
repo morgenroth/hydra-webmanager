@@ -13,7 +13,7 @@
 		        	<b:NavLink ui:field="navNodes">Nodes</b:NavLink>
 		        </b:Nav>
 		        <b:Nav alignment="RIGHT">
-		            <b:NavLink>Not logged in</b:NavLink>
+		            <b:NavLink ui:field="navLogin">Not logged in</b:NavLink>
 				</b:Nav>
 			</b:Navbar>
 			<b:Row><b:Column size="12" ui:field="alertColumn" /></b:Row>
