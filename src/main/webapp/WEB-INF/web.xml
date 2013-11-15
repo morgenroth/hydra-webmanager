@@ -18,8 +18,24 @@
 		<init-param>
 			<param-name>org.atmosphere.useNative</param-name>
 			<param-value>true</param-value>
-		 </init-param>
-		 <load-on-startup>1</load-on-startup>
+		</init-param>
+		<init-param>
+			<param-name>org.atmosphere.cpr.broadcasterCacheClass</param-name>
+			<param-value>org.atmosphere.cache.UUIDBroadcasterCache</param-value>
+		</init-param>
+		<init-param>
+			<param-name>org.atmosphere.cpr.broadcaster.shareableThreadPool</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<init-param>
+			<param-name>org.atmosphere.cpr.broadcaster.maxProcessingThreads</param-name>
+			<param-value>50</param-value>
+		</init-param>
+		<init-param>
+			<param-name>org.atmosphere.cpr.broadcaster.maxAsyncWriteThreads</param-name>
+			<param-value>50</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
 	</servlet>
 	
 	<servlet>
