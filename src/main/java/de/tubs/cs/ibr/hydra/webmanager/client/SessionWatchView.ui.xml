@@ -11,69 +11,63 @@
 		.error { color:red; }
 		.pager { margin-top: 12px; }
 	</ui:style>
-	<g:HTMLPanel>
-		<b:Row>
-			<b:Column size="12">
-				<b:Heading size="2">Session</b:Heading>
-			</b:Column>
-		</b:Row>
-		<b:Row>
-			<b:Column size="12">
-				<b:TabPanel ui:field="panelTabs">
-					<b:Tab heading="Details" active="true">
-						<b:Form type="HORIZONTAL">
-							<b:ControlGroup>
-								<b:ControlLabel for="textDescription">Description</b:ControlLabel>
-								<b:Controls>
-									<b:TextBox alternateSize="XLARGE" b:id="textDescription" b:readOnly="true" ui:field="textDetailsDesc" />
-								</b:Controls>
-							</b:ControlGroup>
-							<b:ControlGroup>
-								<b:ControlLabel for="textState">State</b:ControlLabel>
-								<b:Controls>
-									<b:TextBox alternateSize="XLARGE" b:id="textState"
-										ui:field="textDetailsState" b:readOnly="true" text="initial"></b:TextBox>
-								</b:Controls>
-							</b:ControlGroup>
-							<b:ControlGroup>
-								<b:ControlLabel for="textElapsedTime">Elapsed Time</b:ControlLabel>
-								<b:Controls>
-									<b:InputAddOn prependIcon="TIME">
-										<b:TextBox b:id="textElapsedTime" ui:field="textDetailsElapsedTime" b:readOnly="true" text="00:00:00 / 00:00:00" />
-									</b:InputAddOn>
-								</b:Controls>
-							</b:ControlGroup>
-							<b:ControlGroup>
-								<b:ControlLabel for="progressDetails">Progress</b:ControlLabel>
-								<b:Controls>
-									<b:ProgressBar type="ANIMATED" percent="0" ui:field="progressDetails" />
-								</b:Controls>
-							</b:ControlGroup>
-						</b:Form>
-					</b:Tab>
-					<b:Tab heading="Nodes">
-						<!-- table of nodes -->
-						<b:CellTable ui:field="tableNodes" />
-						<b:SimplePager display="{tableNodes}" location="RIGHT" fastForwardRows="15" styleName="{style.pager}"/>
-					</b:Tab>
-					<b:Tab heading="Stats">
-						<client:SessionStatsWidget ui:field="statsView" />
-					</b:Tab>
-					<b:Tab heading="Map" ui:field="tabMapView">
-					    <client:SessionMapWidget ui:field="mapView" />
-					</b:Tab>
-					<b:Tab heading="Download" ui:field="tabDownload">
-					    <client:SessionDownloadWidget ui:field="downloadView" />
-					</b:Tab>
-				</b:TabPanel>
-			</b:Column>
-		</b:Row>
-		<b:Row>
-			<b:Column size="12">
-			    <g:HTMLPanel><hr /></g:HTMLPanel>
-				<b:Button icon="REPLY" type="LINK" ui:field="buttonBack">Back to
-					sessions</b:Button>
-			</b:Column>
-		</b:Row>
-	</g:HTMLPanel>
+	<b:FluidContainer>
+		<b:FluidRow>
+			<b:Heading size="2">Session</b:Heading>
+		</b:FluidRow>
+		<b:FluidRow>
+			<b:TabPanel ui:field="panelTabs">
+				<b:Tab heading="Details" active="true">
+					<b:Form type="HORIZONTAL">
+						<b:ControlGroup>
+							<b:ControlLabel for="textDescription">Description</b:ControlLabel>
+							<b:Controls>
+								<b:TextBox alternateSize="XLARGE" b:id="textDescription"
+									b:readOnly="true" ui:field="textDetailsDesc" />
+							</b:Controls>
+						</b:ControlGroup>
+						<b:ControlGroup>
+							<b:ControlLabel for="textState">State</b:ControlLabel>
+							<b:Controls>
+								<b:TextBox alternateSize="XLARGE" b:id="textState"
+									ui:field="textDetailsState" b:readOnly="true" text="initial"></b:TextBox>
+							</b:Controls>
+						</b:ControlGroup>
+						<b:ControlGroup>
+							<b:ControlLabel for="textElapsedTime">Elapsed Time</b:ControlLabel>
+							<b:Controls>
+								<b:InputAddOn prependIcon="TIME">
+									<b:TextBox b:id="textElapsedTime" ui:field="textDetailsElapsedTime"
+										b:readOnly="true" text="00:00:00 / 00:00:00" />
+								</b:InputAddOn>
+							</b:Controls>
+						</b:ControlGroup>
+						<b:ControlGroup>
+							<b:ControlLabel for="progressDetails">Progress</b:ControlLabel>
+							<b:Controls>
+								<b:ProgressBar type="ANIMATED" percent="0"
+									ui:field="progressDetails" />
+							</b:Controls>
+						</b:ControlGroup>
+					</b:Form>
+				</b:Tab>
+				<b:Tab heading="Nodes">
+					<!-- table of nodes -->
+					<b:CellTable ui:field="tableNodes" />
+					<b:SimplePager display="{tableNodes}" location="RIGHT"
+						fastForwardRows="15" styleName="{style.pager}" />
+				</b:Tab>
+				<b:Tab heading="Stats">
+					<client:SessionStatsWidget ui:field="statsView" />
+				</b:Tab>
+				<b:Tab heading="Map" ui:field="tabMapView">
+					<client:SessionMapWidget ui:field="mapView" />
+				</b:Tab>
+				<b:Tab heading="Download" ui:field="tabDownload">
+					<client:SessionDownloadWidget
+						ui:field="downloadView" />
+				</b:Tab>
+			</b:TabPanel>
+		</b:FluidRow>
+	</b:FluidContainer>
 </ui:UiBinder> 

@@ -12,8 +12,8 @@
 		.error { color:red; }
 		.pager { margin-top: 12px; }
 	</ui:style>
-	<g:HTMLPanel>
-		<b:Row>
+	<b:FluidContainer>
+		<b:FluidRow>
 			<b:Column size="3">
 				<!-- Statistic dump -->
 				<b:Heading size="3">Bundles</b:Heading>
@@ -28,6 +28,6 @@
 				<b:CellTable ui:field="traceTable" />
 				<b:SimplePager display="{traceTable}" location="RIGHT" fastForwardRows="15" styleName="{style.pager}"/>
 			</b:Column>
-		</b:Row>
-	</g:HTMLPanel>
+		</b:FluidRow>
+	</b:FluidContainer>
 </ui:UiBinder> 

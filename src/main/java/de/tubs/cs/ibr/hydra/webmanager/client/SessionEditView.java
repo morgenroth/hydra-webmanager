@@ -7,6 +7,7 @@ import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CheckBox;
 import com.github.gwtbootstrap.client.ui.Column;
 import com.github.gwtbootstrap.client.ui.FileUpload;
+import com.github.gwtbootstrap.client.ui.FormActions;
 import com.github.gwtbootstrap.client.ui.ListBox;
 import com.github.gwtbootstrap.client.ui.NavLink;
 import com.github.gwtbootstrap.client.ui.Tab;
@@ -39,12 +40,10 @@ public class SessionEditView extends View {
 
     private static SessionEditViewUiBinder uiBinder = GWT.create(SessionEditViewUiBinder.class);
     
-    @UiField Button buttonBack;
-    
     @UiField TabPanel panelTabs;
     @UiField Tab tabNodes;
     
-    @UiField Column columnFormActions;
+    @UiField FormActions faNodes;
     @UiField Button buttonApply;
     @UiField Button buttonReset;
     @UiField Column alertColumn;
@@ -393,12 +392,6 @@ public class SessionEditView extends View {
         return session_id.equals(mSession.id);
     }
 
-    @UiHandler("buttonBack")
-    void onClickBack(ClickEvent e) {
-        // switch back to session view
-        resetView();
-    }
-    
     @UiHandler("checkRemove")
     void onRemoveLockChanged(ClickEvent e) {
         buttonRemove.setEnabled(checkRemove.getValue());
@@ -871,9 +864,9 @@ public class SessionEditView extends View {
     @UiHandler("panelTabs")
     void onTabChange(ShownEvent event) {
         if (tabNodes.isActive()) {
-            columnFormActions.setVisible(false);
+            faNodes.setVisible(false);
         } else {
-            columnFormActions.setVisible(true);
+            faNodes.setVisible(true);
         }
     }
 }

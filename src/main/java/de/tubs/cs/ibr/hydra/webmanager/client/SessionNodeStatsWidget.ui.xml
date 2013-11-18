@@ -1,34 +1,32 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
-	xmlns:g="urn:import:com.google.gwt.user.client.ui"
-	xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
 	xmlns:base="urn:import:com.github.gwtbootstrap.client.ui.base"
 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui"
 	xmlns:viz="urn:import:com.google.gwt.visualization.client.visualizations">
 	<ui:style>
 		.icon-remove {
-			margin-left: 12px;
-			margin-right: 12px;
-			text-decoration: none;
+		margin-left: 12px;
+		margin-right: 12px;
+		text-decoration: none;
 		}
 
 		.icon-remove:hover {
-			margin-left: 12px;
-			margin-right: 12px;
-			text-decoration: none;
+		margin-left: 12px;
+		margin-right: 12px;
+		text-decoration: none;
 		}
 	</ui:style>
-	<g:HTMLPanel>
-		<b:Row>
-			<b:Column size="12">
-			    <g:HorizontalPanel spacing="12" verticalAlignment="ALIGN_MIDDLE">
-					<b:Heading size="3" ui:field="headingNode"></b:Heading>
-					<base:IconAnchor icon="REMOVE_SIGN" ui:field="buttonRemove" addStyleNames="{style.icon-remove}">
-					</base:IconAnchor>
-				</g:HorizontalPanel>
-			</b:Column>
-		</b:Row>
-		<b:Row>
+	<b:FluidContainer>
+		<b:FluidRow>
+			<g:HorizontalPanel spacing="12" verticalAlignment="ALIGN_MIDDLE">
+				<b:Heading size="3" ui:field="headingNode"></b:Heading>
+				<base:IconAnchor icon="REMOVE_SIGN" ui:field="buttonRemove"
+					addStyleNames="{style.icon-remove}">
+				</base:IconAnchor>
+			</g:HorizontalPanel>
+		</b:FluidRow>
+		<b:FluidRow>
 			<b:Column size="2">
 				<b:WellNavList>
 					<b:NavHeader>Common</b:NavHeader>
@@ -45,11 +43,11 @@
 			<b:Column size="10">
 				<g:SimplePanel ui:field="panelChart" />
 			</b:Column>
-		</b:Row>
-    	<b:Row>
-	    	<b:Column size="12">
-	    	    <g:HTMLPanel><hr /></g:HTMLPanel>
-	    	</b:Column>
-    	</b:Row>
-	</g:HTMLPanel>
+		</b:FluidRow>
+		<b:FluidRow>
+			<g:HTMLPanel>
+				<hr />
+			</g:HTMLPanel>
+		</b:FluidRow>
+	</b:FluidContainer>
 </ui:UiBinder> 

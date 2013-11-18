@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CellTable;
 import com.github.gwtbootstrap.client.ui.ProgressBar;
 import com.github.gwtbootstrap.client.ui.Tab;
@@ -14,7 +13,6 @@ import com.github.gwtbootstrap.client.ui.base.ProgressBarBase.Color;
 import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -38,7 +36,6 @@ public class SessionWatchView extends View {
 
     private static SessionWatchViewUiBinder uiBinder = GWT.create(SessionWatchViewUiBinder.class);
     
-    @UiField Button buttonBack;
     @UiField CellTable<Node> tableNodes;
     
     @UiField TextBox textDetailsState;
@@ -555,12 +552,6 @@ public class SessionWatchView extends View {
         return session_id.equals(mSession.id);
     }
 
-    @UiHandler("buttonBack")
-    void onClick(ClickEvent e) {
-        // switch back to session view
-        resetView();
-    }
-    
     @UiHandler("panelTabs")
     void onTabChange(ShownEvent event) {
         statsView.onResize(null);

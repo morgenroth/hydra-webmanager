@@ -5,12 +5,12 @@
 	xmlns:viz="urn:import:com.google.gwt.visualization.client.visualizations">
 	<ui:style>
 		.formButton {
-			margin-left: 6px;
-			margin-right: 6px;
+		margin-left: 6px;
+		margin-right: 6px;
 		}
 	</ui:style>
-	<g:HTMLPanel>
-		<b:Row>
+	<b:FluidContainer>
+		<b:FluidRow>
 			<b:Column size="2">
 				<b:WellNavList>
 					<b:NavHeader>Common</b:NavHeader>
@@ -26,21 +26,20 @@
 			<b:Column size="10">
 				<g:SimplePanel ui:field="panelChart" />
 			</b:Column>
-		</b:Row>
-    	<b:Row>
-	    	<b:Column size="12">
-	    	    <g:HTMLPanel><hr /></g:HTMLPanel>
-	    	</b:Column>
-    	</b:Row>
-		<b:Container ui:field="containerNodeStats" />
-		<b:Row>
-			<b:Column size="6">
-				<b:InputAddOn prependText="Node" appendIcon="PLUS" addStyleNames="{style.formButton}">
-				    <b:ListBox ui:field="listNodes">
-				        <g:item value="-">- select a node -</g:item>
-				    </b:ListBox>
-				</b:InputAddOn>
-			</b:Column>
-		</b:Row>
-	</g:HTMLPanel>
+		</b:FluidRow>
+		<b:FluidRow>
+			<g:HTMLPanel>
+				<hr />
+			</g:HTMLPanel>
+		</b:FluidRow>
+		<b:FluidContainer ui:field="containerNodeStats" />
+		<b:FluidRow>
+			<b:InputAddOn prependText="Node" appendIcon="PLUS"
+				addStyleNames="{style.formButton}">
+				<b:ListBox ui:field="listNodes">
+					<g:item value="-">- select a node -</g:item>
+				</b:ListBox>
+			</b:InputAddOn>
+		</b:FluidRow>
+	</b:FluidContainer>
 </ui:UiBinder> 

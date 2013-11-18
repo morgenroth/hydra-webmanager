@@ -3,16 +3,13 @@ package de.tubs.cs.ibr.hydra.webmanager.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.CellTable;
 import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -40,7 +37,6 @@ public class NodeView extends View {
     ArrayList<Slave> mSlaves = new ArrayList<Slave>();
     
     @UiField CellTable<Node> nodeTable;
-    @UiField Button buttonBack;
     
     interface Style extends CssResource {
         String activated();
@@ -274,11 +270,5 @@ public class NodeView extends View {
         else if (evt.equals(EventType.SLAVE_STATE_CHANGED)) {
             refreshSlaves();
         }
-    }
-    
-    @UiHandler("buttonBack")
-    void onClick(ClickEvent e) {
-        // switch back to session view
-        resetView();
     }
 }

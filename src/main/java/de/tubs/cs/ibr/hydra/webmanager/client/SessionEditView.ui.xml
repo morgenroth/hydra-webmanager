@@ -6,451 +6,461 @@
 	xmlns:hydra="urn:import:de.tubs.cs.ibr.hydra.webmanager.client">
 	<ui:style>
 		.formButton {
-			margin-left: 6px;
-			margin-right: 6px;
+		margin-left: 6px;
+		margin-right: 6px;
 		}
 
 		.monospaced {
-			font-family: monospace;
+		font-family: monospace;
 		}
 	</ui:style>
-	<g:HTMLPanel>
-		<b:Row>
-			<b:Column size="12">
-				<b:Heading size="2">Session Editor</b:Heading>
-			</b:Column>
-		</b:Row>
-		<b:Row><b:Column size="12" ui:field="alertColumn" /></b:Row>
+	<b:FluidContainer>
+		<b:FluidRow>
+			<b:Heading size="2">Session Editor</b:Heading>
+		</b:FluidRow>
+		<b:FluidRow>
+			<b:Column size="12" ui:field="alertColumn" />
+		</b:FluidRow>
 		<b:TabPanel ui:field="panelTabs">
 			<b:Tab heading="Properties" active="true">
 				<!-- Properties -->
 				<b:Form type="HORIZONTAL">
-					<b:Row>
-						<b:Column size="12">
-							<b:ControlGroup>
-								<b:ControlLabel for="textKey">Key</b:ControlLabel>
-								<b:Controls>
-									<b:TextBox alternateSize="XLARGE" b:id="textKey"
-										ui:field="textPropKey" b:readOnly="true" text="- not assigned -"></b:TextBox>
-								</b:Controls>
-							</b:ControlGroup>
-							<b:ControlGroup>
-								<b:ControlLabel for="textOwner">Owner</b:ControlLabel>
-								<b:Controls>
-									<b:TextBox alternateSize="XLARGE" b:id="textOwner"
-										ui:field="textPropOwner" b:readOnly="true" text="- not assigned -"></b:TextBox>
-								</b:Controls>
-							</b:ControlGroup>
-							<b:ControlGroup>
-								<b:ControlLabel for="textDescription">Description</b:ControlLabel>
-								<b:Controls>
-									<b:TextBox alternateSize="XLARGE" b:id="textDescription"
-										ui:field="textPropDesc"></b:TextBox>
-									<b:HelpBlock>This is the description shown in the list of
-										sessions.</b:HelpBlock>
-								</b:Controls>
-							</b:ControlGroup>
-							<b:ControlGroup>
-								<b:ControlLabel for="textState">State</b:ControlLabel>
-								<b:Controls>
-									<b:TextBox alternateSize="XLARGE" b:id="textState"
-										ui:field="textPropState" b:readOnly="true" text="initial"></b:TextBox>
-								</b:Controls>
-							</b:ControlGroup>
-							<b:ControlGroup>
-								<b:ControlLabel>Removal</b:ControlLabel>
-								<b:Controls>
-									<b:CheckBox ui:field="checkRemove">Yes, I want to DELETE this session.</b:CheckBox>
-									<b:Button ui:field="buttonRemove" type="DANGER" b:enabled="false">Remove</b:Button>
-								</b:Controls>
-							</b:ControlGroup>
-						</b:Column>
-					</b:Row>
+					<b:FluidRow>
+						<b:ControlGroup>
+							<b:ControlLabel for="textKey">Key</b:ControlLabel>
+							<b:Controls>
+								<b:TextBox alternateSize="XLARGE" b:id="textKey"
+									ui:field="textPropKey" b:readOnly="true" text="- not assigned -"></b:TextBox>
+							</b:Controls>
+						</b:ControlGroup>
+						<b:ControlGroup>
+							<b:ControlLabel for="textOwner">Owner</b:ControlLabel>
+							<b:Controls>
+								<b:TextBox alternateSize="XLARGE" b:id="textOwner"
+									ui:field="textPropOwner" b:readOnly="true" text="- not assigned -"></b:TextBox>
+							</b:Controls>
+						</b:ControlGroup>
+						<b:ControlGroup>
+							<b:ControlLabel for="textDescription">Description</b:ControlLabel>
+							<b:Controls>
+								<b:TextBox alternateSize="XLARGE" b:id="textDescription"
+									ui:field="textPropDesc"></b:TextBox>
+								<b:HelpBlock>This is the description shown in the list of
+									sessions.</b:HelpBlock>
+							</b:Controls>
+						</b:ControlGroup>
+						<b:ControlGroup>
+							<b:ControlLabel for="textState">State</b:ControlLabel>
+							<b:Controls>
+								<b:TextBox alternateSize="XLARGE" b:id="textState"
+									ui:field="textPropState" b:readOnly="true" text="initial"></b:TextBox>
+							</b:Controls>
+						</b:ControlGroup>
+						<b:ControlGroup>
+							<b:ControlLabel>Removal</b:ControlLabel>
+							<b:Controls>
+								<b:CheckBox ui:field="checkRemove">Yes, I want to DELETE this
+									session.</b:CheckBox>
+								<b:Button ui:field="buttonRemove" type="DANGER"
+									b:enabled="false">Remove</b:Button>
+							</b:Controls>
+						</b:ControlGroup>
+					</b:FluidRow>
 				</b:Form>
 			</b:Tab>
 			<!-- Base -->
 			<b:Tab heading="Base">
 				<b:Form type="HORIZONTAL">
-					<b:Row>
-						<b:Column size="12">
-							<!-- base node image -->
-							<b:ControlGroup>
-								<b:ControlLabel for="listImage">Node image</b:ControlLabel>
-								<b:Controls>
-									<b:ListBox alternateSize="XLARGE" b:id="listImage"
-										ui:field="listBaseImage"></b:ListBox>
-									<b:HelpBlock>The selected image will be the base for all
-										created nodes.</b:HelpBlock>
-								</b:Controls>
-							</b:ControlGroup>
+					<b:FluidRow>
+						<!-- base node image -->
+						<b:ControlGroup>
+							<b:ControlLabel for="listImage">Node image</b:ControlLabel>
+							<b:Controls>
+								<b:ListBox alternateSize="XLARGE" b:id="listImage"
+									ui:field="listBaseImage"></b:ListBox>
+								<b:HelpBlock>The selected image will be the base for all
+									created nodes.</b:HelpBlock>
+							</b:Controls>
+						</b:ControlGroup>
 
-							<!-- opkg respository -->
-							<b:ControlGroup>
-								<b:ControlLabel for="textRepository">Package repository</b:ControlLabel>
-								<b:Controls>
-									<b:InputAddOn prependIcon="GLOBE">
-										<b:TextBox alternateSize="XLARGE" b:id="textRepository"
-											ui:field="textBaseRepository" b:placeholder="http://"></b:TextBox>
-									</b:InputAddOn>
-									<b:HelpBlock>This OpenWrt repository will be added to the file
-										/etc/opkg.conf and used as source for installation packages.</b:HelpBlock>
-								</b:Controls>
-							</b:ControlGroup>
+						<!-- opkg respository -->
+						<b:ControlGroup>
+							<b:ControlLabel for="textRepository">Package repository</b:ControlLabel>
+							<b:Controls>
+								<b:InputAddOn prependIcon="GLOBE">
+									<b:TextBox alternateSize="XLARGE" b:id="textRepository"
+										ui:field="textBaseRepository" b:placeholder="http://"></b:TextBox>
+								</b:InputAddOn>
+								<b:HelpBlock>This OpenWrt repository will be added to the file
+									/etc/opkg.conf and used as source for installation packages.</b:HelpBlock>
+							</b:Controls>
+						</b:ControlGroup>
 
-							<!-- packages.install -->
-							<b:ControlGroup>
-								<b:ControlLabel for="textInstall">Install list</b:ControlLabel>
-								<b:Controls>
-									<b:TextArea alternateSize="XLARGE" b:id="textInstall" addStyleNames="{style.monospaced}"
-										ui:field="textBaseInstall" visibleLines="5"></b:TextArea>
-									<b:HelpBlock>These packages are installed during the base
-										preparation. Put each package into a separate line.</b:HelpBlock>
-								</b:Controls>
-							</b:ControlGroup>
+						<!-- packages.install -->
+						<b:ControlGroup>
+							<b:ControlLabel for="textInstall">Install list</b:ControlLabel>
+							<b:Controls>
+								<b:TextArea alternateSize="XLARGE" b:id="textInstall"
+									addStyleNames="{style.monospaced}" ui:field="textBaseInstall"
+									visibleLines="5"></b:TextArea>
+								<b:HelpBlock>These packages are installed during the base
+									preparation. Put each package into a separate line.</b:HelpBlock>
+							</b:Controls>
+						</b:ControlGroup>
 
-							<!-- additional packages upload/remove -->
-							<b:ControlGroup>
-								<b:ControlLabel for="listPackages">Packages</b:ControlLabel>
-								<b:Controls>
-									<b:ListBox alternateSize="XLARGE" b:id="listPackages" b:enabled="false" visibleItemCount="4" ui:field="listBasePackages"></b:ListBox>
-									<b:Button ui:field="buttonBasePackages" type="DANGER" b:enabled="false" b:icon="TRASH">Delete</b:Button>
-									<g:FormPanel ui:field="formBasePackages">
-										<b:FileUpload ui:field="uploadBasePackages" name="packagefile" />
-									</g:FormPanel>
-									<b:HelpBlock>These uploaded packages are installed during the base
-										preparation.</b:HelpBlock>
-								</b:Controls>
-							</b:ControlGroup>
+						<!-- additional packages upload/remove -->
+						<b:ControlGroup>
+							<b:ControlLabel for="listPackages">Packages</b:ControlLabel>
+							<b:Controls>
+								<b:ListBox alternateSize="XLARGE" b:id="listPackages"
+									b:enabled="false" visibleItemCount="4" ui:field="listBasePackages"></b:ListBox>
+								<b:Button ui:field="buttonBasePackages" type="DANGER"
+									b:enabled="false" b:icon="TRASH">Delete</b:Button>
+								<g:FormPanel ui:field="formBasePackages">
+									<b:FileUpload ui:field="uploadBasePackages" name="packagefile" />
+								</g:FormPanel>
+								<b:HelpBlock>These uploaded packages are installed during the
+									base
+									preparation.</b:HelpBlock>
+							</b:Controls>
+						</b:ControlGroup>
 
-							<!-- Node Template (qemu) -->
-							<b:ControlGroup>
-								<b:ControlLabel for="textQemuTemplate">Template (QEMU)</b:ControlLabel>
-								<b:Controls>
-									<b:TextArea alternateSize="XXLARGE" b:id="textQemuTemplate" addStyleNames="{style.monospaced}"
-										ui:field="textBaseQemuTemplate" visibleLines="10"></b:TextArea>
-									<b:HelpBlock>This is the template for QEMU virtualization used
-										to create nodes on the slaves.</b:HelpBlock>
-								</b:Controls>
-							</b:ControlGroup>
+						<!-- Node Template (qemu) -->
+						<b:ControlGroup>
+							<b:ControlLabel for="textQemuTemplate">Template (QEMU)</b:ControlLabel>
+							<b:Controls>
+								<b:TextArea alternateSize="XXLARGE" b:id="textQemuTemplate"
+									addStyleNames="{style.monospaced}" ui:field="textBaseQemuTemplate"
+									visibleLines="10"></b:TextArea>
+								<b:HelpBlock>This is the template for QEMU virtualization used
+									to create nodes on the slaves.</b:HelpBlock>
+							</b:Controls>
+						</b:ControlGroup>
 
-							<!-- Node Template (vbox) -->
-							<b:ControlGroup>
-								<b:ControlLabel for="textVboxTemplate">Template (VirtualBox)</b:ControlLabel>
-								<b:Controls>
-									<b:TextArea alternateSize="XXLARGE" b:id="textVboxTemplate" addStyleNames="{style.monospaced}"
-										ui:field="textBaseVboxTemplate" visibleLines="10"></b:TextArea>
-									<b:HelpBlock>This is the template for VirtualBox virtualization
-										used to create nodes on the slaves.</b:HelpBlock>
-								</b:Controls>
-							</b:ControlGroup>
-							
-							<!-- Generic Node Setup Script -->
-							<b:ControlGroup>
-								<b:ControlLabel for="textSetupScript">Generic setup</b:ControlLabel>
-								<b:Controls>
-									<b:TextArea alternateSize="XXLARGE" b:id="textSetupScript" addStyleNames="{style.monospaced}"
-										ui:field="textBaseSetupScript" visibleLines="10"></b:TextArea>
-									<b:HelpBlock>This script is applied once to the base image.</b:HelpBlock>
-								</b:Controls>
-							</b:ControlGroup>
-							
-							<!-- Individual Node Setup Script -->
-							<b:ControlGroup>
-								<b:ControlLabel for="textIndividualSetupScript">Individual setup</b:ControlLabel>
-								<b:Controls>
-									<b:TextArea alternateSize="XXLARGE" b:id="textIndividualSetupScript" addStyleNames="{style.monospaced}"
-										ui:field="textBaseIndividualSetupScript" visibleLines="10"></b:TextArea>
-									<b:HelpBlock>This script is applied to each individual node image.</b:HelpBlock>
-								</b:Controls>
-							</b:ControlGroup>
-						</b:Column>
-					</b:Row>
+						<!-- Node Template (vbox) -->
+						<b:ControlGroup>
+							<b:ControlLabel for="textVboxTemplate">Template (VirtualBox)</b:ControlLabel>
+							<b:Controls>
+								<b:TextArea alternateSize="XXLARGE" b:id="textVboxTemplate"
+									addStyleNames="{style.monospaced}" ui:field="textBaseVboxTemplate"
+									visibleLines="10"></b:TextArea>
+								<b:HelpBlock>This is the template for VirtualBox virtualization
+									used to create nodes on the slaves.</b:HelpBlock>
+							</b:Controls>
+						</b:ControlGroup>
+
+						<!-- Generic Node Setup Script -->
+						<b:ControlGroup>
+							<b:ControlLabel for="textSetupScript">Generic setup</b:ControlLabel>
+							<b:Controls>
+								<b:TextArea alternateSize="XXLARGE" b:id="textSetupScript"
+									addStyleNames="{style.monospaced}" ui:field="textBaseSetupScript"
+									visibleLines="10"></b:TextArea>
+								<b:HelpBlock>This script is applied once to the base image.</b:HelpBlock>
+							</b:Controls>
+						</b:ControlGroup>
+
+						<!-- Individual Node Setup Script -->
+						<b:ControlGroup>
+							<b:ControlLabel for="textIndividualSetupScript">Individual setup</b:ControlLabel>
+							<b:Controls>
+								<b:TextArea alternateSize="XXLARGE" b:id="textIndividualSetupScript"
+									addStyleNames="{style.monospaced}" ui:field="textBaseIndividualSetupScript"
+									visibleLines="10"></b:TextArea>
+								<b:HelpBlock>This script is applied to each individual node
+									image.</b:HelpBlock>
+							</b:Controls>
+						</b:ControlGroup>
+					</b:FluidRow>
 				</b:Form>
 			</b:Tab>
 			<!-- Simulation -->
 			<b:Tab heading="Simulation">
 				<b:Form type="HORIZONTAL">
-					<b:Row>
-						<b:Column size="12">
-							<!-- Resolution -->
-							<b:ControlGroup>
-								<b:ControlLabel for="textResolution">Unit size / Resolution</b:ControlLabel>
-								<b:Controls>
-									<b:InputAddOn appendText="s">
-										<b:TextBox alternateSize="SMALL" b:id="textResolution"
-											ui:field="textSimulationResolution" b:placeholder="0.2" />
-									</b:InputAddOn>
-									<b:HelpBlock>
-										Calculate step and connection every
-										x seconds.
-										Strict adherence to the resolution
-										can not be guaranteed,
-										however drift in
-										# sleep() will not affect the correctness of
-										the traces.
-									</b:HelpBlock>
-								</b:Controls>
-							</b:ControlGroup>
-							<!-- Communication Range -->
-							<b:ControlGroup>
-								<b:ControlLabel for="textRange">Communication Range</b:ControlLabel>
-								<b:Controls>
-									<b:InputAddOn appendText="m">
-										<b:TextBox alternateSize="SMALL" b:id="textRange"
-											ui:field="textSimulationRange" b:placeholder="300" />
-									</b:InputAddOn>
-								</b:Controls>
-							</b:ControlGroup>
-						</b:Column>
-					</b:Row>
+					<b:FluidRow>
+						<!-- Resolution -->
+						<b:ControlGroup>
+							<b:ControlLabel for="textResolution">Unit size / Resolution</b:ControlLabel>
+							<b:Controls>
+								<b:InputAddOn appendText="s">
+									<b:TextBox alternateSize="SMALL" b:id="textResolution"
+										ui:field="textSimulationResolution" b:placeholder="0.2" />
+								</b:InputAddOn>
+								<b:HelpBlock>
+									Calculate step and connection every
+									x seconds.
+									Strict adherence to the resolution
+									can not be guaranteed,
+									however drift in
+									# sleep() will not affect the correctness of
+									the traces.
+								</b:HelpBlock>
+							</b:Controls>
+						</b:ControlGroup>
+						<!-- Communication Range -->
+						<b:ControlGroup>
+							<b:ControlLabel for="textRange">Communication Range</b:ControlLabel>
+							<b:Controls>
+								<b:InputAddOn appendText="m">
+									<b:TextBox alternateSize="SMALL" b:id="textRange"
+										ui:field="textSimulationRange" b:placeholder="300" />
+								</b:InputAddOn>
+							</b:Controls>
+						</b:ControlGroup>
+					</b:FluidRow>
 				</b:Form>
 			</b:Tab>
 			<!-- Network -->
 			<b:Tab heading="Network">
 				<b:Form type="HORIZONTAL">
-					<b:Row>
-						<b:Column size="12">
-							<!-- Address -->
-							<b:ControlGroup>
-								<b:ControlLabel for="textNodeAddressMin">Node's address</b:ControlLabel>
-								<b:Controls>
-									<b:InputAddOn prependText="Range" appendText=" ">
-										<b:TextBox alternateSize="MEDIUM" b:id="textNodeAddressMin"
-											ui:field="textNetworkNodeAddressMin" b:placeholder="10.242.2.0" />
-										<base:AddOn text="-" />
-										<b:TextBox alternateSize="MEDIUM" b:id="textNodeAddressMax"
-											ui:field="textNetworkNodeAddressMax" b:placeholder="10.242.255.254" />
-									</b:InputAddOn>
-								</b:Controls>
-							</b:ControlGroup>
-							<b:ControlGroup>
-								<b:ControlLabel for="textMonitorNodes">Node's netmask</b:ControlLabel>
-								<b:Controls>
-									<b:InputAddOn>
-										<b:TextBox alternateSize="XLARGE" b:id="textNodeNetmask"
-											ui:field="textNetworkNodeNetmask" b:placeholder="10.242.255.255"></b:TextBox>
-									</b:InputAddOn>
-								</b:Controls>
-							</b:ControlGroup>
-							
-							<!-- Monitor Nodes -->
-							<b:ControlGroup>
-								<b:ControlLabel for="textMonitorNodes">Monitor nodes</b:ControlLabel>
-								<b:Controls>
-									<b:TextArea alternateSize="XLARGE" b:id="textMonitorNodes"
-										ui:field="textNetworkMonitorNodes"></b:TextArea>
-									<b:HelpBlock>These hosts can communicate to all the nodes and
-										never gets blocked. Put each IP address (IPv4 only) into a
-										separate line.</b:HelpBlock>
-								</b:Controls>
-							</b:ControlGroup>
-						</b:Column>
-					</b:Row>
+					<b:FluidRow>
+						<!-- Address -->
+						<b:ControlGroup>
+							<b:ControlLabel for="textNodeAddressMin">Node's address</b:ControlLabel>
+							<b:Controls>
+								<b:InputAddOn prependText="Range" appendText=" ">
+									<b:TextBox alternateSize="MEDIUM" b:id="textNodeAddressMin"
+										ui:field="textNetworkNodeAddressMin" b:placeholder="10.242.2.0" />
+									<base:AddOn text="-" />
+									<b:TextBox alternateSize="MEDIUM" b:id="textNodeAddressMax"
+										ui:field="textNetworkNodeAddressMax" b:placeholder="10.242.255.254" />
+								</b:InputAddOn>
+							</b:Controls>
+						</b:ControlGroup>
+						<b:ControlGroup>
+							<b:ControlLabel for="textMonitorNodes">Node's netmask</b:ControlLabel>
+							<b:Controls>
+								<b:InputAddOn>
+									<b:TextBox alternateSize="XLARGE" b:id="textNodeNetmask"
+										ui:field="textNetworkNodeNetmask" b:placeholder="10.242.255.255"></b:TextBox>
+								</b:InputAddOn>
+							</b:Controls>
+						</b:ControlGroup>
+
+						<!-- Monitor Nodes -->
+						<b:ControlGroup>
+							<b:ControlLabel for="textMonitorNodes">Monitor nodes</b:ControlLabel>
+							<b:Controls>
+								<b:TextArea alternateSize="XLARGE" b:id="textMonitorNodes"
+									ui:field="textNetworkMonitorNodes"></b:TextArea>
+								<b:HelpBlock>These hosts can communicate to all the nodes and
+									never gets blocked. Put each IP address (IPv4 only) into a
+									separate line.</b:HelpBlock>
+							</b:Controls>
+						</b:ControlGroup>
+					</b:FluidRow>
 				</b:Form>
 			</b:Tab>
 			<!-- Movement -->
 			<b:Tab heading="Movement">
 				<b:Form type="HORIZONTAL">
-					<b:Row>
-						<b:Column size="12">
-							<!-- movement module -->
-							<b:ControlGroup>
-								<b:ControlLabel for="listMovAlgorithm">Movement Algorithm</b:ControlLabel>
-								<b:Controls>
-									<b:ListBox alternateSize="XLARGE" b:id="listMovAlgorithm"
-										ui:field="listMovementAlgorithm">
-										<b:item value="none">None</b:item>
-										<b:item value="randomwalk">Random Walk</b:item>
-										<b:item value="trace">Trace Playback</b:item>
-										<b:item value="static">Static Positions</b:item>
-									</b:ListBox>
-									<b:HelpBlock>The movement will be calculated using the selected
-										algorithm.</b:HelpBlock>
-								</b:Controls>
-							</b:ControlGroup>
-							<!-- Each movement algorithm has its own settings -->
-							<g:DeckPanel ui:field="panelMovement">
-								<!-- None -->
-								<g:FlowPanel>
-								</g:FlowPanel>
-								<!-- Random Walk -->
-								<g:FlowPanel>
-									<!-- Duration -->
-									<b:ControlGroup>
-										<b:ControlLabel for="textRwpDuration">Duration</b:ControlLabel>
-										<b:Controls>
-											<b:InputAddOn prependIcon="TIME" appendText="s">
-												<b:TextBox alternateSize="SMALL" b:id="textRwpDuration"
-													ui:field="textMovementRwpDuration" b:placeholder="infinite" />
-											</b:InputAddOn>
-											<b:HelpBlock>
-												This is the time the simulation will last.
-											</b:HelpBlock>
-										</b:Controls>
-									</b:ControlGroup>
+					<b:FluidRow>
+						<!-- movement module -->
+						<b:ControlGroup>
+							<b:ControlLabel for="listMovAlgorithm">Movement Algorithm</b:ControlLabel>
+							<b:Controls>
+								<b:ListBox alternateSize="XLARGE" b:id="listMovAlgorithm"
+									ui:field="listMovementAlgorithm">
+									<b:item value="none">None</b:item>
+									<b:item value="randomwalk">Random Walk</b:item>
+									<b:item value="trace">Trace Playback</b:item>
+									<b:item value="static">Static Positions</b:item>
+								</b:ListBox>
+								<b:HelpBlock>The movement will be calculated using the selected
+									algorithm.</b:HelpBlock>
+							</b:Controls>
+						</b:ControlGroup>
+						<!-- Each movement algorithm has its own settings -->
+						<g:DeckPanel ui:field="panelMovement">
+							<!-- None -->
+							<g:FlowPanel>
+							</g:FlowPanel>
+							<!-- Random Walk -->
+							<g:FlowPanel>
+								<!-- Duration -->
+								<b:ControlGroup>
+									<b:ControlLabel for="textRwpDuration">Duration</b:ControlLabel>
+									<b:Controls>
+										<b:InputAddOn prependIcon="TIME" appendText="s">
+											<b:TextBox alternateSize="SMALL" b:id="textRwpDuration"
+												ui:field="textMovementRwpDuration" b:placeholder="infinite" />
+										</b:InputAddOn>
+										<b:HelpBlock>
+											This is the time the simulation will last.
+										</b:HelpBlock>
+									</b:Controls>
+								</b:ControlGroup>
 
-									<!-- Area size -->
-									<b:ControlGroup>
-										<b:ControlLabel for="textRwpAreaSizeHeight">Area</b:ControlLabel>
-										<b:Controls>
-											<b:InputAddOn prependText="Size" appendText="m">
-												<b:TextBox alternateSize="SMALL" b:id="textRwpAreaSizeHeight"
-													ui:field="textMovementRwpAreaSizeHeight" b:placeholder="5000" />
-												<base:AddOn text="x" />
-												<b:TextBox alternateSize="SMALL" b:id="textRwpAreaSizeWidth"
-													ui:field="textMovementRwpAreaSizeWidth" b:placeholder="5000" />
-											</b:InputAddOn>
-										</b:Controls>
-									</b:ControlGroup>
+								<!-- Area size -->
+								<b:ControlGroup>
+									<b:ControlLabel for="textRwpAreaSizeHeight">Area</b:ControlLabel>
+									<b:Controls>
+										<b:InputAddOn prependText="Size" appendText="m">
+											<b:TextBox alternateSize="SMALL" b:id="textRwpAreaSizeHeight"
+												ui:field="textMovementRwpAreaSizeHeight" b:placeholder="5000" />
+											<base:AddOn text="x" />
+											<b:TextBox alternateSize="SMALL" b:id="textRwpAreaSizeWidth"
+												ui:field="textMovementRwpAreaSizeWidth" b:placeholder="5000" />
+										</b:InputAddOn>
+									</b:Controls>
+								</b:ControlGroup>
 
-									<!-- Moving Time -->
-									<b:ControlGroup>
-										<b:ControlLabel for="textRwpMovetime">Moving Time</b:ControlLabel>
-										<b:Controls>
-											<b:InputAddOn appendText="units">
-												<b:TextBox alternateSize="SMALL" b:id="textRwpMovetime"
-													ui:field="textMovementRwpMovetime" b:placeholder="75" />
-											</b:InputAddOn>
-											<b:HelpBlock>
-												Change direction after x units of time.
-											</b:HelpBlock>
-										</b:Controls>
-									</b:ControlGroup>
+								<!-- Moving Time -->
+								<b:ControlGroup>
+									<b:ControlLabel for="textRwpMovetime">Moving Time</b:ControlLabel>
+									<b:Controls>
+										<b:InputAddOn appendText="units">
+											<b:TextBox alternateSize="SMALL" b:id="textRwpMovetime"
+												ui:field="textMovementRwpMovetime" b:placeholder="75" />
+										</b:InputAddOn>
+										<b:HelpBlock>
+											Change direction after x units of time.
+										</b:HelpBlock>
+									</b:Controls>
+								</b:ControlGroup>
 
-									<!-- Velocity -->
-									<b:ControlGroup>
-										<b:ControlLabel for="textRwpVelocity">Velocity</b:ControlLabel>
-										<b:Controls>
-											<b:InputAddOn prependText="Range" appendText="m/s">
-												<b:TextBox alternateSize="SMALL" b:id="textRwpVelocity"
-													ui:field="textMovementRwpVmin" b:placeholder="10" />
-												<base:AddOn text="-" />
-												<b:TextBox alternateSize="SMALL" b:id="textRwpVelocityMax"
-													ui:field="textMovementRwpVmax" b:placeholder="10" />
-											</b:InputAddOn>
-											<b:HelpBlock>
-												Speed is uniformly distributed between minimum
-												and maximum.
-											</b:HelpBlock>
-										</b:Controls>
-									</b:ControlGroup>
-									
-									<!-- GPS Reference Coordinates -->
-									<b:ControlGroup>
-										<b:ControlLabel for="textRwpCoordLat">Reference coordinate</b:ControlLabel>
-										<b:Controls>
-											<b:InputAddOn prependText="Latitude" appendIcon="MAP_MARKER">
-												<b:TextBox alternateSize="SMALL" b:id="textRwpCoordLat"
-													ui:field="textMovementRwpCoordLat" b:placeholder="52.123456" />
-												<base:AddOn text="Longitude" />
-												<b:TextBox alternateSize="SMALL" b:id="textRwpCoordLng"
-													ui:field="textMovementRwpCoordLng" b:placeholder="10.123456" />
-											</b:InputAddOn>
-											<b:HelpBlock>
-												This coordinates are used to map node positions to GPS coordinates.
-											</b:HelpBlock>
-										</b:Controls>
-									</b:ControlGroup>
-								</g:FlowPanel>
-								<!-- Traces -->
-								<g:FlowPanel>
-									<!-- upload mechanism for trace files -->
-									<b:ControlGroup>
-										<b:ControlLabel for="listTrace">Trace</b:ControlLabel>
-										<b:Controls>
-											<b:ListBox alternateSize="XLARGE" b:id="listTrace" b:enabled="false" ui:field="listMovementTrace"></b:ListBox>
-											<b:Button ui:field="buttonMovementTrace" type="DANGER" b:enabled="false" b:icon="TRASH">Delete</b:Button>
-											<g:FormPanel ui:field="formMovementTrace">
-												<b:FileUpload ui:field="uploadMovementTrace" name="tracefile" />
-											</g:FormPanel>
-										</b:Controls>
-									</b:ControlGroup>
-									<b:ControlGroup>
-										<b:ControlLabel for="checkTraceRepetition">Repetition</b:ControlLabel>
-										<b:Controls>
-											<b:CheckBox b:id="checkTraceRepetition" ui:field="checkMovementTraceRepetition">Repeat the trace playback until the session is stopped manually.</b:CheckBox>
-										</b:Controls>
-									</b:ControlGroup>
-								</g:FlowPanel>
-								<!-- Static -->
-								<g:FlowPanel>
-									<!-- Duration -->
-									<b:ControlGroup>
-										<b:ControlLabel for="textStaticDuration">Duration</b:ControlLabel>
-										<b:Controls>
-											<b:InputAddOn prependIcon="TIME" appendText="s">
-												<b:TextBox alternateSize="SMALL" b:id="textStaticDuration"
-													ui:field="textMovementStaticDuration" b:placeholder="infinite" />
-											</b:InputAddOn>
-											<b:HelpBlock>
-												This is the time the simulation will last.
-											</b:HelpBlock>
-										</b:Controls>
-									</b:ControlGroup>
-									<!-- Static positions -->
-									<b:ControlGroup>
-										<b:ControlLabel for="textStaticPositions">Static Positions</b:ControlLabel>
-										<b:Controls>
-											<b:TextArea alternateSize="XLARGE" b:id="textStaticPositions"
-												ui:field="textMovementStaticPositions"></b:TextArea>
-											<b:HelpBlock>Each line defines an position of one node on the map.
-											    One line consists of 'x', 'y' and 'z' position. Use '0.0' for empty values.
-												If not positions are defined all nodes are arranged in a straight line.</b:HelpBlock>
-										</b:Controls>
-									</b:ControlGroup>
-									
-									<!-- GPS Reference Coordinates -->
-									<b:ControlGroup>
-										<b:ControlLabel for="textStaticCoordLat">Reference coordinate</b:ControlLabel>
-										<b:Controls>
-											<b:InputAddOn prependText="Latitude" appendIcon="MAP_MARKER">
-												<b:TextBox alternateSize="SMALL" b:id="textStaticCoordLat"
-													ui:field="textMovementStaticCoordLat" b:placeholder="52.123456" />
-												<base:AddOn text="Longitude" />
-												<b:TextBox alternateSize="SMALL" b:id="textStaticCoordLng"
-													ui:field="textMovementStaticCoordLng" b:placeholder="10.123456" />
-											</b:InputAddOn>
-											<b:HelpBlock>
-												This coordinates are used to map node positions to GPS coordinates.
-											</b:HelpBlock>
-										</b:Controls>
-									</b:ControlGroup>
-								</g:FlowPanel>
-							</g:DeckPanel>
-						</b:Column>
-					</b:Row>
+								<!-- Velocity -->
+								<b:ControlGroup>
+									<b:ControlLabel for="textRwpVelocity">Velocity</b:ControlLabel>
+									<b:Controls>
+										<b:InputAddOn prependText="Range" appendText="m/s">
+											<b:TextBox alternateSize="SMALL" b:id="textRwpVelocity"
+												ui:field="textMovementRwpVmin" b:placeholder="10" />
+											<base:AddOn text="-" />
+											<b:TextBox alternateSize="SMALL" b:id="textRwpVelocityMax"
+												ui:field="textMovementRwpVmax" b:placeholder="10" />
+										</b:InputAddOn>
+										<b:HelpBlock>
+											Speed is uniformly distributed between minimum
+											and maximum.
+										</b:HelpBlock>
+									</b:Controls>
+								</b:ControlGroup>
+
+								<!-- GPS Reference Coordinates -->
+								<b:ControlGroup>
+									<b:ControlLabel for="textRwpCoordLat">Reference coordinate</b:ControlLabel>
+									<b:Controls>
+										<b:InputAddOn prependText="Latitude" appendIcon="MAP_MARKER">
+											<b:TextBox alternateSize="SMALL" b:id="textRwpCoordLat"
+												ui:field="textMovementRwpCoordLat" b:placeholder="52.123456" />
+											<base:AddOn text="Longitude" />
+											<b:TextBox alternateSize="SMALL" b:id="textRwpCoordLng"
+												ui:field="textMovementRwpCoordLng" b:placeholder="10.123456" />
+										</b:InputAddOn>
+										<b:HelpBlock>
+											This coordinates are used to map node positions to GPS
+											coordinates.
+										</b:HelpBlock>
+									</b:Controls>
+								</b:ControlGroup>
+							</g:FlowPanel>
+							<!-- Traces -->
+							<g:FlowPanel>
+								<!-- upload mechanism for trace files -->
+								<b:ControlGroup>
+									<b:ControlLabel for="listTrace">Trace</b:ControlLabel>
+									<b:Controls>
+										<b:ListBox alternateSize="XLARGE" b:id="listTrace"
+											b:enabled="false" ui:field="listMovementTrace"></b:ListBox>
+										<b:Button ui:field="buttonMovementTrace" type="DANGER"
+											b:enabled="false" b:icon="TRASH">Delete</b:Button>
+										<g:FormPanel ui:field="formMovementTrace">
+											<b:FileUpload ui:field="uploadMovementTrace"
+												name="tracefile" />
+										</g:FormPanel>
+									</b:Controls>
+								</b:ControlGroup>
+								<b:ControlGroup>
+									<b:ControlLabel for="checkTraceRepetition">Repetition</b:ControlLabel>
+									<b:Controls>
+										<b:CheckBox b:id="checkTraceRepetition" ui:field="checkMovementTraceRepetition">Repeat
+											the trace playback until the session is stopped manually.</b:CheckBox>
+									</b:Controls>
+								</b:ControlGroup>
+							</g:FlowPanel>
+							<!-- Static -->
+							<g:FlowPanel>
+								<!-- Duration -->
+								<b:ControlGroup>
+									<b:ControlLabel for="textStaticDuration">Duration</b:ControlLabel>
+									<b:Controls>
+										<b:InputAddOn prependIcon="TIME" appendText="s">
+											<b:TextBox alternateSize="SMALL" b:id="textStaticDuration"
+												ui:field="textMovementStaticDuration" b:placeholder="infinite" />
+										</b:InputAddOn>
+										<b:HelpBlock>
+											This is the time the simulation will last.
+										</b:HelpBlock>
+									</b:Controls>
+								</b:ControlGroup>
+								<!-- Static positions -->
+								<b:ControlGroup>
+									<b:ControlLabel for="textStaticPositions">Static Positions</b:ControlLabel>
+									<b:Controls>
+										<b:TextArea alternateSize="XLARGE" b:id="textStaticPositions"
+											ui:field="textMovementStaticPositions"></b:TextArea>
+										<b:HelpBlock>Each line defines an position of one node on the
+											map.
+											One line consists of 'x', 'y' and 'z' position. Use '0.0' for
+											empty values.
+											If not positions are defined all nodes are arranged in a
+											straight line.</b:HelpBlock>
+									</b:Controls>
+								</b:ControlGroup>
+
+								<!-- GPS Reference Coordinates -->
+								<b:ControlGroup>
+									<b:ControlLabel for="textStaticCoordLat">Reference coordinate</b:ControlLabel>
+									<b:Controls>
+										<b:InputAddOn prependText="Latitude" appendIcon="MAP_MARKER">
+											<b:TextBox alternateSize="SMALL" b:id="textStaticCoordLat"
+												ui:field="textMovementStaticCoordLat" b:placeholder="52.123456" />
+											<base:AddOn text="Longitude" />
+											<b:TextBox alternateSize="SMALL" b:id="textStaticCoordLng"
+												ui:field="textMovementStaticCoordLng" b:placeholder="10.123456" />
+										</b:InputAddOn>
+										<b:HelpBlock>
+											This coordinates are used to map node positions to GPS
+											coordinates.
+										</b:HelpBlock>
+									</b:Controls>
+								</b:ControlGroup>
+							</g:FlowPanel>
+						</g:DeckPanel>
+					</b:FluidRow>
 				</b:Form>
 			</b:Tab>
 			<!-- Network -->
 			<b:Tab heading="Statistical data">
 				<b:Form type="HORIZONTAL">
-					<b:Row>
-						<b:Column size="12">
-							<!-- Address -->
-							<b:ControlGroup>
-								<b:ControlLabel for="textInterval">Collect interval</b:ControlLabel>
-								<b:Controls>
-									<b:InputAddOn prependIcon="TIME" appendText="s">
-										<b:TextBox alternateSize="SMALL" b:id="textInterval"
-											ui:field="textStatsInterval" b:placeholder="disabled" />
-									</b:InputAddOn>
-								</b:Controls>
-							</b:ControlGroup>
-							<!-- Recording -->
-							<b:ControlGroup>
-								<b:ControlLabel>Recording</b:ControlLabel>
-								<b:Controls>
-									<b:CheckBox ui:field="checkStatsRecordContact">Record a contact trace</b:CheckBox>
-								</b:Controls>
-								<b:Controls>
-									<b:CheckBox ui:field="checkStatsRecordMovement">Record a movement trace</b:CheckBox>
-								</b:Controls>
-								<b:Controls>
-									<b:HelpBlock>Trace files are store on the Hydra server and will be available for download if the session is finished or stopped.</b:HelpBlock>
-								</b:Controls>
-							</b:ControlGroup>
-						</b:Column>
-					</b:Row>
+					<b:FluidRow>
+						<!-- Address -->
+						<b:ControlGroup>
+							<b:ControlLabel for="textInterval">Collect interval</b:ControlLabel>
+							<b:Controls>
+								<b:InputAddOn prependIcon="TIME" appendText="s">
+									<b:TextBox alternateSize="SMALL" b:id="textInterval"
+										ui:field="textStatsInterval" b:placeholder="disabled" />
+								</b:InputAddOn>
+							</b:Controls>
+						</b:ControlGroup>
+						<!-- Recording -->
+						<b:ControlGroup>
+							<b:ControlLabel>Recording</b:ControlLabel>
+							<b:Controls>
+								<b:CheckBox ui:field="checkStatsRecordContact">Record a contact trace</b:CheckBox>
+							</b:Controls>
+							<b:Controls>
+								<b:CheckBox ui:field="checkStatsRecordMovement">Record a movement trace</b:CheckBox>
+							</b:Controls>
+							<b:Controls>
+								<b:HelpBlock>Trace files are store on the Hydra server and will
+									be available for download if the session is finished or
+									stopped.</b:HelpBlock>
+							</b:Controls>
+						</b:ControlGroup>
+					</b:FluidRow>
 				</b:Form>
 			</b:Tab>
 			<!-- Nodes -->
@@ -458,20 +468,13 @@
 				<hydra:SessionNodesEditor ui:field="nodesEditor" />
 			</b:Tab>
 		</b:TabPanel>
-		<b:Row>
-			<b:Column size="12" ui:field="columnFormActions">
-				<b:FormActions>
-					<b:Button addStyleNames="{style.formButton}" icon="OK" type="SUCCESS" ui:field="buttonApply">Apply</b:Button>
-					<b:Button addStyleNames="{style.formButton}" icon="REMOVE" type="DEFAULT" ui:field="buttonReset">Reset</b:Button>
-				</b:FormActions>
-			</b:Column>
-		</b:Row>
-		<b:Row>
-			<b:Column size="12">
-			    <g:HTMLPanel><hr /></g:HTMLPanel>
-				<b:Button icon="REPLY" type="LINK" ui:field="buttonBack">Back to
-					sessions</b:Button>
-			</b:Column>
-		</b:Row>
-	</g:HTMLPanel>
+		<b:FluidRow>
+			<b:FormActions ui:field="faNodes">
+				<b:Button addStyleNames="{style.formButton}" icon="OK"
+					type="SUCCESS" ui:field="buttonApply">Apply</b:Button>
+				<b:Button addStyleNames="{style.formButton}" icon="REMOVE"
+					type="DEFAULT" ui:field="buttonReset">Reset</b:Button>
+			</b:FormActions>
+		</b:FluidRow>
+	</b:FluidContainer>
 </ui:UiBinder> 

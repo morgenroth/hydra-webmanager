@@ -1,27 +1,26 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
-	xmlns:g="urn:import:com.google.gwt.user.client.ui"
-	xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
- 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
+	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
+	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
 	<ui:style>
 		.pager { margin-top: 12px; }
+		.controls { margin-bottom: 24px; }
 	</ui:style>
-	<g:HTMLPanel>
+	<b:FluidContainer>
 		<b:Hero>
-		    <b:Heading size="1">Hydra</b:Heading>
-		    <b:Paragraph>The emulation framework for large-scale software testing in disrupted networks.</b:Paragraph>
+			<b:Heading size="1">Hydra</b:Heading>
+			<b:Paragraph>The emulation framework for large-scale software testing
+				in disrupted networks.</b:Paragraph>
 		</b:Hero>
- 		<b:Row>
-	    	<b:Column size="12">
-				<b:CellTable ui:field="sessionTable" />
-				<b:SimplePager display="{sessionTable}" location="RIGHT" fastForwardRows="15" styleName="{style.pager}"/>
-	    	</b:Column>
-    	</b:Row>
-    	<b:Row>
-	    	<b:Column size="12">
-	    	    <g:HTMLPanel><hr /></g:HTMLPanel>
+		<b:FluidRow>
+			<g:HorizontalPanel addStyleNames="{style.controls}">
 				<b:Button icon="PLUS" type="PRIMARY" ui:field="buttonAdd">Add session</b:Button>
-	    	</b:Column>
-    	</b:Row>
-	</g:HTMLPanel>
+			</g:HorizontalPanel>
+		</b:FluidRow>
+		<b:FluidRow>
+			<b:CellTable ui:field="sessionTable" />
+			<b:SimplePager display="{sessionTable}" location="RIGHT"
+				fastForwardRows="15" styleName="{style.pager}" />
+		</b:FluidRow>
+	</b:FluidContainer>
 </ui:UiBinder> 

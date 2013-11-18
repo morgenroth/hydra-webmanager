@@ -1,28 +1,22 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
 <ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
-	xmlns:g="urn:import:com.google.gwt.user.client.ui"
-	xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
- 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
+	xmlns:g="urn:import:com.google.gwt.user.client.ui" xmlns:b="urn:import:com.github.gwtbootstrap.client.ui"
+	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
 	<ui:style type='de.tubs.cs.ibr.hydra.webmanager.client.NodeView.Style'>
 		.activated { color:green; }
-		.enabled { color:black; }
+		.enabled {
+		color:black; }
 		.disabled { color:gray; }
 		.error { color:red; }
-		.pager { margin-top: 12px; }
+		.pager {
+		margin-top: 12px; }
 	</ui:style>
-	<g:HTMLPanel>
- 		<b:Row>
-	    	<b:Column size="12">
-	    	    <b:Heading size="2">Nodes</b:Heading>
-				<b:CellTable ui:field="nodeTable" />
-				<b:SimplePager display="{nodeTable}" location="RIGHT" fastForwardRows="15" styleName="{style.pager}"/>
-	    	</b:Column>
-    	</b:Row>
-    	<b:Row>
-	    	<b:Column size="12">
-	    	    <g:HTMLPanel><hr /></g:HTMLPanel>
-				<b:Button icon="REPLY" type="LINK" ui:field="buttonBack">Back to sessions</b:Button>
-	    	</b:Column>
-    	</b:Row>
-	</g:HTMLPanel>
+	<b:FluidContainer>
+		<b:FluidRow>
+			<b:Heading size="2">Nodes</b:Heading>
+			<b:CellTable ui:field="nodeTable" />
+			<b:SimplePager display="{nodeTable}" location="RIGHT"
+				fastForwardRows="15" styleName="{style.pager}" />
+		</b:FluidRow>
+	</b:FluidContainer>
 </ui:UiBinder> 

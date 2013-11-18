@@ -45,7 +45,7 @@ public class HydraApp extends Composite {
     @UiField NavLink navNodes;
     @UiField NavLink navLogin;
     
-    @UiField Column alertColumn;
+    @UiField Container alertContainer;
     final Alert mAlert = new Alert();
     
     View currentView = null;
@@ -65,7 +65,7 @@ public class HydraApp extends Composite {
         mAlert.setHeading("Server:");
         mAlert.setText("Connecting...");
         mAlert.setAnimation(true);
-        alertColumn.add(mAlert);
+        alertContainer.add(mAlert);
         
         changeView(null);
     }
@@ -161,12 +161,12 @@ public class HydraApp extends Composite {
         jsonRequestConfig.setCloseHandler(new AtmosphereCloseHandler() {
             @Override
             public void onClose(AtmosphereResponse response) {
-                alertColumn.clear();
+                alertContainer.clear();
                 mAlert.setType(AlertType.ERROR);
                 mAlert.setHeading("Server:");
                 mAlert.setText("Disconnected!");
                 mAlert.setAnimation(true);
-                alertColumn.add(mAlert);
+                alertContainer.add(mAlert);
             }
         });
         jsonRequestConfig.setMessageHandler(new AtmosphereMessageHandler() {

@@ -10,45 +10,46 @@
 			margin-right: 6px;
 		}
 	</ui:style>
-	<g:HTMLPanel>
-		<b:Row>
-			<b:Column size="12">
-				<g:HorizontalPanel>
-					<g:SimplePanel>
-						<b:InputAddOn prependText="Node" appendIcon="BOOKMARK" addStyleNames="{style.formButton}">
-						    <b:ListBox alternateSize="MEDIUM" ui:field="listSelectedNode">
-						    </b:ListBox>
-						</b:InputAddOn>
-					</g:SimplePanel>
-					<g:SimplePanel>
-						<b:InputAddOn prependText="View" appendIcon="REFRESH" addStyleNames="{style.formButton}">
-						    <b:ListBox alternateSize="MEDIUM" ui:field="listViewType">
-						        <g:item value="0">Static</g:item>
-						        <g:item value="1">Refreshed</g:item>
-						        <g:item value="2">Animated</g:item>
-						    </b:ListBox>
-						</b:InputAddOn>
-					</g:SimplePanel>
-					<g:SimplePanel>
-						<b:Button type="DEFAULT" ui:field="buttonRefresh" addStyleNames="{style.formButton}">Refresh</b:Button>
-					</g:SimplePanel>
-					<g:SimplePanel>
-						<b:Button type="DEFAULT" ui:field="buttonAutoFit" addStyleNames="{style.formButton}">Auto-Fit</b:Button>
-					</g:SimplePanel>
-					<g:SimplePanel>
-						<b:InputAddOn prependText="Latitude" appendIcon="MAP_MARKER" addStyleNames="{style.formButton}">
-							<b:TextBox alternateSize="SMALL" b:id="textCoordLat"
-								ui:field="textCoordLat" b:placeholder="52.123456" />
-							<base:AddOn text="Longitude" />
-							<b:TextBox alternateSize="SMALL" b:id="textCoordLng"
-								ui:field="textCoordLng" b:placeholder="10.123456" />
-						</b:InputAddOn>
-					</g:SimplePanel>
-				</g:HorizontalPanel>
-			</b:Column>
-			<b:Column size="12">
-				<g:SimplePanel ui:field="panelMap" />
-			</b:Column>
-		</b:Row>
-	</g:HTMLPanel>
+	<b:FluidContainer>
+		<b:FluidRow>
+			<g:HorizontalPanel>
+				<g:SimplePanel>
+					<b:InputAddOn prependText="Node" appendIcon="BOOKMARK"
+						addStyleNames="{style.formButton}">
+						<b:ListBox alternateSize="MEDIUM" ui:field="listSelectedNode">
+						</b:ListBox>
+					</b:InputAddOn>
+				</g:SimplePanel>
+				<g:SimplePanel>
+					<b:InputAddOn prependText="View" appendIcon="REFRESH"
+						addStyleNames="{style.formButton}">
+						<b:ListBox alternateSize="MEDIUM" ui:field="listViewType">
+							<g:item value="0">Static</g:item>
+							<g:item value="1">Refreshed</g:item>
+							<g:item value="2">Animated</g:item>
+						</b:ListBox>
+					</b:InputAddOn>
+				</g:SimplePanel>
+				<g:SimplePanel>
+					<b:Button type="DEFAULT" ui:field="buttonRefresh"
+						addStyleNames="{style.formButton}">Refresh</b:Button>
+				</g:SimplePanel>
+				<g:SimplePanel>
+					<b:Button type="DEFAULT" ui:field="buttonAutoFit"
+						addStyleNames="{style.formButton}">Auto-Fit</b:Button>
+				</g:SimplePanel>
+				<g:SimplePanel>
+					<b:InputAddOn prependText="Latitude" appendIcon="MAP_MARKER"
+						addStyleNames="{style.formButton}">
+						<b:TextBox alternateSize="SMALL" b:id="textCoordLat"
+							ui:field="textCoordLat" b:placeholder="52.123456" />
+						<base:AddOn text="Longitude" />
+						<b:TextBox alternateSize="SMALL" b:id="textCoordLng"
+							ui:field="textCoordLng" b:placeholder="10.123456" />
+					</b:InputAddOn>
+				</g:SimplePanel>
+			</g:HorizontalPanel>
+			<g:SimplePanel ui:field="panelMap" />
+		</b:FluidRow>
+	</b:FluidContainer>
 </ui:UiBinder> 
