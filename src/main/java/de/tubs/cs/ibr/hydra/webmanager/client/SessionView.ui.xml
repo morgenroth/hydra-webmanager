@@ -5,12 +5,17 @@
 	<ui:style>
 		.pager { margin-top: 12px; }
 		.controls { margin-bottom: 24px; }
+		.herotitle { margin-left: 140px; }
+		.herobanner { margin-left: 140px; }
+		.herologo { float: left; position: relative; top: -2px; left: -12px; }
 	</ui:style>
 	<b:FluidContainer>
 		<b:Hero>
-			<b:Heading size="1">Hydra</b:Heading>
-			<b:Paragraph>The emulation framework for large-scale software testing
-				in disrupted networks.</b:Paragraph>
+		    <b:Image url="logo.png" addStyleNames="{style.herologo}" />
+		    <b:Paragraph addStyleNames="{style.herobanner}">
+				<b:Image url="hydra.png" /><br />
+				The emulation framework for large-scale software testing in disrupted networks.
+			</b:Paragraph>
 		</b:Hero>
 		<b:FluidRow>
 			<g:HorizontalPanel addStyleNames="{style.controls}">
@@ -23,4 +28,4 @@
 				fastForwardRows="15" styleName="{style.pager}" />
 		</b:FluidRow>
 	</b:FluidContainer>
-</ui:UiBinder> 
+</ui:UiBinder>
