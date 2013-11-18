@@ -359,11 +359,13 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         // do not redraw until the chart library has been initialized
         if (!initialized) return;
         
-        // adjust views to show only last X entries
-        int dataRows = mData.getNumberOfRows() - 1;
-        int offset = (dataRows < MAX_ROWS) ? 0 : dataRows - MAX_ROWS;
-        mView[i].setRows(offset, dataRows);
-
+        if (mData.getNumberOfRows() > 0) {
+            // adjust views to show only last X entries
+            int dataRows = mData.getNumberOfRows() - 1;
+            int offset = (dataRows < MAX_ROWS) ? 0 : dataRows - MAX_ROWS;
+            mView[i].setRows(offset, dataRows);
+        }
+    
         // redraw charts
         mChart.draw(mView[i], mOptions[i]);
     }
