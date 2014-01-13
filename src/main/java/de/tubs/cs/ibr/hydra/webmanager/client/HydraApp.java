@@ -72,18 +72,41 @@ public class HydraApp extends Composite {
     
     @UiHandler("navSession")
     void onSessionsClick(ClickEvent e) {
+        navSession.setActive(true);
+        navSlaves.setActive(false);
+        navNodes.setActive(false);
+        navLogin.setActive(false);
         changeView(null);
     }
     
     @UiHandler("navSlaves")
     void onSlavesClick(ClickEvent e) {
+        navSession.setActive(false);
+        navSlaves.setActive(true);
+        navNodes.setActive(false);
+        navLogin.setActive(false);
         changeView(new SlaveView(HydraApp.this));
     }
     
     @UiHandler("navNodes")
     void onNodesClick(ClickEvent e) {
+        navSession.setActive(false);
+        navSlaves.setActive(false);
+        navNodes.setActive(true);
+        navLogin.setActive(false);
         changeView(new NodeView(HydraApp.this, null));
     }
+    @UiHandler("navLogin")
+    void onLoginClick(ClickEvent e) {
+        navSession.setActive(false);
+        navSlaves.setActive(false);
+        navNodes.setActive(false);
+        navLogin.setActive(true);
+        changeView(new NodeView(HydraApp.this, null));
+    }
+    
+    
+    
 
     @Override
     protected void onAttach() {
@@ -97,7 +120,7 @@ public class HydraApp extends Composite {
             public void onSuccess(Credentials result) {
                 if (result == null) {
                     // no credentials received - show login link
-                    navLogin.setText("Not logged in");
+                    navLogin.setText("Login");
                 } else {
                     // show username
                     navLogin.setText("Logged in as '" + result.getUsername() + "'");
@@ -230,6 +253,7 @@ public class HydraApp extends Composite {
     public void changeView(View newView) {
         if (newView == null) {
             newView = new SessionView(HydraApp.this);
+            navSession.setActive(true);
         }
         
         if (currentView != null) {
