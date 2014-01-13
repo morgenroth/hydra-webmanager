@@ -14,16 +14,23 @@ import org.atmosphere.gwt20.client.ClientSerializer;
 import com.github.gwtbootstrap.client.ui.Alert;
 import com.github.gwtbootstrap.client.ui.Column;
 import com.github.gwtbootstrap.client.ui.Container;
+import com.github.gwtbootstrap.client.ui.Label;
 import com.github.gwtbootstrap.client.ui.NavLink;
 import com.github.gwtbootstrap.client.ui.constants.AlertType;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.PopupPanel;
+import com.google.gwt.user.client.ui.SimplePanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import de.tubs.cs.ibr.hydra.webmanager.shared.Credentials;
@@ -98,11 +105,8 @@ public class HydraApp extends Composite {
     }
     @UiHandler("navLogin")
     void onLoginClick(ClickEvent e) {
-        navSession.setActive(false);
-        navSlaves.setActive(false);
-        navNodes.setActive(false);
-        navLogin.setActive(true);
-        changeView(new NodeView(HydraApp.this, null));
+        LoginPopup lp = new LoginPopup();
+        lp.center();
     }
     
     
