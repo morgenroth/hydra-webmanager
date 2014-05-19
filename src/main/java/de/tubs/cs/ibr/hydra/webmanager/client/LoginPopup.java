@@ -9,16 +9,15 @@ import javax.naming.directory.InitialDirContext;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.KeyPressEvent;
+import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.ui.Button;
+import com.github.gwtbootstrap.client.ui.Button;
+import com.github.gwtbootstrap.client.ui.Label;
+import com.github.gwtbootstrap.client.ui.constants.ButtonType;
 import com.google.gwt.user.client.ui.FormPanel;
-import com.google.gwt.user.client.ui.FormPanel.SubmitCompleteEvent;
-import com.google.gwt.user.client.ui.FormPanel.SubmitCompleteHandler;
-import com.google.gwt.user.client.ui.FormPanel.SubmitEvent;
-import com.google.gwt.user.client.ui.FormPanel.SubmitHandler;
-import com.google.gwt.user.client.ui.PasswordTextBox;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.PopupPanel;
-import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class LoginPopup extends PopupPanel
@@ -26,14 +25,14 @@ public class LoginPopup extends PopupPanel
     
     FormPanel form = new FormPanel();
     final LoginPopup p = this;
-    TextBox userBox = null;
-    TextBox pwBox = null;
+    DefaultTextBox userBox = null;
+    DefaultPasswordBox pwBox = null;
+    Label noteText = null;
     
     public LoginPopup()
     {
         super(false);
         
-
         initForm();
         
         this.setWidget(form);
@@ -41,31 +40,49 @@ public class LoginPopup extends PopupPanel
     
     private void initForm()
     {
-        //form.setAction("/myFormHandler");
-        //form.setEncoding(FormPanel.ENCODING_MULTIPART);
-        //form.setMethod(FormPanel.METHOD_POST);
-
         VerticalPanel content = new VerticalPanel();
+        HorizontalPanel buttons = new HorizontalPanel();
+        noteText = new Label();
+        noteText.setVisible(false);
         
         Button cancelButton = new Button("Cancel", new ClickHandler() {
                             public void onClick(ClickEvent event) {
                                 p.hide();
                                 } });
+        cancelButton.setType(ButtonType.DANGER);
         Button loginButton = new Button("Login", new ClickHandler() {
                             public void onClick(ClickEvent event) {
-                                //form.submit();
                                 if(checkPassword(userBox.getText(), pwBox.getText()))
+                                {
                                     p.hide();
+                                }
                                 
                             } });
+        loginButton.setType(ButtonType.SUCCESS);
         
-        userBox = new TextBox();
-        userBox.setFocus(false);
-        pwBox = new PasswordTextBox();
+        buttons.add(cancelButton);
+        buttons.add(loginButton);
+
+        userBox = new DefaultTextBox("Username");
+        userBox.setFocus(true);
+        userBox.setText("Username");
+
+        pwBox = new DefaultPasswordBox("password");
+        pwBox.setText("Password");
+        pwBox.addKeyPressHandler(new KeyPressHandler() {
+            @Override
+            public void onKeyPress(KeyPressEvent event) {
+               if ((int)event.getCharCode() == 13 ) { //submit form on enter
+                   form.submit();
+               }
+            }
+        });
+
         content.add(userBox);
         content.add(pwBox);
-        content.add(cancelButton);
-        content.add(loginButton);
+        content.add(buttons);
+        content.add(noteText);
+
         
         form.setWidget(content);
     }
@@ -103,10 +120,11 @@ public class LoginPopup extends PopupPanel
             authenticated = false;
         }
         
-        if(authenticated)
-            Window.alert("YAY");
-        else
-            Window.alert("NOPE");
+        if(!authenticated)
+        {
+            noteText.setVisible(true);
+            noteText.setText("wrong username/password!");
+        }
             
         return authenticated;
     }
