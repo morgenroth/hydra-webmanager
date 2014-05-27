@@ -1,22 +1,14 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
-import java.util.Hashtable;
-import de.tubs.cs.ibr.hydra.webmanager.client.LDAP;
-
-import javax.naming.Context;
-import javax.naming.NamingException;
-import javax.naming.directory.DirContext;
-import javax.naming.directory.InitialDirContext;
-
-
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
-import com.google.gwt.user.client.Window;
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.Label;
 import com.github.gwtbootstrap.client.ui.constants.ButtonType;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.PopupPanel;
@@ -54,15 +46,31 @@ public class LoginPopup extends PopupPanel
         cancelButton.setType(ButtonType.DANGER);
         Button loginButton = new Button("Login", new ClickHandler() {
                             public void onClick(ClickEvent event) {
-                                if(LDAP.authenticate(userBox.getText(), pwBox.getText()))
-                                {
-                                    p.hide();
-                                }
-                                else
-                                {
-                                    noteText.setVisible(true);
-                                    noteText.setText("wrong username/password!");
-                                }
+
+                                MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+                                mcs.authenticate(userBox.getText(), pwBox.getText(), new AsyncCallback<Boolean>() {
+                                    
+                                    @Override
+                                    public void onSuccess(Boolean result) {
+                                        if ( result )
+                                        {
+                                            p.hide();
+                                        }
+                                        else
+                                        {
+                                            noteText.setVisible(true);
+                                            noteText.setText("wrong username/password!");
+                                        }
+                                    }
+                                    @Override
+                                    public void onFailure(Throwable caught) {
+                                        noteText.setVisible(true);
+                                        noteText.setText("ERROR!");
+                                    }
+
+                                });
+                                
+
                                 
                             } });
         loginButton.setType(ButtonType.SUCCESS);
@@ -89,7 +97,6 @@ public class LoginPopup extends PopupPanel
         content.add(pwBox);
         content.add(buttons);
         content.add(noteText);
-
         
         form.setWidget(content);
     }

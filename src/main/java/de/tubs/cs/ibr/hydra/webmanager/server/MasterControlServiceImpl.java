@@ -283,6 +283,11 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     }
 
     @Override
+    public Boolean authenticate(String username, String password) {
+        return LDAP.authenticate(username, password);
+    }
+    
+    @Override
     public Credentials getCredentials() {
         String username = this.getThreadLocalRequest().getRemoteUser();
         if (username == null) return null;

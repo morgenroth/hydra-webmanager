@@ -17,6 +17,12 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
 
 @RemoteServiceRelativePath("master")
 public interface MasterControlService extends RemoteService {
+    
+    /**
+     * authenticate user
+     */
+    public Boolean authenticate(String username, String password);
+    
     /**
      * Get user credentials
      */

@@ -1,4 +1,4 @@
-package de.tubs.cs.ibr.hydra.webmanager.client;
+package de.tubs.cs.ibr.hydra.webmanager.server;
 
 import java.util.Hashtable;
 
@@ -9,7 +9,7 @@ import javax.naming.directory.InitialDirContext;
 
 public class LDAP {
     
-    static boolean authenticate(String username, String password)
+    static Boolean authenticate(String username, String password)
     {
         DirContext ctx = null;
         String usergroup = "users";
