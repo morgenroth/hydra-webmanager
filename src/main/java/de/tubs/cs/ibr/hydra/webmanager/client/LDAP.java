@@ -28,14 +28,11 @@ public class LDAP {
             env.put(Context.SECURITY_PRINCIPAL, ldap_path);
             env.put(Context.SECURITY_CREDENTIALS, password);
 
-            System.out.println("before context");
-
             // NamingException -> NOT authenticated!
             ctx = new InitialDirContext(env);
 
             //The user is authenticated.
             authenticated = true;
-            System.out.println("after context");
 
         } catch (NamingException e) {
             //e.printStackTrace();
