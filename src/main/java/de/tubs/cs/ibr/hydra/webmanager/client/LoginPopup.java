@@ -65,7 +65,7 @@ public class LoginPopup extends PopupPanel
                                     @Override
                                     public void onFailure(Throwable caught) {
                                         noteText.setVisible(true);
-                                        noteText.setText("ERROR!");
+                                        noteText.setText("ERROR: " + caught.getMessage());
                                     }
 
                                 });
