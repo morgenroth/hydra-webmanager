@@ -1,11 +1,13 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
 import java.util.Hashtable;
+import de.tubs.cs.ibr.hydra.webmanager.client.LDAP;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
+
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -52,16 +54,21 @@ public class LoginPopup extends PopupPanel
         cancelButton.setType(ButtonType.DANGER);
         Button loginButton = new Button("Login", new ClickHandler() {
                             public void onClick(ClickEvent event) {
-                                if(checkPassword(userBox.getText(), pwBox.getText()))
+                                if(LDAP.authenticate(userBox.getText(), pwBox.getText()))
                                 {
                                     p.hide();
+                                }
+                                else
+                                {
+                                    noteText.setVisible(true);
+                                    noteText.setText("wrong username/password!");
                                 }
                                 
                             } });
         loginButton.setType(ButtonType.SUCCESS);
         
-        buttons.add(cancelButton);
         buttons.add(loginButton);
+        buttons.add(cancelButton);
 
         userBox = new DefaultTextBox("Username");
         userBox.setFocus(true);
@@ -87,45 +94,5 @@ public class LoginPopup extends PopupPanel
         form.setWidget(content);
     }
     
-    private boolean checkPassword(String username, String password)
-    {
-        DirContext ctx = null;
-        String usergroup = "users";
-        String ldap_path = "uid="+username+",ou="+usergroup+",dc=ibr,dc=cs,dc=tu-bs,dc=de";
-        
-        Hashtable env = new Hashtable();
-        boolean authenticated = false;
-        
-        try {
 
-            env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-            env.put(Context.PROVIDER_URL, "ldaps://ldap.ibr.cs.tu-bs.de");
-
-            env.put(Context.SECURITY_AUTHENTICATION, "simple");
-            //env.put(Context.SECURITY_PRINCIPAL, "uid="+ userId +",ou=users,dc=ibr,dc=tu-bs,dc=de");
-            env.put(Context.SECURITY_PRINCIPAL, ldap_path);
-            env.put(Context.SECURITY_CREDENTIALS, password);
-
-            System.out.println("before context");
-
-            // NamingException -> NOT authenticated!
-            ctx = new InitialDirContext(env);
-
-            //The user is authenticated.
-            authenticated = true;
-            System.out.println("after context");
-
-        } catch (NamingException e) {
-            //e.printStackTrace();
-            authenticated = false;
-        }
-        
-        if(!authenticated)
-        {
-            noteText.setVisible(true);
-            noteText.setText("wrong username/password!");
-        }
-            
-        return authenticated;
-    }
 }
