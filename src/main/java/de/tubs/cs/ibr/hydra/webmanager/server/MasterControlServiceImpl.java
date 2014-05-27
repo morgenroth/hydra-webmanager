@@ -29,6 +29,8 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
      */
     private static final long serialVersionUID = 1516194997681942066L;
 
+    private static Credentials credentials;
+
     @Override
     public void triggerAction(final Session s, final Action action) {
         MasterServer.invoke(new Task() {
@@ -284,16 +286,17 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
 
     @Override
     public Boolean authenticate(String username, String password) {
-        return LDAP.authenticate(username, password);
+        if(LDAP.authenticate(username, password))
+        {
+            credentials = new Credentials();
+            credentials.setUsername(username);
+            return true;
+        }
+        return false;
     }
     
     @Override
     public Credentials getCredentials() {
-        String username = this.getThreadLocalRequest().getRemoteUser();
-        if (username == null) return null;
-        
-        Credentials c = new Credentials();
-        c.setUsername(username);
-        return c;
+        return credentials;
     }
 }
