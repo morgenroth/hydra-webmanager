@@ -16,6 +16,7 @@ import com.github.gwtbootstrap.client.ui.Column;
 import com.github.gwtbootstrap.client.ui.Container;
 import com.github.gwtbootstrap.client.ui.Label;
 import com.github.gwtbootstrap.client.ui.NavLink;
+import com.github.gwtbootstrap.client.ui.NavText;
 import com.github.gwtbootstrap.client.ui.constants.AlertType;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -43,6 +44,8 @@ public class HydraApp extends Composite {
 
     private Atmosphere atmosphere = null;
 
+    private boolean loggedIn = false;
+
     interface HydraAppUiBinder extends UiBinder<Widget, HydraApp> {
     }
     
@@ -50,7 +53,8 @@ public class HydraApp extends Composite {
     @UiField NavLink navSession;
     @UiField NavLink navSlaves;
     @UiField NavLink navNodes;
-    @UiField NavLink navLogin;
+    @UiField NavText navLoggedIn;
+    @UiField NavLink navLoginLogout;
     
     @UiField Container alertContainer;
     final Alert mAlert = new Alert();
@@ -82,7 +86,7 @@ public class HydraApp extends Composite {
         navSession.setActive(true);
         navSlaves.setActive(false);
         navNodes.setActive(false);
-        navLogin.setActive(false);
+        navLoginLogout.setActive(false);
         changeView(null);
     }
     
@@ -91,7 +95,7 @@ public class HydraApp extends Composite {
         navSession.setActive(false);
         navSlaves.setActive(true);
         navNodes.setActive(false);
-        navLogin.setActive(false);
+        navLoginLogout.setActive(false);
         changeView(new SlaveView(HydraApp.this));
     }
     
@@ -100,13 +104,30 @@ public class HydraApp extends Composite {
         navSession.setActive(false);
         navSlaves.setActive(false);
         navNodes.setActive(true);
-        navLogin.setActive(false);
+        navLoginLogout.setActive(false);
         changeView(new NodeView(HydraApp.this, null));
     }
-    @UiHandler("navLogin")
+    @UiHandler("navLoginLogout")
     void onLoginClick(ClickEvent e) {
-        LoginPopup lp = new LoginPopup();
-        lp.center();
+        if(!loggedIn)
+        {
+            LoginPopup lp = new LoginPopup();
+            lp.center();
+        } else {
+            MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+            mcs.logout(new AsyncCallback<Void>() {
+
+                    @Override
+                    public void onFailure(Throwable caught) {
+                    }
+
+                    @Override
+                    public void onSuccess(Void result) {
+                       setLogout(); 
+                    }
+                }
+            );
+        }
     }
     
     
@@ -124,10 +145,10 @@ public class HydraApp extends Composite {
             public void onSuccess(Credentials result) {
                 if (result == null) {
                     // no credentials received - show login link
-                    navLogin.setText("Login");
+                    setLogout();
                 } else {
                     // show username
-                    navLogin.setText("Logged in as '" + result.getUsername() + "'");
+                    setLogin(result.getUsername());
                 }
             }
             
@@ -266,5 +287,18 @@ public class HydraApp extends Composite {
         
         currentView = newView;
         containerContent.add((Widget)currentView);
+    }
+    
+    private void setLogin(String username) {
+        loggedIn = true;
+        navLoggedIn.setVisible(true);
+        navLoggedIn.setText("logged in as '" + username + "'");
+        navLoginLogout.setText("Logout");
+    }
+
+    private void setLogout() {
+        loggedIn = false;
+        navLoggedIn.setVisible(false);
+        navLoginLogout.setText("Login");
     }
 }

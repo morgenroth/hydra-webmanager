@@ -48,7 +48,7 @@ public class LoginPopup extends PopupPanel
                             public void onClick(ClickEvent event) {
 
                                 MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-                                mcs.authenticate(userBox.getText(), pwBox.getText(), new AsyncCallback<Boolean>() {
+                                mcs.login(userBox.getText(), pwBox.getText(), new AsyncCallback<Boolean>() {
                                     
                                     @Override
                                     public void onSuccess(Boolean result) {

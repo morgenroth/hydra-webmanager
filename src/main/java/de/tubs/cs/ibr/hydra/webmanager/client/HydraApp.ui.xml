@@ -15,7 +15,8 @@
 				<b:NavLink ui:field="navNodes">Nodes</b:NavLink>
 			</b:Nav>
 			<b:Nav alignment="RIGHT">
-				<b:NavLink ui:field="navLogin">Not logged in</b:NavLink>
+				<b:NavText ui:field="navLoggedIn">not logged in</b:NavText>
+				<b:NavLink ui:field="navLoginLogout">Login</b:NavLink>
 			</b:Nav>
 		</b:ResponsiveNavbar>
 		<b:FluidContainer ui:field="alertContainer" />

@@ -21,7 +21,12 @@ public interface MasterControlService extends RemoteService {
     /**
      * authenticate user
      */
-    public Boolean authenticate(String username, String password);
+    public Boolean login(String username, String password);
+
+    /**
+     * log user out
+     */
+    public void logout();
     
     /**
      * Get user credentials

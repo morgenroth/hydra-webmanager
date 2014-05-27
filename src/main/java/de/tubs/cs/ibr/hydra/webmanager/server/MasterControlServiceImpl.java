@@ -29,7 +29,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
      */
     private static final long serialVersionUID = 1516194997681942066L;
 
-    private static Credentials credentials;
+    private static Credentials mCredentials;
 
     @Override
     public void triggerAction(final Session s, final Action action) {
@@ -285,18 +285,22 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     }
 
     @Override
-    public Boolean authenticate(String username, String password) {
+    public Boolean login(String username, String password) {
         if(LDAP.authenticate(username, password))
         {
-            credentials = new Credentials();
-            credentials.setUsername(username);
+            mCredentials = new Credentials();
+            mCredentials.setUsername(username);
             return true;
         }
         return false;
     }
+
+    public void logout() {
+        mCredentials = null;
+    }
     
     @Override
     public Credentials getCredentials() {
-        return credentials;
+        return mCredentials;
     }
 }
