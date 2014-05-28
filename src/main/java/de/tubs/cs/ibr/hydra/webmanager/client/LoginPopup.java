@@ -17,55 +17,59 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 public class LoginPopup extends PopupPanel
 {
     
-    FormPanel form = new FormPanel();
-    final LoginPopup p = this;
-    DefaultTextBox userBox = null;
-    DefaultPasswordBox pwBox = null;
-    Label noteText = null;
+    FormPanel mForm = new FormPanel();
+    final LoginPopup mPopup = this;
+    DefaultTextBox mUserBox ;
+    DefaultPasswordBox mPWBox;
+    Label mNoteText;
+    AsyncCallback<String> mCallback;
     
-    public LoginPopup()
+    
+    public LoginPopup(AsyncCallback<String> callback)
     {
         super(false);
         
+        mCallback = callback;
         initForm();
         
-        this.setWidget(form);
+        this.setWidget(mForm);
     }
     
     private void initForm()
     {
         VerticalPanel content = new VerticalPanel();
         HorizontalPanel buttons = new HorizontalPanel();
-        noteText = new Label();
-        noteText.setVisible(false);
+        mNoteText = new Label();
+        mNoteText.setVisible(false);
         
         Button cancelButton = new Button("Cancel", new ClickHandler() {
                             public void onClick(ClickEvent event) {
-                                p.hide();
+                                mPopup.hide();
                                 } });
         cancelButton.setType(ButtonType.DANGER);
         Button loginButton = new Button("Login", new ClickHandler() {
                             public void onClick(ClickEvent event) {
 
                                 MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-                                mcs.login(userBox.getText(), pwBox.getText(), new AsyncCallback<Boolean>() {
+                                mcs.login(mUserBox.getText(), mPWBox.getText(), new AsyncCallback<Boolean>() {
                                     
                                     @Override
                                     public void onSuccess(Boolean result) {
                                         if ( result )
                                         {
-                                            p.hide();
+                                            mPopup.hide();
+                                            mCallback.onSuccess(mUserBox.getText());
                                         }
                                         else
                                         {
-                                            noteText.setVisible(true);
-                                            noteText.setText("wrong username/password!");
+                                            mNoteText.setVisible(true);
+                                            mNoteText.setText("wrong username/password!");
                                         }
                                     }
                                     @Override
                                     public void onFailure(Throwable caught) {
-                                        noteText.setVisible(true);
-                                        noteText.setText("ERROR: " + caught.getMessage());
+                                        mNoteText.setVisible(true);
+                                        mNoteText.setText("ERROR: " + caught.getMessage());
                                     }
 
                                 });
@@ -78,27 +82,27 @@ public class LoginPopup extends PopupPanel
         buttons.add(loginButton);
         buttons.add(cancelButton);
 
-        userBox = new DefaultTextBox("Username");
-        userBox.setFocus(true);
-        userBox.setText("Username");
+        mUserBox = new DefaultTextBox("Username");
+        mUserBox.setFocus(true);
+        mUserBox.setText("Username");
 
-        pwBox = new DefaultPasswordBox("password");
-        pwBox.setText("Password");
-        pwBox.addKeyPressHandler(new KeyPressHandler() {
+        mPWBox = new DefaultPasswordBox("password");
+        mPWBox.setText("Password");
+        mPWBox.addKeyPressHandler(new KeyPressHandler() {
             @Override
             public void onKeyPress(KeyPressEvent event) {
                if ((int)event.getCharCode() == 13 ) { //submit form on enter
-                   form.submit();
+                   mForm.submit();
                }
             }
         });
 
-        content.add(userBox);
-        content.add(pwBox);
+        content.add(mUserBox);
+        content.add(mPWBox);
         content.add(buttons);
-        content.add(noteText);
+        content.add(mNoteText);
         
-        form.setWidget(content);
+        mForm.setWidget(content);
     }
     
 

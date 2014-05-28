@@ -21,6 +21,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.Composite;
@@ -36,7 +37,7 @@ public class HydraApp extends Composite {
 
     private Atmosphere atmosphere = null;
 
-    private boolean loggedIn = false;
+    private static boolean loggedIn = false;
 
     interface HydraAppUiBinder extends UiBinder<Widget, HydraApp> {
     }
@@ -103,7 +104,18 @@ public class HydraApp extends Composite {
     void onLoginClick(ClickEvent e) {
         if(!loggedIn)
         {
-            LoginPopup lp = new LoginPopup();
+            LoginPopup lp = new LoginPopup(new AsyncCallback<String>() {
+
+                @Override
+                public void onFailure(Throwable caught) {
+                    Window.alert("ERROR " + caught.getMessage());
+                }
+
+                @Override
+                public void onSuccess(String username) {
+                    setLogin(username);
+                }
+            });
             lp.center();
         } else {
             MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
@@ -281,6 +293,9 @@ public class HydraApp extends Composite {
         containerContent.add((Widget)currentView);
     }
     
+    public boolean getLoggedIn() {
+       return loggedIn; 
+    }
     private void setLogin(String username) {
         loggedIn = true;
         navLoggedIn.setVisible(true);
