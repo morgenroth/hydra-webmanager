@@ -29,10 +29,13 @@ import com.google.gwt.view.client.ListDataProvider;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
+import de.tubs.cs.ibr.hydra.webmanager.shared.ToggleButtonCell;
 
 public class SessionView extends View {
 
     private static SessionViewUiBinder uiBinder = GWT.create(SessionViewUiBinder.class);
+    
+    private static boolean loggedIn = false;
     
     // data provider for the session table
     ListDataProvider<Session> mDataProvider = new ListDataProvider<Session>();
@@ -52,6 +55,9 @@ public class SessionView extends View {
         
         mDataProvider = new ListDataProvider<Session>();
         mDataProvider.addDataDisplay(sessionTable);
+        
+        loggedIn = app.getLoggedIn();
+        buttonAdd.setEnabled(loggedIn);
         
         refreshSessionTable();
     }
@@ -144,7 +150,8 @@ public class SessionView extends View {
         sessionTable.addColumn(stateColumn, "State");
         sessionTable.setColumnWidth(stateColumn, 8, Unit.EM);
 
-        ButtonCell actionCell = new ButtonCell();
+        ToggleButtonCell actionCell = new ToggleButtonCell();
+        actionCell.setEnabled(loggedIn);
         actionCell.setSize(ButtonSize.SMALL);
         Column<Session, String> actionColumn = new Column<Session, String>(actionCell) {
             @Override
@@ -197,54 +204,64 @@ public class SessionView extends View {
             public void update(int index, final Session s, String value) {
                 // trigger action on session
                 final Session.Action action = Session.Action.fromString(value);
-                MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-                mcs.triggerAction(s, action, new AsyncCallback<Void>() {
-
-                    @Override
-                    public void onFailure(Throwable caught) {
-                        Window.alert("Action '" + action.toString() + "' on session " + s.id.toString() + " failed!");
-                    }
-
-                    @Override
-                    public void onSuccess(Void result) {
-                        switch (action) {
-                            case ABORT:
-                                //Window.alert("Session '" + s.name + "' aborted.");
-                                break;
-                            case QUEUE:
-                                //Window.alert("Session '" + s.name + "' queued.");
-                                break;
-                            case RESET:
-                                //Window.alert("Session '" + s.name + "' resetted.");
-                                break;
-                            case CANCEL:
-                                //Window.alert("Session '" + s.name + "' cancelled.");
-                                break;
-                            default:
-                                break;
+                //allow action-triggering only if logged in
+                if(loggedIn)
+                {
+                       MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+                    mcs.triggerAction(s, action, new AsyncCallback<Void>() {
+    
+                        @Override
+                        public void onFailure(Throwable caught) {
+                            Window.alert("Action '" + action.toString() + "' on session " + s.id.toString() + " failed!");
                         }
-                    }
-                    
-                });
+    
+                        @Override
+                        public void onSuccess(Void result) {
+                            switch (action) {
+                                case ABORT:
+                                    //Window.alert("Session '" + s.name + "' aborted.");
+                                    break;
+                                case QUEUE:
+                                    //Window.alert("Session '" + s.name + "' queued.");
+                                    break;
+                                case RESET:
+                                    //Window.alert("Session '" + s.name + "' resetted.");
+                                    break;
+                                case CANCEL:
+                                    //Window.alert("Session '" + s.name + "' cancelled.");
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        
+                    });
+                        
+                }
+
             }
         });
 
         sessionTable.addColumn(actionColumn);
         sessionTable.setColumnWidth(actionColumn, 8, Unit.EM);
         
-        ButtonCell editCell = new ButtonCell();
+        ToggleButtonCell editCell = new ToggleButtonCell();
         editCell.setType(ButtonType.LINK);
         Column<Session, String> editColumn = new Column<Session, String>(editCell) {
             @Override
             public String getValue(Session s) {
-                ButtonCell button = (ButtonCell)this.getCell();
+                ToggleButtonCell button = (ToggleButtonCell)this.getCell();
                 
                 switch (s.state) {
                     case INITIAL:
                         button.setIcon(IconType.EDIT);
+                        //disable, if not logged in
+                        button.setEnabled(loggedIn);
                         return "Edit";
                     case DRAFT:
                         button.setIcon(IconType.EDIT);
+                        //disable, if not logged in
+                        button.setEnabled(loggedIn);
                         return "Edit";
                     default:
                         button.setIcon(IconType.EYE_OPEN);
@@ -259,8 +276,9 @@ public class SessionView extends View {
                 // watch running sessions
                 if (Session.State.INITIAL.equals(s.state) || Session.State.DRAFT.equals(s.state))
                 {
-                    // open edit view
-                    changeView(new SessionEditView(getApplication(), s));
+                    // open edit view, when logged in
+                    if (loggedIn)
+                        changeView(new SessionEditView(getApplication(), s));
                 }
                 else
                 {
