@@ -1,5 +1,6 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
+import java.util.Date;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -8,12 +9,14 @@ import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.Label;
 import com.github.gwtbootstrap.client.ui.constants.ButtonType;
+import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.Credentials;
 public class LoginPopup extends PopupPanel
 {
     
@@ -51,14 +54,16 @@ public class LoginPopup extends PopupPanel
                             public void onClick(ClickEvent event) {
 
                                 MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-                                mcs.login(mUserBox.getText(), mPWBox.getText(), new AsyncCallback<Boolean>() {
+                                mcs.login(mUserBox.getText(), mPWBox.getText(), new AsyncCallback<Credentials>() {
                                     
                                     @Override
-                                    public void onSuccess(Boolean result) {
-                                        if ( result )
+                                    public void onSuccess(Credentials creds) {
+                                        if ( creds != null)
                                         {
                                             mPopup.hide();
-                                            mCallback.onSuccess(mUserBox.getText());
+                                            mCallback.onSuccess(creds.getUsername());
+                                            Date expires = new Date(creds.getSessionExpires());
+                                            Cookies.setCookie("hydra_sid", creds.getSessionId(), expires, null, "/", false);
                                         }
                                         else
                                         {

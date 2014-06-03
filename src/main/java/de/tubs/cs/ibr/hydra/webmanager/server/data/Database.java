@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 
 import de.tubs.cs.ibr.hydra.webmanager.server.MasterServer;
 import de.tubs.cs.ibr.hydra.webmanager.server.Task;
+import de.tubs.cs.ibr.hydra.webmanager.shared.Credentials;
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
@@ -65,6 +66,9 @@ public class Database {
     private final static String QUERY_STATS_BY_NODE = "SELECT `timestamp`, `data` FROM stats WHERE session = ? AND node = ? AND (`timestamp` > ?) AND (`timestamp` <= ?) ORDER BY timestamp DESC LIMIT 0,60;";
     private final static String QUERY_STATS_LATEST = "SELECT `id`, `s`.`timestamp`, `s`.`data` FROM `nodes` RIGHT JOIN (SELECT `timestamp`, `node`, `data` FROM `stats` WHERE `session` = ? ORDER BY `timestamp` DESC) as s ON (`s`.`node` = `nodes`.`id`) WHERE `session` = ? GROUP BY `id` ORDER BY `id`;";
     
+
+    private final static String QUERY_USERSESSION= "SELECT `username`, `sessionid`, `expires` FROM `usersessions` WHERE sessionid = ? AND  expires > NOW() LIMIT 1";
+
     private final static String UPDATE_NODE_ADDRESS = "UPDATE nodes SET `address` = ? WHERE id = ?;";
     private final static String UPDATE_NODE_STATE = "UPDATE nodes SET `state` = ? WHERE id = ?;";
     private final static String UPDATE_NODE = "UPDATE nodes SET `slave` = ?, `name` = ? WHERE id = ?;";
@@ -96,12 +100,15 @@ public class Database {
     private final static String INSERT_SESSION = "INSERT INTO sessions (`user`, `created`) VALUES (?, NOW());";
     private final static String INSERT_STATS_DATA = "INSERT INTO stats (`session`, `node`, `data`) VALUES (?, ?, ?);";
     
+
+    private final static String INSERT_USERSESSION= "INSERT INTO usersessions (`username`, `sessionid`, `expires`) VALUES (?, ?, ?);";
+
     private static Database __db__ = new Database();
     
     //private Connection mConn = null;
     private boolean mInitialized = false;
-    private BlockingQueue<Connection> mConnPool = new LinkedBlockingQueue<Connection>();
     
+    private final BlockingQueue<Connection> mConnPool = new LinkedBlockingQueue<Connection>();
     private static final int CONNECTION_POOL_SIZE = 5;
     
     public static Database getInstance() {
@@ -1314,5 +1321,58 @@ public class Database {
         }
         
         return ret;
+    }
+
+    /**
+     * returns Credentials Object belong to sessionID
+     * @param sessionId the session-id
+     * @return valid Credentials Object, or null if not-existent
+     */
+    public Credentials getUserSession(String sessionId)
+    {
+
+        Credentials rCreds = null;
+
+        Connection conn = getConnection();
+        if (conn == null) return null;
+
+        try (PreparedStatement st = conn.prepareStatement(QUERY_USERSESSION)) {
+
+            st.setString(1, sessionId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next())
+            {
+                    rCreds = new Credentials();
+                    rCreds.setUsername(rs.getString(1));
+                    rCreds.setSessionId(rs.getString(2));
+                    rCreds.setSessionExpires(rs.getLong(3));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return rCreds;
+    }
+
+    public void putUserSession(Credentials creds)
+    {
+        // get a connection from the pool
+        Connection conn = getConnection();
+        if (conn == null) return;
+
+        try (PreparedStatement st = conn.prepareStatement(INSERT_USERSESSION)) {
+
+            st.setString(1, creds.getUsername());
+            st.setString(2, creds.getSessionId());
+            st.setTimestamp(3, new Timestamp(creds.getSessionExpires()));
+
+            st.execute();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
+        }
+
     }
 }

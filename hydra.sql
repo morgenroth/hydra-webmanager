@@ -115,6 +115,30 @@ CREATE TABLE IF NOT EXISTS `users` (
 INSERT INTO `users` (`id`, `name`, `passwd`) VALUES
 (1, 'admin', NULL);
 
+--
+-- table `usersessions`
+--
+
+CREATE TABLE IF NOT EXISTS `usersessions` (
+`id` int(11) NOT NULL,
+  `username` varchar(64) NOT NULL,
+  `sessionid` varchar(256) DEFAULT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `expires` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
+
+--
+-- Indexes for table `usersessions`
+--
+ALTER TABLE `usersessions`
+ ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT for table `usersessions`
+--
+ALTER TABLE `usersessions`
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=5;
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

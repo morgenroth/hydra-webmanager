@@ -21,7 +21,7 @@ public interface MasterControlService extends RemoteService {
     /**
      * authenticate user
      */
-    public Boolean login(String username, String password);
+    public Credentials login(String username, String password);
 
     /**
      * log user out
@@ -31,8 +31,8 @@ public interface MasterControlService extends RemoteService {
     /**
      * Get user credentials
      */
-    public Credentials getCredentials();
     
+    public Credentials getCredentials(String sessionId);
     /**
      * Create a new session
      * @return A session object with a unique key

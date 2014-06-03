@@ -21,6 +21,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.SerializationException;
@@ -142,26 +143,33 @@ public class HydraApp extends Composite {
         super.onAttach();
         
         // request user credentials
-        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.getCredentials(new AsyncCallback<Credentials>() {
-            
-            @Override
-            public void onSuccess(Credentials result) {
-                if (result == null) {
-                    // no credentials received - show login link
-                    setLogout();
-                } else {
-                    // show username
-                    setLogin(result.getUsername());
+        String sessionId = Cookies.getCookie("hydra_sid");
+        if ( sessionId != null)
+        {
+            MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+            mcs.getCredentials(sessionId, new AsyncCallback<Credentials>() {
+
+
+                @Override
+                public void onSuccess(Credentials result) {
+                    if (result == null) {
+                        // no credentials received - show login link
+                        setLogout();
+                    } else {
+                        // show username
+                        setLogin(result.getUsername());
+                    }
                 }
-            }
-            
-            @Override
-            public void onFailure(Throwable caught) {
-                // no credentials received
-            }
-        });
-        
+
+                @Override
+                public void onFailure(Throwable caught) {
+                    // no credentials received
+                }
+            });
+
+        } else {
+            setLogout();
+        }
         // create a new atmosphere client
         atmosphere = Atmosphere.create();
 

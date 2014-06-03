@@ -2,6 +2,8 @@ package de.tubs.cs.ibr.hydra.webmanager.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,13 +16,13 @@ import de.tubs.cs.ibr.hydra.webmanager.server.data.Configuration;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.Database;
 import de.tubs.cs.ibr.hydra.webmanager.server.data.SessionContainer;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Credentials;
+import de.tubs.cs.ibr.hydra.webmanager.shared.DataFile;
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataPoint;
 import de.tubs.cs.ibr.hydra.webmanager.shared.MapDataSet;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Node;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session.Action;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Slave;
-import de.tubs.cs.ibr.hydra.webmanager.shared.DataFile;
 
 public class MasterControlServiceImpl extends RemoteServiceServlet implements MasterControlService {
 
@@ -28,8 +30,6 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
      * serial ID
      */
     private static final long serialVersionUID = 1516194997681942066L;
-
-    private static Credentials mCredentials;
 
     @Override
     public void triggerAction(final Session s, final Action action) {
@@ -39,66 +39,66 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
             public void run() {
                 // refresh session object
                 Session session = Database.getInstance().getSession(s.id);
-                
+
                 switch (action) {
                     case ABORT:
                         // check if transition is allowed
                         if (!Session.State.RUNNING.equals(session.state)) break;
-                        
+
                         // set new state in database
                         Database.getInstance().setState(session, Session.State.CANCELLED);
-                        
+
                         break;
-                        
+
                     case QUEUE:
                         // check if transition is allowed
                         if (!Session.State.DRAFT.equals(session.state)) break;
-                        
+
                         // set new state in database
                         Database.getInstance().setState(session, Session.State.PENDING);
 
                         break;
-                        
+
                     case RESET:
                         // check if transition is allowed
                         if (!Session.State.ABORTED.equals(session.state)
                                 && !Session.State.FINISHED.equals(session.state)
                                 && !Session.State.ERROR.equals(session.state))
                             break;
-                        
+
                         // set new state in database
                         Database.getInstance().setState(session, Session.State.DRAFT);
 
                         break;
-                        
+
                     case REMOVE:
                         // check if transition is allowed
                         if (!Session.State.DRAFT.equals(session.state)
                                 && !Session.State.INITIAL.equals(session.state))
                             break;
-                        
+
                         // set new state in database
                         Database.getInstance().removeSession(session);
-                        
+
                         break;
-                        
+
                     case CANCEL:
                         // check if transition is allowed
                         if (!Session.State.PENDING.equals(session.state))
                             break;
-                        
+
                         // set new state in database
                         Database.getInstance().setState(session, Session.State.CANCELLED);
-                        
+
                         break;
-                        
+
                     default:
                         // unknown action - do nothing
                         break;
-                    
+
                 }
             }
-            
+
         });
     }
 
@@ -118,7 +118,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         if (sessionId != null) {
             s = new Session(sessionId);
         }
-        
+
         return MasterServer.getNodes(s);
     }
 
@@ -141,16 +141,16 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     public Session createSession() {
         // create a new session in the database
         final Session s = Database.getInstance().createSession();
-        
+
         final SessionContainer sc = SessionContainer.getContainer(s);
-        
+
         MasterServer.invoke(new Task() {
             @Override
             public void run() {
                 try {
                     // trigger initialization of the session
                     sc.initialize(SessionContainer.getDefault());
-                    
+
                     // set session state to DRAFT
                     Database.getInstance().setState(s, Session.State.DRAFT);
                 } catch (IOException e) {
@@ -159,7 +159,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
                 }
             }
         });
-        
+
         return s;
     }
 
@@ -167,20 +167,20 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     public void applySession(Session s) {
         // get session container
         SessionContainer sc = SessionContainer.getContainer(s);
-        
+
         try {
             // try to initialize the container
             sc.initialize(null);
-            
+
             // store configuration
             sc.apply(s);
         } catch (IOException e) {
             // can not initialize the container
         }
-        
+
         // update database
         Database.getInstance().updateSession(s);
-        
+
         // prepare session change extras
         MasterServer.fireSessionDataUpdated(s);
     }
@@ -188,13 +188,13 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     @Override
     public void applyNodes(ArrayList<Node> nodes) {
         HashSet<Long> sessions = new HashSet<Long>();
-        
+
         Database d = Database.getInstance();
         for (Node n : nodes) {
             d.updateNode(n);
             sessions.add(n.sessionId);
         }
-        
+
         for (Long session_id : sessions) {
             MasterServer.fireNodeStateChanged(session_id, null);
         }
@@ -203,13 +203,13 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     @Override
     public void removeNodes(ArrayList<Node> nodes) {
         HashSet<Long> sessions = new HashSet<Long>();
-        
+
         Database d = Database.getInstance();
         for (Node n : nodes) {
             d.removeNode(n);
             sessions.add(n.sessionId);
         }
-        
+
         for (Long session_id : sessions) {
             MasterServer.fireNodeStateChanged(session_id, null);
         }
@@ -218,11 +218,11 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     @Override
     public void createNodes(Long amount, Long sessionId, Long slaveId) {
         Database db = Database.getInstance();
-        
+
         for (int i = 0; i < amount; i++) {
             db.createNode(sessionId, slaveId);
         }
-        
+
         // prepare session change extras
         MasterServer.fireNodeStateChanged(sessionId, null);
     }
@@ -245,7 +245,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         if (sessionId != null) {
             s = new Session(sessionId);
         }
-        
+
         return MasterServer.getMapData(s);
     }
 
@@ -253,29 +253,29 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     public ArrayList<DataFile> getSessionFiles(Session s, String tag) {
         ArrayList<DataFile> ret = null;
         SessionContainer sc = SessionContainer.getContainer(s);
-        
+
         try {
             // initialize the container
             sc.initialize(null);
-            
+
             // get all trace files
             ret = sc.getDataFiles(tag);
         } catch (IOException e) {
             // could not initialize session container
             ret = new ArrayList<DataFile>();
         }
-        
+
         return ret;
     }
 
     @Override
     public void removeSessionFile(Session s, String tag, String filename) {
         SessionContainer sc = SessionContainer.getContainer(s);
-        
+
         try {
             // initialize the container
             sc.initialize(null);
-            
+
             // trace files
             File f = new File(sc.getDataPath(tag), filename);
             f.delete();
@@ -285,22 +285,36 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     }
 
     @Override
-    public Boolean login(String username, String password) {
-        if(LDAP.authenticate(username, password))
+    public Credentials login(String username, String password) {
+        //TODO if(LDAP.authenticate(username, password))
+        if(true)
         {
-            mCredentials = new Credentials();
-            mCredentials.setUsername(username);
-            return true;
+            SecureRandom random = new SecureRandom();
+            String sessionId = new BigInteger(1278, random).toString(32); //256 char string
+
+            final long DURATION = 1000 * 60 * 60 * 1; // 1 hour
+            long expires = System.currentTimeMillis() + DURATION;
+
+
+            Credentials creds = new Credentials();
+            creds.setUsername(username);
+            creds.setSessionId(sessionId);
+            creds.setSessionExpires(expires);
+
+            Database.getInstance().putUserSession(creds);
+
+            return creds;
         }
-        return false;
+        return null;
     }
 
+    @Override
     public void logout() {
-        mCredentials = null;
+        //%TODO
     }
     
     @Override
-    public Credentials getCredentials() {
-        return mCredentials;
+    public Credentials getCredentials(String sessionId) {
+        return Database.getInstance().getUserSession(sessionId);
     }
 }
