@@ -4,6 +4,7 @@
 	xmlns:b2="urn:import:com.github.gwtbootstrap.datepicker.client.ui">
 	<ui:style>
 		.footer { margin-top: 24px; }
+		.loglink{ font-weight: bold; }
 	</ui:style>
 	<g:FlowPanel>
 		<b:ResponsiveNavbar position="TOP" scrollspy="false"
@@ -16,7 +17,7 @@
 			</b:Nav>
 			<b:Nav alignment="RIGHT">
 				<b:NavText ui:field="navLoggedIn">not logged in</b:NavText>
-				<b:NavLink ui:field="navLoginLogout">Login</b:NavLink>
+				<b:NavLink addStyleNames="{style.loglink}" ui:field="navLoginLogout">Login</b:NavLink>
 			</b:Nav>
 		</b:ResponsiveNavbar>
 		<b:FluidContainer ui:field="alertContainer" />
