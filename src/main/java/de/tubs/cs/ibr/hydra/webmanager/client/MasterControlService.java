@@ -26,7 +26,7 @@ public interface MasterControlService extends RemoteService {
     /**
      * log user out
      */
-    public void logout();
+    public void logout(String sessionId);
     
     /**
      * Get user credentials

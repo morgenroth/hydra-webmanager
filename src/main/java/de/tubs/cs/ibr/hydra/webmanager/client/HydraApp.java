@@ -119,8 +119,9 @@ public class HydraApp extends Composite {
             });
             lp.center();
         } else {
+            String sessionId = Cookies.getCookie("hydra_sid");
             MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-            mcs.logout(new AsyncCallback<Void>() {
+            mcs.logout(sessionId, new AsyncCallback<Void>() {
 
                     @Override
                     public void onFailure(Throwable caught) {

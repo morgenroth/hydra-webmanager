@@ -309,8 +309,8 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     }
 
     @Override
-    public void logout() {
-        //%TODO
+    public void logout(String sessionId) {
+        Database.getInstance().removeUserSession(sessionId);
     }
     
     @Override

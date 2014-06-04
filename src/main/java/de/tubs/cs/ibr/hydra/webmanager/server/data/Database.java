@@ -94,6 +94,7 @@ public class Database {
     private final static String DELETE_NODE = "DELETE FROM nodes WHERE id = ?;";
     private final static String DELETE_SESSION_NODES = "DELETE FROM nodes WHERE session = ?;";
     private final static String DELETE_SESSION = "DELETE FROM sessions WHERE id = ?;";
+    private final static String DELETE_USERSESSION = "DELETE FROM usersessions WHERE sessionid = ?;";
     
     private final static String INSERT_NODE = "INSERT INTO nodes (`session`, `slave`) VALUES (?, ?);";
     private final static String INSERT_SLAVE = "INSERT INTO slaves (`name`, `address`, `owner`, `capacity`) VALUES (?, ?, ?, ?);";
@@ -1374,5 +1375,22 @@ public class Database {
             releaseConnection(conn);
         }
 
+    }
+    
+    public void removeUserSession(String sid)
+    {
+        Connection conn = getConnection();
+        if (conn == null) return;
+
+        try (PreparedStatement st = conn.prepareStatement(DELETE_USERSESSION)) {
+
+            st.setString(1, sid);
+            st.execute();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
+        }
     }
 }
