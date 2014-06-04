@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Properties;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
@@ -292,8 +293,16 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
             SecureRandom random = new SecureRandom();
             String sessionId = new BigInteger(1278, random).toString(32); //256 char string
 
-            final long DURATION = 1000 * 60 * 60 * 1; // 1 hour
-            long expires = System.currentTimeMillis() + DURATION;
+            long expires = 0;
+            Properties p;
+            try {
+                p = Configuration.getProperties();
+                // get minutes from session.properties file, calculate milliseconds
+                long duration = 1000 * 60 * Long.parseLong(p.getProperty("session.duration")) * 1;
+                expires = System.currentTimeMillis() + duration;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
 
             Credentials creds = new Credentials();
