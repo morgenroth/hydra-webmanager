@@ -290,6 +290,10 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         //TODO if(LDAP.authenticate(username, password))
         if(true)
         {
+            if (isFirstLogin(username))
+                Database.getInstance().putUser(username);
+
+            //create sessionID
             SecureRandom random = new SecureRandom();
             String sessionId = new BigInteger(1278, random).toString(32); //256 char string
 
@@ -325,5 +329,10 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     @Override
     public Credentials getCredentials(String sessionId) {
         return Database.getInstance().getUserSession(sessionId);
+    }
+
+    private boolean isFirstLogin(String username)
+    {
+        return (Database.getInstance().getUser(username) == null);
     }
 }

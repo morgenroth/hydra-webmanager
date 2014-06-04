@@ -101,8 +101,8 @@ public class Database {
     private final static String INSERT_SESSION = "INSERT INTO sessions (`user`, `created`) VALUES (?, NOW());";
     private final static String INSERT_STATS_DATA = "INSERT INTO stats (`session`, `node`, `data`) VALUES (?, ?, ?);";
     
-
     private final static String INSERT_USERSESSION= "INSERT INTO usersessions (`username`, `sessionid`, `expires`) VALUES (?, ?, ?);";
+    private final static String INSERT_USER= "INSERT INTO users (`username`) VALUES (?);";
 
     private static Database __db__ = new Database();
     
@@ -1385,6 +1385,23 @@ public class Database {
         try (PreparedStatement st = conn.prepareStatement(DELETE_USERSESSION)) {
 
             st.setString(1, sid);
+            st.execute();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
+        }
+    }
+
+    public void putUser(String username)
+    {
+        Connection conn = getConnection();
+        if (conn == null) return;
+
+        try (PreparedStatement st = conn.prepareStatement(INSERT_USER)) {
+
+            st.setString(1, username);
             st.execute();
 
         } catch (SQLException e) {
