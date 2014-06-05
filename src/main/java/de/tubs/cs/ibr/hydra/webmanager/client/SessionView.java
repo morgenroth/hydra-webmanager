@@ -26,6 +26,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.Credentials;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
@@ -35,7 +36,7 @@ public class SessionView extends View {
 
     private static SessionViewUiBinder uiBinder = GWT.create(SessionViewUiBinder.class);
     
-    private static boolean loggedIn = false;
+    private static Credentials mCredentials = null;
     
     // data provider for the session table
     ListDataProvider<Session> mDataProvider = new ListDataProvider<Session>();
@@ -56,8 +57,8 @@ public class SessionView extends View {
         mDataProvider = new ListDataProvider<Session>();
         mDataProvider.addDataDisplay(sessionTable);
         
-        loggedIn = app.getLoggedIn();
-        buttonAdd.setEnabled(loggedIn);
+        mCredentials = app.getCredentials();
+        buttonAdd.setEnabled(isLoggedIn());
         
         refreshSessionTable();
     }
@@ -151,12 +152,13 @@ public class SessionView extends View {
         sessionTable.setColumnWidth(stateColumn, 8, Unit.EM);
 
         ToggleButtonCell actionCell = new ToggleButtonCell();
-        actionCell.setEnabled(loggedIn);
         actionCell.setSize(ButtonSize.SMALL);
         Column<Session, String> actionColumn = new Column<Session, String>(actionCell) {
             @Override
             public String getValue(Session s) {
-                ButtonCell button = (ButtonCell)this.getCell();
+                ToggleButtonCell button = (ToggleButtonCell)this.getCell();
+                
+                button.setEnabled(isUser(s.username));
                 
                 switch (s.state) {
                     case ABORTED:
@@ -205,7 +207,7 @@ public class SessionView extends View {
                 // trigger action on session
                 final Session.Action action = Session.Action.fromString(value);
                 //allow action-triggering only if logged in
-                if(loggedIn)
+                if(isLoggedIn())
                 {
                        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
                     mcs.triggerAction(s, action, new AsyncCallback<Void>() {
@@ -255,15 +257,17 @@ public class SessionView extends View {
                 switch (s.state) {
                     case INITIAL:
                         button.setIcon(IconType.EDIT);
-                        //disable, if not logged in
-                        button.setEnabled(loggedIn);
+                        //disable, if not logged in as user to whom this session belongs
+                        button.setEnabled(isUser(s.username));
                         return "Edit";
                     case DRAFT:
                         button.setIcon(IconType.EDIT);
-                        //disable, if not logged in
-                        button.setEnabled(loggedIn);
+                        //disable, if not logged in as user to whom this session belongs
+                        button.setEnabled(isUser(s.username));
                         return "Edit";
                     default:
+                        //always enabled
+                        button.setEnabled(true);
                         button.setIcon(IconType.EYE_OPEN);
                         return "Watch";
                 }
@@ -277,7 +281,7 @@ public class SessionView extends View {
                 if (Session.State.INITIAL.equals(s.state) || Session.State.DRAFT.equals(s.state))
                 {
                     // open edit view, when logged in
-                    if (loggedIn)
+                    if (isLoggedIn())
                         changeView(new SessionEditView(getApplication(), s));
                 }
                 else
@@ -317,5 +321,17 @@ public class SessionView extends View {
     
     public static String formatDatetime(Date d) {
         return DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_MEDIUM).format(d);
+    }
+    
+    private boolean isLoggedIn()
+    {
+        return mCredentials != null;
+    }
+    
+    private boolean isUser(String username)
+    {
+        if (mCredentials == null)
+            return false;
+        return mCredentials.getUsername() == username;
     }
 }
