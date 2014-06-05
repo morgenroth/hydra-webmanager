@@ -102,7 +102,7 @@ public class Database {
     private final static String INSERT_STATS_DATA = "INSERT INTO stats (`session`, `node`, `data`) VALUES (?, ?, ?);";
     
     private final static String INSERT_USERSESSION= "INSERT INTO usersessions (`username`, `sessionid`, `expires`) VALUES (?, ?, ?);";
-    private final static String INSERT_USER= "INSERT INTO users (`username`) VALUES (?);";
+    private final static String INSERT_USER= "INSERT INTO users (`name`) VALUES (?);";
 
     private static Database __db__ = new Database();
     
