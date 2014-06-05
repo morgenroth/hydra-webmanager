@@ -1,18 +1,24 @@
 package de.tubs.cs.ibr.hydra.webmanager.client;
 
 import java.util.Date;
+
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.dom.client.KeyPressEvent;
-import com.google.gwt.event.dom.client.KeyPressHandler;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyUpEvent;
+import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.Label;
+import com.github.gwtbootstrap.client.ui.TextBox;
 import com.github.gwtbootstrap.client.ui.constants.ButtonType;
 import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.PasswordTextBox;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
@@ -22,8 +28,10 @@ public class LoginPopup extends PopupPanel
     
     FormPanel mForm = new FormPanel();
     final LoginPopup mPopup = this;
-    DefaultTextBox mUserBox ;
-    DefaultPasswordBox mPWBox;
+    Label mUsernameLabel;
+    TextBox mUserBox;
+    Label mPasswordLabel;
+    PasswordTextBox mPWBox;
     Label mNoteText;
     AsyncCallback<Credentials> mCallback;
     
@@ -36,6 +44,15 @@ public class LoginPopup extends PopupPanel
         initForm();
         
         this.setWidget(mForm);
+
+        Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+
+            @Override
+            public void execute() {
+               mUserBox.setFocus(true);
+            }
+         });
+
     }
     
     private void initForm()
@@ -43,6 +60,8 @@ public class LoginPopup extends PopupPanel
         VerticalPanel content = new VerticalPanel();
         HorizontalPanel buttons = new HorizontalPanel();
         mNoteText = new Label();
+        mUsernameLabel= new Label();
+        mPasswordLabel= new Label();
         mNoteText.setVisible(false);
         
         Button cancelButton = new Button("Cancel", new ClickHandler() {
@@ -87,22 +106,17 @@ public class LoginPopup extends PopupPanel
         buttons.add(loginButton);
         buttons.add(cancelButton);
 
-        mUserBox = new DefaultTextBox("Username");
-        mUserBox.setFocus(true);
-        mUserBox.setText("Username");
+        mUsernameLabel.setText("Username:");
+        mUserBox = new TextBox();
+        mUserBox.addKeyUpHandler(new EnterEscapePressHandler());
 
-        mPWBox = new DefaultPasswordBox("password");
-        mPWBox.setText("Password");
-        mPWBox.addKeyPressHandler(new KeyPressHandler() {
-            @Override
-            public void onKeyPress(KeyPressEvent event) {
-               if ((int)event.getCharCode() == 13 ) { //submit form on enter
-                   mForm.submit();
-               }
-            }
-        });
+        mPasswordLabel.setText("Password:");
+        mPWBox = new PasswordTextBox();
+        mPWBox.addKeyUpHandler(new EnterEscapePressHandler());
 
+        content.add(mUsernameLabel);
         content.add(mUserBox);
+        content.add(mPasswordLabel);
         content.add(mPWBox);
         content.add(buttons);
         content.add(mNoteText);
@@ -111,4 +125,20 @@ public class LoginPopup extends PopupPanel
     }
     
 
+    private class EnterEscapePressHandler implements KeyUpHandler
+    {
+        @Override
+        public void onKeyUp(KeyUpEvent event) {
+            switch ((int)event.getNativeKeyCode()) {
+            case KeyCodes.KEY_ENTER:
+                mForm.submit();
+                break;
+            case KeyCodes.KEY_ESCAPE:
+                mPopup.hide();
+                break;
+            default:
+                break;
+            }
+        }
+    }
 }
