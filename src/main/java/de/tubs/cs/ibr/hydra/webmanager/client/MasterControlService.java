@@ -35,9 +35,10 @@ public interface MasterControlService extends RemoteService {
     public Credentials getCredentials(String sessionId);
     /**
      * Create a new session
+     * @param username the username, to whom the session belongs
      * @return A session object with a unique key
      */
-    public Session createSession();
+    public Session createSession(String username);
     
     /**
      * Store writable values of the session in the database

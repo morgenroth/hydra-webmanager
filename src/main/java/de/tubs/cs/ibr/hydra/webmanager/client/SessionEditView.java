@@ -125,7 +125,7 @@ public class SessionEditView extends View {
         
         if (s == null) {
             // create a session first
-            createSession();
+            createSession(app.getCredentials().getUsername());
         } else {
             // initialize the session directly
             init(s);
@@ -333,9 +333,9 @@ public class SessionEditView extends View {
         onMovementAlgorithmChanged(null);
     }
     
-    private void createSession() {
+    private void createSession(String username) {
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.createSession(new AsyncCallback<Session>() {
+        mcs.createSession(username, new AsyncCallback<Session>() {
             @Override
             public void onFailure(Throwable caught) {
             }

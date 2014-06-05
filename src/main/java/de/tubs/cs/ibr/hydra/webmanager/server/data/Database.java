@@ -815,16 +815,18 @@ public class Database {
         return s;
     }
     
-    public Session createSession() {
+    public Session createSession(String username) {
         Long sessionId = null;
-        
+
+        User user = getUser(username);
+
         // get a connection from the pool
         Connection conn = getConnection();
         if (conn == null) return null;
 
         try (PreparedStatement st = conn.prepareStatement(INSERT_SESSION, Statement.RETURN_GENERATED_KEYS)) {
-            // TODO: set right user id
-            st.setLong(1, 1);
+            //set right user id
+            st.setLong(1, user.id);
             
             // execute insertion
             st.execute();

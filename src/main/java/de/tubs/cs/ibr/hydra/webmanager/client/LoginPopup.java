@@ -25,10 +25,10 @@ public class LoginPopup extends PopupPanel
     DefaultTextBox mUserBox ;
     DefaultPasswordBox mPWBox;
     Label mNoteText;
-    AsyncCallback<String> mCallback;
+    AsyncCallback<Credentials> mCallback;
     
     
-    public LoginPopup(AsyncCallback<String> callback)
+    public LoginPopup(AsyncCallback<Credentials> callback)
     {
         super(false);
         
@@ -61,7 +61,7 @@ public class LoginPopup extends PopupPanel
                                         if ( creds != null)
                                         {
                                             mPopup.hide();
-                                            mCallback.onSuccess(creds.getUsername());
+                                            mCallback.onSuccess(creds);
                                             Date expires = new Date(creds.getSessionExpires());
                                             Cookies.setCookie("hydra_sid", creds.getSessionId(), expires, null, "/", false);
                                         }

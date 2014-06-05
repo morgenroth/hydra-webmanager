@@ -38,7 +38,7 @@ public class HydraApp extends Composite {
 
     private Atmosphere atmosphere = null;
 
-    private static boolean loggedIn = false;
+    private static Credentials mCredentials = null;
 
     interface HydraAppUiBinder extends UiBinder<Widget, HydraApp> {
     }
@@ -103,9 +103,9 @@ public class HydraApp extends Composite {
     }
     @UiHandler("navLoginLogout")
     void onLoginClick(ClickEvent e) {
-        if(!loggedIn)
+        if(mCredentials == null)
         {
-            LoginPopup lp = new LoginPopup(new AsyncCallback<String>() {
+            LoginPopup lp = new LoginPopup(new AsyncCallback<Credentials>() {
 
                 @Override
                 public void onFailure(Throwable caught) {
@@ -113,8 +113,8 @@ public class HydraApp extends Composite {
                 }
 
                 @Override
-                public void onSuccess(String username) {
-                    setLogin(username);
+                public void onSuccess(Credentials result) {
+                    setLogin(result);
                 }
             });
             lp.center();
@@ -158,7 +158,7 @@ public class HydraApp extends Composite {
                         setLogout();
                     } else {
                         // show username
-                        setLogin(result.getUsername());
+                        setLogin(result);
                     }
                 }
 
@@ -301,20 +301,25 @@ public class HydraApp extends Composite {
         currentView = newView;
         containerContent.add((Widget)currentView);
     }
-    
+
     public boolean getLoggedIn() {
-       return loggedIn; 
+        return mCredentials != null;
     }
-    private void setLogin(String username) {
-        loggedIn = true;
+
+    public Credentials getCredentials() {
+        return mCredentials;
+    }
+
+    private void setLogin(Credentials creds) {
         navLoggedIn.setVisible(true);
-        navLoggedIn.setText("logged in as '" + username + "'");
+        navLoggedIn.setText("logged in as '" + creds.getUsername() + "'");
         navLoginLogout.setText("Logout");
+        mCredentials = creds;
     }
 
     private void setLogout() {
-        loggedIn = false;
         navLoggedIn.setVisible(false);
         navLoginLogout.setText("Login");
+        mCredentials = null;
     }
 }

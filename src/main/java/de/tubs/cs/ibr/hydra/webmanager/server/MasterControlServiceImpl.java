@@ -139,9 +139,9 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     }
 
     @Override
-    public Session createSession() {
+    public Session createSession(String username) {
         // create a new session in the database
-        final Session s = Database.getInstance().createSession();
+        final Session s = Database.getInstance().createSession(username);
 
         final SessionContainer sc = SessionContainer.getContainer(s);
 
