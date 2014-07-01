@@ -210,7 +210,7 @@ public class SessionView extends View {
                 if(isLoggedIn())
                 {
                        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-                    mcs.triggerAction(s, action, new AsyncCallback<Void>() {
+                    mcs.triggerAction(s, action, mCredentials, new AsyncCallback<Void>() {
     
                         @Override
                         public void onFailure(Throwable caught) {

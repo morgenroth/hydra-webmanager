@@ -29,6 +29,7 @@ import com.google.gwt.user.client.ui.DeckPanel;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.Widget;
 
+import de.tubs.cs.ibr.hydra.webmanager.shared.Credentials;
 import de.tubs.cs.ibr.hydra.webmanager.shared.DataFile;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Event;
 import de.tubs.cs.ibr.hydra.webmanager.shared.EventType;
@@ -39,6 +40,8 @@ import de.tubs.cs.ibr.hydra.webmanager.shared.Session;
 public class SessionEditView extends View {
 
     private static SessionEditViewUiBinder uiBinder = GWT.create(SessionEditViewUiBinder.class);
+
+    private static Credentials mCredentials = null;
     
     @UiField TabPanel panelTabs;
     @UiField Tab tabNodes;
@@ -122,6 +125,8 @@ public class SessionEditView extends View {
     public SessionEditView(HydraApp app, Session s) {
         super(app);
         initWidget(uiBinder.createAndBindUi(this));
+        
+        mCredentials = app.getCredentials();
         
         if (s == null) {
             // create a session first
@@ -400,7 +405,7 @@ public class SessionEditView extends View {
     @UiHandler("buttonRemove")
     void onRemoveSession(ClickEvent e) {
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.triggerAction(mSession, Session.Action.REMOVE, new AsyncCallback<Void>() {
+        mcs.triggerAction(mSession, Session.Action.REMOVE, mCredentials, new AsyncCallback<Void>() {
 
             @Override
             public void onFailure(Throwable caught) {

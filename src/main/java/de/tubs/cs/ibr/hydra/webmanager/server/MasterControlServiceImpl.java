@@ -33,13 +33,32 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     private static final long serialVersionUID = 1516194997681942066L;
 
     @Override
-    public void triggerAction(final Session s, final Action action) {
+    public void triggerAction(final Session s, final Action action, final Credentials creds) {
         MasterServer.invoke(new Task() {
 
             @Override
             public void run() {
                 // refresh session object
                 Session session = Database.getInstance().getSession(s.id);
+                
+                // check credentials on null
+                if ( creds == null )
+                {
+                    return;
+                }
+                // check existance of usersession
+                if ( Database.getInstance().getUserSession(creds.getSessionId()) == null)
+                {
+                    System.out.println("wrong usersession");
+                    return;
+                }
+                    
+                // check if session belongs to user
+                if ( ! session.username.trim().equals(creds.getUsername().trim()))
+                {
+                    System.out.println("wrong username");
+                    return;
+                }
 
                 switch (action) {
                     case ABORT:

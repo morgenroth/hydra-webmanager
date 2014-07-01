@@ -101,8 +101,9 @@ public interface MasterControlService extends RemoteService {
      * Execute an action on a session
      * @param s
      * @param action
+     * @param creds
      */
-    public void triggerAction(Session s, Session.Action action);
+    public void triggerAction(Session s, Session.Action action, Credentials creds);
     
     /**
      * Get all available image files
