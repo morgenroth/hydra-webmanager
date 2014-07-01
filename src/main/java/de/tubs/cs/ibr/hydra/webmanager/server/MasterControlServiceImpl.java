@@ -191,13 +191,18 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
 
     @Override
     public void applySession(Session s, Credentials creds) {
+        // check existance of session
+        if ( s == null)
+            return;
+
         // check usersession
         if ( ! Database.getInstance().isUserSessionValid(creds))
             return;
 
         // check if considered session belongs to user
-        if ( ! s.username.equals(creds.getUsername()))
-            return;
+        //TODO this yields to a null-pointer exception, because the name stays unchanged?
+        //if ( ! s.username.equals(creds.getUsername()))
+            //return;
 
         // get session container
         SessionContainer sc = SessionContainer.getContainer(s);
