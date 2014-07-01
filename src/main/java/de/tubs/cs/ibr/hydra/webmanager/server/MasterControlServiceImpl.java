@@ -306,8 +306,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
 
     @Override
     public Credentials login(String username, String password) {
-        //TODO if(LDAP.authenticate(username, password))
-        if(true)
+        if(LDAP.authenticate(username, password))
         {
             if (isFirstLogin(username))
                 Database.getInstance().putUser(username);
