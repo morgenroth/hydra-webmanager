@@ -47,7 +47,7 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
                     return;
                 }
                 // check existance of usersession
-                if ( Database.getInstance().getUserSession(creds.getSessionId()) == null)
+                if ( ! Database.getInstance().isUserSessionValid(creds) )
                 {
                     System.out.println("wrong usersession");
                     return;
@@ -158,9 +158,15 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     }
 
     @Override
-    public Session createSession(String username) {
+    public Session createSession(Credentials creds) {
+        // check usersession
+        if ( ! Database.getInstance().isUserSessionValid(creds))
+        {
+            return null;
+        }
+
         // create a new session in the database
-        final Session s = Database.getInstance().createSession(username);
+        final Session s = Database.getInstance().createSession(creds.getUsername());
 
         final SessionContainer sc = SessionContainer.getContainer(s);
 
@@ -184,7 +190,15 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     }
 
     @Override
-    public void applySession(Session s) {
+    public void applySession(Session s, Credentials creds) {
+        // check usersession
+        if ( ! Database.getInstance().isUserSessionValid(creds))
+            return;
+
+        // check if considered session belongs to user
+        if ( ! s.username.equals(creds.getUsername()))
+            return;
+
         // get session container
         SessionContainer sc = SessionContainer.getContainer(s);
 
@@ -289,7 +303,14 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     }
 
     @Override
-    public void removeSessionFile(Session s, String tag, String filename) {
+    public void removeSessionFile(Session s, String tag, String filename, Credentials creds) {
+        if ( ! Database.getInstance().isUserSessionValid(creds))
+            return;
+
+        // check if considered session belongs to user
+        if ( ! s.username.equals(creds.getUsername()))
+            return;
+
         SessionContainer sc = SessionContainer.getContainer(s);
 
         try {

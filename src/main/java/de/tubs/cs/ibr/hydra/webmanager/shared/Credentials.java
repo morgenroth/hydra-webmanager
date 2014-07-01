@@ -33,4 +33,12 @@ public class Credentials implements IsSerializable {
     public void setSessionExpires(long expires) {
         mSessionExpires = expires;
     }
+
+    @Override
+    public boolean equals (Object obj) {
+        Credentials otherCreds = (Credentials) obj;
+        return  mUsername.equals(otherCreds.getUsername()) &&
+                mSessionId.equals(otherCreds.getSessionId()) &&
+                mSessionExpires == otherCreds.getSessionExpires();
+    }
 }

@@ -31,20 +31,21 @@ public interface MasterControlService extends RemoteService {
     /**
      * Get user credentials
      */
-    
     public Credentials getCredentials(String sessionId);
+
     /**
      * Create a new session
-     * @param username the username, to whom the session belongs
+     * @param creds Credentials object of user, to whom the session belongs
      * @return A session object with a unique key
      */
-    public Session createSession(String username);
+    public Session createSession(Credentials creds);
     
     /**
      * Store writable values of the session in the database
      * @param s
+     * @param creds, Credentials object
      */
-    public void applySession(Session s);
+    public void applySession(Session s, Credentials creds);
     
     /**
      * Get the session data of the given session id
@@ -62,6 +63,7 @@ public interface MasterControlService extends RemoteService {
     /**
      * Add a number of nodes
      * @param amount
+     * @param sessionId
      * @param slaveId
      */
     public void createNodes(Long amount, Long sessionId, Long slaveId);
@@ -140,6 +142,7 @@ public interface MasterControlService extends RemoteService {
      * @param s
      * @param tag
      * @param filename
+     * @param creds
      */
-    public void removeSessionFile(Session s, String tag, String filename);
+    public void removeSessionFile(Session s, String tag, String filename, Credentials creds);
 }

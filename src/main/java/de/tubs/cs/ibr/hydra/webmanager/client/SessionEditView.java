@@ -340,7 +340,7 @@ public class SessionEditView extends View {
     
     private void createSession(String username) {
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.createSession(username, new AsyncCallback<Session>() {
+        mcs.createSession(mCredentials, new AsyncCallback<Session>() {
             @Override
             public void onFailure(Throwable caught) {
             }
@@ -442,7 +442,7 @@ public class SessionEditView extends View {
         if (mChangedSession == null) return;
         
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.applySession(mChangedSession, new AsyncCallback<Void>() {
+        mcs.applySession(mChangedSession, mCredentials, new AsyncCallback<Void>() {
 
             @Override
             public void onFailure(Throwable caught) {
@@ -554,7 +554,7 @@ public class SessionEditView extends View {
         
         buttonBasePackages.setEnabled(false);
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.removeSessionFile(mSession, "packages", listBasePackages.getValue(), new AsyncCallback<Void>() {
+        mcs.removeSessionFile(mSession, "packages", listBasePackages.getValue(), mCredentials, new AsyncCallback<Void>() {
             
             @Override
             public void onSuccess(Void result) {
@@ -788,7 +788,7 @@ public class SessionEditView extends View {
         
         buttonMovementTrace.setEnabled(false);
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.removeSessionFile(mSession, "data", listMovementTrace.getValue(), new AsyncCallback<Void>() {
+        mcs.removeSessionFile(mSession, "data", listMovementTrace.getValue(), mCredentials, new AsyncCallback<Void>() {
             
             @Override
             public void onSuccess(Void result) {

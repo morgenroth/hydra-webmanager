@@ -1357,6 +1357,24 @@ public class Database {
         return rCreds;
     }
 
+    public boolean isUserSessionValid(Credentials checkCreds)
+    {
+        if ( checkCreds == null )
+            return false;
+
+        String sessionId = checkCreds.getSessionId();
+
+        if ( sessionId == null )
+            return false;
+
+        Credentials creds = getUserSession(sessionId);
+
+        if ( creds == null )
+            return false;
+
+        return creds.equals(checkCreds);
+    }
+
     public void putUserSession(Credentials creds)
     {
         // get a connection from the pool
