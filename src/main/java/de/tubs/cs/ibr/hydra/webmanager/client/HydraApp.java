@@ -40,6 +40,8 @@ public class HydraApp extends Composite {
 
     private static Credentials mCredentials = null;
 
+    private static LoginPopup lp = null;
+
     interface HydraAppUiBinder extends UiBinder<Widget, HydraApp> {
     }
     
@@ -103,10 +105,13 @@ public class HydraApp extends Composite {
     }
     @UiHandler("navLoginLogout")
     void onLoginClick(ClickEvent e) {
-        //login
+        //login if not logged in
         if(mCredentials == null)
         {
-            LoginPopup lp = new LoginPopup(new AsyncCallback<Credentials>() {
+            // prevent overlaying popups
+            if ( lp == null)
+            {
+            lp = new LoginPopup(new AsyncCallback<Credentials>() {
 
                 @Override
                 public void onFailure(Throwable caught) {
@@ -116,9 +121,15 @@ public class HydraApp extends Composite {
                 @Override
                 public void onSuccess(Credentials result) {
                     setLogin(result);
+                    lp = null;
                 }
-            });
+                });
             lp.center();
+            }
+            else
+            {
+                lp.show();
+            }
         //logout
         } else {
             String sessionId = Cookies.getCookie("hydra_sid");

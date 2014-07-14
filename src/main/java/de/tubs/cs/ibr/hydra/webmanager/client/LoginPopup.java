@@ -8,8 +8,8 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.event.dom.client.KeyUpEvent;
-import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.event.dom.client.KeyDownEvent;
+import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.Label;
 import com.github.gwtbootstrap.client.ui.TextBox;
@@ -108,11 +108,11 @@ public class LoginPopup extends PopupPanel
 
         mUsernameLabel.setText("Username:");
         mUserBox = new TextBox();
-        mUserBox.addKeyUpHandler(new EnterEscapePressHandler());
+        mUserBox.addKeyDownHandler(new EnterEscapePressHandler());
 
         mPasswordLabel.setText("Password:");
         mPWBox = new PasswordTextBox();
-        mPWBox.addKeyUpHandler(new EnterEscapePressHandler());
+        mPWBox.addKeyDownHandler(new EnterEscapePressHandler());
 
         content.add(mUsernameLabel);
         content.add(mUserBox);
@@ -125,15 +125,18 @@ public class LoginPopup extends PopupPanel
     }
     
 
-    private class EnterEscapePressHandler implements KeyUpHandler
+    private class EnterEscapePressHandler implements KeyDownHandler
     {
         @Override
-        public void onKeyUp(KeyUpEvent event) {
+        public void onKeyDown(KeyDownEvent event) {
+            System.out.println("detected key down: " + event.getNativeKeyCode());
             switch ((int)event.getNativeKeyCode()) {
             case KeyCodes.KEY_ENTER:
+                System.out.println("enter");
                 mForm.submit();
                 break;
             case KeyCodes.KEY_ESCAPE:
+                System.out.println("escape");
                 mPopup.hide();
                 break;
             default:
