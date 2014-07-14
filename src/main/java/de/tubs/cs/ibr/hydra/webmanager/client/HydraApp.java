@@ -330,7 +330,9 @@ public class HydraApp extends Composite {
         navLoginLogout.setText("Logout");
         mCredentials = creds;
         //update view after login
-        changeView(currentView);
+        //changeView(currentView); // TODO why does this not work?
+        //workaround:
+        onSessionsClick(null);
     }
 
     private void setLogout() {
@@ -338,6 +340,8 @@ public class HydraApp extends Composite {
         navLoginLogout.setText("Login");
         mCredentials = null;
         //update view after logout
-        changeView(currentView);
+        //changeView(currentView); // TODO why does this not work?
+        //workaround:
+        onSessionsClick(null);
     }
 }
