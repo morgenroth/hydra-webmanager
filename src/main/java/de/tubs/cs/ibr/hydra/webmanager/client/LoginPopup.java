@@ -129,14 +129,11 @@ public class LoginPopup extends PopupPanel
     {
         @Override
         public void onKeyDown(KeyDownEvent event) {
-            System.out.println("detected key down: " + event.getNativeKeyCode());
             switch ((int)event.getNativeKeyCode()) {
             case KeyCodes.KEY_ENTER:
-                System.out.println("enter");
                 mForm.submit();
                 break;
             case KeyCodes.KEY_ESCAPE:
-                System.out.println("escape");
                 mPopup.hide();
                 break;
             default:
