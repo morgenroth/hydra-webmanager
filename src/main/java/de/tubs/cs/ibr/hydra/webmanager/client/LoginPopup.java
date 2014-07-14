@@ -140,6 +140,8 @@ public class LoginPopup extends PopupPanel
                 mPopup.hide();
                 break;
             default:
+                //do not display "wrong password" msg when user is typing again
+                mNoteText.setVisible(false);
                 break;
             }
         }
