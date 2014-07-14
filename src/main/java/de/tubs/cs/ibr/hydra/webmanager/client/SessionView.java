@@ -282,7 +282,11 @@ public class SessionView extends View {
                 {
                     // open edit view, when logged in
                     if (isLoggedIn())
-                        changeView(new SessionEditView(getApplication(), s));
+                        try {
+                            changeView(new SessionEditView(getApplication(), s));
+                        } catch (UnauthorizedException caught) {
+                            Window.alert("ERROR during session update:" + caught.getMessage());
+                        }
                 }
                 else
                 {
@@ -315,8 +319,15 @@ public class SessionView extends View {
     
     @UiHandler("buttonAdd")
     void onClick(ClickEvent e) {
-        // edit session edit view without a existing session
-        changeView(new SessionEditView(getApplication(), null));
+        if (isLoggedIn())
+        {
+            // edit session edit view without a existing session
+            try {
+                changeView(new SessionEditView(getApplication(), null));
+            } catch (UnauthorizedException caught) {
+                Window.alert("ERROR during session creation:" + caught.getMessage());
+            }
+        }
     }
     
     public static String formatDatetime(Date d) {

@@ -103,13 +103,14 @@ public class HydraApp extends Composite {
     }
     @UiHandler("navLoginLogout")
     void onLoginClick(ClickEvent e) {
+        //login
         if(mCredentials == null)
         {
             LoginPopup lp = new LoginPopup(new AsyncCallback<Credentials>() {
 
                 @Override
                 public void onFailure(Throwable caught) {
-                    Window.alert("ERROR " + caught.getMessage());
+                    Window.alert("ERROR during login:" + caught.getMessage());
                 }
 
                 @Override
@@ -118,6 +119,7 @@ public class HydraApp extends Composite {
                 }
             });
             lp.center();
+        //logout
         } else {
             String sessionId = Cookies.getCookie("hydra_sid");
             MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
@@ -125,6 +127,7 @@ public class HydraApp extends Composite {
 
                     @Override
                     public void onFailure(Throwable caught) {
+                        Window.alert("ERROR during logout:" + caught.getMessage());
                     }
 
                     @Override
@@ -315,11 +318,15 @@ public class HydraApp extends Composite {
         navLoggedIn.setText("logged in as '" + creds.getUsername() + "'");
         navLoginLogout.setText("Logout");
         mCredentials = creds;
+        //update view after login
+        changeView(currentView);
     }
 
     private void setLogout() {
         navLoggedIn.setVisible(false);
         navLoginLogout.setText("Login");
         mCredentials = null;
+        //update view after logout
+        changeView(currentView);
     }
 }

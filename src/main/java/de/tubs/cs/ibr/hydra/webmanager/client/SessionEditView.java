@@ -122,15 +122,17 @@ public class SessionEditView extends View {
     interface SessionEditViewUiBinder extends UiBinder<Widget, SessionEditView> {
     }
 
-    public SessionEditView(HydraApp app, Session s) {
+    public SessionEditView(HydraApp app, Session s) throws UnauthorizedException {
         super(app);
         initWidget(uiBinder.createAndBindUi(this));
         
         mCredentials = app.getCredentials();
+        if ( mCredentials == null )
+            throw new UnauthorizedException();
         
         if (s == null) {
             // create a session first
-            createSession(app.getCredentials().getUsername());
+            createSession(mCredentials.getUsername());
         } else {
             // initialize the session directly
             init(s);
