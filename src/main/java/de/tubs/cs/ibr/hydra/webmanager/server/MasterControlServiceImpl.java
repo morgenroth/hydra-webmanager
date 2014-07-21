@@ -199,10 +199,11 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
         if ( ! Database.getInstance().isUserSessionValid(creds))
             return;
 
+        //get real session
+        Session realSession = Database.getInstance().getSession(s.id);
         // check if considered session belongs to user
-        //TODO this yields to a null-pointer exception, because the name stays unchanged?
-        //if ( ! s.username.equals(creds.getUsername()))
-            //return;
+        if ( ! realSession.username.equals(creds.getUsername()))
+            return;
 
         // get session container
         SessionContainer sc = SessionContainer.getContainer(s);
