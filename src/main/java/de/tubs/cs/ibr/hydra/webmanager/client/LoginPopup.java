@@ -12,6 +12,7 @@ import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.Label;
+import com.github.gwtbootstrap.client.ui.SubmitButton;
 import com.github.gwtbootstrap.client.ui.TextBox;
 import com.github.gwtbootstrap.client.ui.constants.ButtonType;
 import com.google.gwt.user.client.Cookies;
@@ -69,7 +70,7 @@ public class LoginPopup extends PopupPanel
                                 mPopup.hide();
                                 } });
         cancelButton.setType(ButtonType.DANGER);
-        Button loginButton = new Button("Login", new ClickHandler() {
+        SubmitButton loginButton = new SubmitButton("Login", new ClickHandler() {
                             public void onClick(ClickEvent event) {
 
                                 MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
@@ -130,10 +131,6 @@ public class LoginPopup extends PopupPanel
         @Override
         public void onKeyDown(KeyDownEvent event) {
             switch ((int)event.getNativeKeyCode()) {
-            //TODO this does not work: (Message: gwt module may need to be (re)compiled)
-            /*case KeyCodes.KEY_ENTER:
-                mForm.submit();
-                break;*/
             case KeyCodes.KEY_ESCAPE:
                 mPopup.hide();
                 break;
