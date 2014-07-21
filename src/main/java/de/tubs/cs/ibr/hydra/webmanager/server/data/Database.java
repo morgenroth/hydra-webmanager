@@ -1353,6 +1353,8 @@ public class Database {
 
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
         }
         return rCreds;
     }
