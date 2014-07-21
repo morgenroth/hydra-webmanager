@@ -1348,7 +1348,7 @@ public class Database {
                     rCreds = new Credentials();
                     rCreds.setUsername(rs.getString(1));
                     rCreds.setSessionId(rs.getString(2));
-                    rCreds.setSessionExpires(rs.getLong(3));
+                    rCreds.setSessionExpires(rs.getTimestamp(3).getTime());
             }
 
         } catch (SQLException e) {
