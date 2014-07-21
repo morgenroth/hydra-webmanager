@@ -130,9 +130,10 @@ public class LoginPopup extends PopupPanel
         @Override
         public void onKeyDown(KeyDownEvent event) {
             switch ((int)event.getNativeKeyCode()) {
-            case KeyCodes.KEY_ENTER:
+            //TODO this does not work: (Message: gwt module may need to be (re)compiled)
+            /*case KeyCodes.KEY_ENTER:
                 mForm.submit();
-                break;
+                break;*/
             case KeyCodes.KEY_ESCAPE:
                 mPopup.hide();
                 break;
