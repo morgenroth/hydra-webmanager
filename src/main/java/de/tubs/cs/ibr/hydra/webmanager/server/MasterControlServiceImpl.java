@@ -360,6 +360,9 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
             creds.setSessionExpires(expires);
 
             Database.getInstance().putUserSession(creds);
+            
+            //purge expired usersessions
+            Database.getInstance().purgeUserSessions();
 
             return creds;
         }

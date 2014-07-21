@@ -102,7 +102,11 @@ public class Database {
     private final static String INSERT_STATS_DATA = "INSERT INTO stats (`session`, `node`, `data`) VALUES (?, ?, ?);";
     
     private final static String INSERT_USERSESSION= "INSERT INTO usersessions (`username`, `sessionid`, `expires`) VALUES (?, ?, ?);";
+    
     private final static String INSERT_USER= "INSERT INTO users (`name`) VALUES (?);";
+
+    private final static String PURGE_USERSESSION = "DELETE FROM usersessions WHERE `expires` < NOW() - 1000 ;";
+    
 
     private static Database __db__ = new Database();
     
@@ -1424,6 +1428,21 @@ public class Database {
         try (PreparedStatement st = conn.prepareStatement(INSERT_USER)) {
 
             st.setString(1, username);
+            st.execute();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
+        }
+    }
+    
+    public void purgeUserSessions(){
+        Connection conn = getConnection();
+        if (conn == null) return;
+        
+        try (PreparedStatement st = conn.prepareStatement(PURGE_USERSESSION)) {
+
             st.execute();
 
         } catch (SQLException e) {
