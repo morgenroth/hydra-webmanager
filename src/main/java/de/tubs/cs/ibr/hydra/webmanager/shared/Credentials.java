@@ -39,8 +39,7 @@ public class Credentials implements IsSerializable {
         Credentials otherCreds = (Credentials) obj;
         boolean sameUsername = mUsername.equals(otherCreds.getUsername());
         boolean sameSessionId = mSessionId.equals(otherCreds.getSessionId());
-        //must me roughly the same
-        boolean sameExpire =  Math.abs(mSessionExpires - otherCreds.getSessionExpires()) < 1000;
+        boolean sameExpire =  mSessionExpires == otherCreds.getSessionExpires();
         return sameUsername && sameSessionId && sameExpire;
     }
 }

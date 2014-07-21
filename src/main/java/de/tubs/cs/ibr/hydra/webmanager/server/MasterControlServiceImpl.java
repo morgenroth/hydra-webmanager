@@ -349,6 +349,9 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
                 // get minutes from session.properties file, calculate milliseconds
                 long duration = 1000 * 60 * Long.parseLong(p.getProperty("session.duration")) * 1;
                 expires = System.currentTimeMillis() + duration;
+                //set last 3 digits to zero, because the DB discards them anyway
+                expires = expires / 1000;
+                expires = expires * 1000;
             } catch (IOException e) {
                 e.printStackTrace();
             }
