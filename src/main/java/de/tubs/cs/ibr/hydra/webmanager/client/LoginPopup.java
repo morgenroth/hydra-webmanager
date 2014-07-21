@@ -58,7 +58,13 @@ public class LoginPopup extends PopupPanel
                mUserBox.setFocus(true);
             }
          });
-
+    }
+    
+    @Override
+    public void show()
+    {
+        super.show();
+        mUserBox.setFocus(true);
     }
     
     private void initForm()
