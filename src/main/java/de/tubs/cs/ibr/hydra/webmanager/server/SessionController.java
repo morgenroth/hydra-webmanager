@@ -25,6 +25,7 @@ import de.tubs.cs.ibr.hydra.webmanager.server.movement.MovementProvider;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.MovementProvider.MovementFinishedException;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.NullMovement;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.RandomWalkMovement;
+import de.tubs.cs.ibr.hydra.webmanager.server.movement.RandomWaypointMovement;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.StaticMovement;
 import de.tubs.cs.ibr.hydra.webmanager.server.movement.TraceMovement;
 import de.tubs.cs.ibr.hydra.webmanager.shared.Coordinates;
@@ -596,6 +597,10 @@ public class SessionController {
         
         // create the right movement model
         switch (mSession.mobility.model) {
+            case RANDOM_WAYPOINT:
+                // random waypoint selected
+                mMovement = new RandomWaypointMovement(mSession.mobility);
+                break;
             case RANDOM_WALK:
                 // random walk selected
                 mMovement = new RandomWalkMovement(mSession.mobility);

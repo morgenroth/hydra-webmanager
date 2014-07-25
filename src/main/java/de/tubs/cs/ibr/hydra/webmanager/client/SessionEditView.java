@@ -92,11 +92,21 @@ public class SessionEditView extends View {
     @UiField TextBox textMovementRwpDuration;
     @UiField TextBox textMovementRwpAreaSizeHeight;
     @UiField TextBox textMovementRwpAreaSizeWidth;
-    @UiField TextBox textMovementRwpMovetime;
+    @UiField TextBox textMovementRwpWaittime;
     @UiField TextBox textMovementRwpVmin;
     @UiField TextBox textMovementRwpVmax;
     @UiField TextBox textMovementRwpCoordLat;
     @UiField TextBox textMovementRwpCoordLng;
+    
+    // RW
+    @UiField TextBox textMovementRwDuration;
+    @UiField TextBox textMovementRwAreaSizeHeight;
+    @UiField TextBox textMovementRwAreaSizeWidth;
+    @UiField TextBox textMovementRwMovetime;
+    @UiField TextBox textMovementRwVmin;
+    @UiField TextBox textMovementRwVmax;
+    @UiField TextBox textMovementRwCoordLat;
+    @UiField TextBox textMovementRwCoordLng;
     
     // TRACE
     @UiField FormPanel formMovementTrace;
@@ -623,7 +633,7 @@ public class SessionEditView extends View {
         
         // load parameters
         switch (m.model) {
-            case RANDOM_WALK:
+            case RANDOM_WAYPOINT:
                 if (mSession.mobility.parameters.containsKey("duration")) {
                     textMovementRwpDuration.setText(mSession.mobility.parameters.get("duration"));
                 } else {
@@ -642,10 +652,10 @@ public class SessionEditView extends View {
                     textMovementRwpAreaSizeWidth.setText(null);
                 }
                 
-                if (mSession.mobility.parameters.containsKey("movetime")) {
-                    textMovementRwpMovetime.setText(mSession.mobility.parameters.get("movetime"));
+                if (mSession.mobility.parameters.containsKey("waittime")) {
+                    textMovementRwpWaittime.setText(mSession.mobility.parameters.get("waittime"));
                 } else {
-                    textMovementRwpMovetime.setText(null);
+                	textMovementRwpWaittime.setText(null);
                 }
                 
                 if (mSession.mobility.parameters.containsKey("vmin")) {
@@ -670,6 +680,55 @@ public class SessionEditView extends View {
                     textMovementRwpCoordLng.setText(mSession.mobility.parameters.get("lng"));
                 } else {
                     textMovementRwpCoordLng.setText(null);
+                }
+                break;
+            case RANDOM_WALK:
+                if (mSession.mobility.parameters.containsKey("duration")) {
+                    textMovementRwDuration.setText(mSession.mobility.parameters.get("duration"));
+                } else {
+                    textMovementRwDuration.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("height")) {
+                    textMovementRwAreaSizeHeight.setText(mSession.mobility.parameters.get("height"));
+                } else {
+                    textMovementRwAreaSizeHeight.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("width")) {
+                    textMovementRwAreaSizeWidth.setText(mSession.mobility.parameters.get("width"));
+                } else {
+                    textMovementRwAreaSizeWidth.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("movetime")) {
+                    textMovementRwMovetime.setText(mSession.mobility.parameters.get("movetime"));
+                } else {
+                    textMovementRwMovetime.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("vmin")) {
+                    textMovementRwVmin.setText(mSession.mobility.parameters.get("vmin"));
+                } else {
+                    textMovementRwVmin.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("vmax")) {
+                    textMovementRwVmax.setText(mSession.mobility.parameters.get("vmax"));
+                } else {
+                    textMovementRwVmax.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("lat")) {
+                    textMovementRwCoordLat.setText(mSession.mobility.parameters.get("lat"));
+                } else {
+                    textMovementRwCoordLat.setText(null);
+                }
+                
+                if (mSession.mobility.parameters.containsKey("lng")) {
+                    textMovementRwCoordLng.setText(mSession.mobility.parameters.get("lng"));
+                } else {
+                    textMovementRwCoordLng.setText(null);
                 }
                 break;
             case STATIC:
@@ -715,6 +774,15 @@ public class SessionEditView extends View {
         }
     }
     
+    @UiHandler("textSimulationResolution")
+    void onSimulationResolutionChanged(ChangeEvent evt) {
+        try {
+            mChangedSession.resolution = Double.valueOf(textSimulationResolution.getText());
+        } catch (java.lang.NumberFormatException e) {
+            mChangedSession.resolution = 0.0;
+        }
+    }
+    
     // RWP
     @UiHandler("textMovementRwpDuration")
     void onMovementRwpDurationChanged(ChangeEvent evt) {
@@ -734,19 +802,10 @@ public class SessionEditView extends View {
         mChangedSession.mobility.parameters.put("width", textMovementRwpAreaSizeWidth.getText());
     }
     
-    @UiHandler("textSimulationResolution")
-    void onSimulationResolutionChanged(ChangeEvent evt) {
-        try {
-            mChangedSession.resolution = Double.valueOf(textSimulationResolution.getText());
-        } catch (java.lang.NumberFormatException e) {
-            mChangedSession.resolution = 0.0;
-        }
-    }
-    
-    @UiHandler("textMovementRwpMovetime")
-    void onMovementRwpMovetimeChanged(ChangeEvent evt) {
+    @UiHandler("textMovementRwpWaittime")
+    void onMovementRwpWaittimeChanged(ChangeEvent evt) {
         if (mChangedSession.mobility == null) return;
-        mChangedSession.mobility.parameters.put("movetime", textMovementRwpMovetime.getText());
+        mChangedSession.mobility.parameters.put("waittime", textMovementRwpWaittime.getText());
     }
     
     @UiHandler("textMovementRwpVmin")
@@ -771,6 +830,55 @@ public class SessionEditView extends View {
     void onMovementRwpCoordLngChanged(ChangeEvent evt) {
         if (mChangedSession.mobility == null) return;
         mChangedSession.mobility.parameters.put("lng", textMovementRwpCoordLng.getText());
+    }
+    
+    // RW
+    @UiHandler("textMovementRwDuration")
+    void onMovementRwDurationChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("duration", textMovementRwDuration.getText());
+    }
+    
+    @UiHandler("textMovementRwAreaSizeHeight")
+    void onMovementRwAreaSizeHeightChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("height", textMovementRwAreaSizeHeight.getText());
+    }
+    
+    @UiHandler("textMovementRwAreaSizeWidth")
+    void onMovementRwAreaSizeWidthChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("width", textMovementRwAreaSizeWidth.getText());
+    }
+    
+    @UiHandler("textMovementRwMovetime")
+    void onMovementRwMovetimeChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("movetime", textMovementRwMovetime.getText());
+    }
+    
+    @UiHandler("textMovementRwVmin")
+    void onMovementRwVminChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("vmin", textMovementRwVmin.getText());
+    }
+    
+    @UiHandler("textMovementRwVmax")
+    void onMovementRwVmaxChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("vmax", textMovementRwVmax.getText());
+    }
+    
+    @UiHandler("textMovementRwCoordLat")
+    void onMovementRwCoordLatChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("lat", textMovementRwCoordLat.getText());
+    }
+    
+    @UiHandler("textMovementRwCoordLng")
+    void onMovementRwCoordLngChanged(ChangeEvent evt) {
+        if (mChangedSession.mobility == null) return;
+        mChangedSession.mobility.parameters.put("lng", textMovementRwCoordLng.getText());
     }
     
     @UiHandler("textSimulationRange")

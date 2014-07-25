@@ -158,6 +158,11 @@ public class SessionWatchView extends View {
         Long duration = null;
         
         switch (s.mobility.model) {
+            case RANDOM_WAYPOINT:
+                if (s.mobility.parameters.containsKey("duration")) {
+                    duration = Long.valueOf(s.mobility.parameters.get("duration"));
+                }
+                break;
             case RANDOM_WALK:
                 if (s.mobility.parameters.containsKey("duration")) {
                     duration = Long.valueOf(s.mobility.parameters.get("duration"));

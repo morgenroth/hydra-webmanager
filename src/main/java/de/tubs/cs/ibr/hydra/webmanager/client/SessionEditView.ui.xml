@@ -262,6 +262,7 @@
 								<b:ListBox alternateSize="XLARGE" b:id="listMovAlgorithm"
 									ui:field="listMovementAlgorithm">
 									<b:item value="none">None</b:item>
+									<b:item value="rwp">Random Waypoint</b:item>
 									<b:item value="randomwalk">Random Walk</b:item>
 									<b:item value="trace">Trace Playback</b:item>
 									<b:item value="static">Static Positions</b:item>
@@ -275,11 +276,11 @@
 							<!-- None -->
 							<g:FlowPanel>
 							</g:FlowPanel>
-							<!-- Random Walk -->
+							<!-- Random Waypoint -->
 							<g:FlowPanel>
 								<!-- Duration -->
 								<b:ControlGroup>
-									<b:ControlLabel for="textRwpDuration">Duration</b:ControlLabel>
+									<b:ControlLabel for="textMovementRwpDuration">Duration</b:ControlLabel>
 									<b:Controls>
 										<b:InputAddOn prependIcon="TIME" appendText="s">
 											<b:TextBox alternateSize="SMALL" b:id="textRwpDuration"
@@ -307,14 +308,14 @@
 
 								<!-- Moving Time -->
 								<b:ControlGroup>
-									<b:ControlLabel for="textRwpMovetime">Moving Time</b:ControlLabel>
+									<b:ControlLabel for="textRwpWaittime">Wait Time</b:ControlLabel>
 									<b:Controls>
 										<b:InputAddOn appendText="units">
-											<b:TextBox alternateSize="SMALL" b:id="textRwpMovetime"
-												ui:field="textMovementRwpMovetime" b:placeholder="75" />
+											<b:TextBox alternateSize="SMALL" b:id="textRwpWaittime"
+												ui:field="textMovementRwpWaittime" b:placeholder="75" />
 										</b:InputAddOn>
 										<b:HelpBlock>
-											Change direction after x units of time.
+											Pause between movements.
 										</b:HelpBlock>
 									</b:Controls>
 								</b:ControlGroup>
@@ -347,6 +348,86 @@
 											<base:AddOn text="Longitude" />
 											<b:TextBox alternateSize="SMALL" b:id="textRwpCoordLng"
 												ui:field="textMovementRwpCoordLng" b:placeholder="10.123456" />
+										</b:InputAddOn>
+										<b:HelpBlock>
+											This coordinates are used to map node positions to GPS
+											coordinates.
+										</b:HelpBlock>
+									</b:Controls>
+								</b:ControlGroup>
+							</g:FlowPanel>
+							<!-- Random Walk -->
+							<g:FlowPanel>
+								<!-- Duration -->
+								<b:ControlGroup>
+									<b:ControlLabel for="textRwDuration">Duration</b:ControlLabel>
+									<b:Controls>
+										<b:InputAddOn prependIcon="TIME" appendText="s">
+											<b:TextBox alternateSize="SMALL" b:id="textRwDuration"
+												ui:field="textMovementRwDuration" b:placeholder="infinite" />
+										</b:InputAddOn>
+										<b:HelpBlock>
+											This is the time the simulation will last.
+										</b:HelpBlock>
+									</b:Controls>
+								</b:ControlGroup>
+
+								<!-- Area size -->
+								<b:ControlGroup>
+									<b:ControlLabel for="textRwAreaSizeHeight">Area</b:ControlLabel>
+									<b:Controls>
+										<b:InputAddOn prependText="Size" appendText="m">
+											<b:TextBox alternateSize="SMALL" b:id="textRwAreaSizeHeight"
+												ui:field="textMovementRwAreaSizeHeight" b:placeholder="5000" />
+											<base:AddOn text="x" />
+											<b:TextBox alternateSize="SMALL" b:id="textRwAreaSizeWidth"
+												ui:field="textMovementRwAreaSizeWidth" b:placeholder="5000" />
+										</b:InputAddOn>
+									</b:Controls>
+								</b:ControlGroup>
+
+								<!-- Moving Time -->
+								<b:ControlGroup>
+									<b:ControlLabel for="textRwMovetime">Moving Time</b:ControlLabel>
+									<b:Controls>
+										<b:InputAddOn appendText="units">
+											<b:TextBox alternateSize="SMALL" b:id="textRwMovetime"
+												ui:field="textMovementRwMovetime" b:placeholder="75" />
+										</b:InputAddOn>
+										<b:HelpBlock>
+											Change direction after x units of time.
+										</b:HelpBlock>
+									</b:Controls>
+								</b:ControlGroup>
+
+								<!-- Velocity -->
+								<b:ControlGroup>
+									<b:ControlLabel for="textRwVelocity">Velocity</b:ControlLabel>
+									<b:Controls>
+										<b:InputAddOn prependText="Range" appendText="m/s">
+											<b:TextBox alternateSize="SMALL" b:id="textRwVelocity"
+												ui:field="textMovementRwVmin" b:placeholder="10" />
+											<base:AddOn text="-" />
+											<b:TextBox alternateSize="SMALL" b:id="textRwVelocityMax"
+												ui:field="textMovementRwVmax" b:placeholder="10" />
+										</b:InputAddOn>
+										<b:HelpBlock>
+											Speed is uniformly distributed between minimum
+											and maximum.
+										</b:HelpBlock>
+									</b:Controls>
+								</b:ControlGroup>
+
+								<!-- GPS Reference Coordinates -->
+								<b:ControlGroup>
+									<b:ControlLabel for="textRwCoordLat">Reference coordinate</b:ControlLabel>
+									<b:Controls>
+										<b:InputAddOn prependText="Latitude" appendIcon="MAP_MARKER">
+											<b:TextBox alternateSize="SMALL" b:id="textRwCoordLat"
+												ui:field="textMovementRwCoordLat" b:placeholder="52.123456" />
+											<base:AddOn text="Longitude" />
+											<b:TextBox alternateSize="SMALL" b:id="textRwCoordLng"
+												ui:field="textMovementRwCoordLng" b:placeholder="10.123456" />
 										</b:InputAddOn>
 										<b:HelpBlock>
 											This coordinates are used to map node positions to GPS

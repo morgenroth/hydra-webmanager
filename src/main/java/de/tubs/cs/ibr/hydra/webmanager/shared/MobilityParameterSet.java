@@ -8,6 +8,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 public class MobilityParameterSet implements IsSerializable {
     
     public enum MobilityModel {
+    	RANDOM_WAYPOINT("rwp"),
         RANDOM_WALK("randomwalk"),
         TRACE("trace"),
         STATIC("static"),
@@ -25,6 +26,9 @@ public class MobilityParameterSet implements IsSerializable {
         }
         
         public static MobilityModel fromString(String tag) {
+            if (RANDOM_WAYPOINT.toString().equals(tag)) {
+                return RANDOM_WAYPOINT;
+            }
             if (RANDOM_WALK.toString().equals(tag)) {
                 return RANDOM_WALK;
             }

@@ -204,6 +204,9 @@ public class SessionContainer {
                 switch (m.model) {
                     case NONE:
                         break;
+                    case RANDOM_WAYPOINT:
+                        section = "rwp";
+                        break;
                     case RANDOM_WALK:
                         section = "randomwalk";
                         break;
@@ -419,6 +422,9 @@ public class SessionContainer {
                 
                 switch (s.mobility.model) {
                     case NONE:
+                        break;
+                    case RANDOM_WAYPOINT:
+                        section = "rwp";
                         break;
                     case RANDOM_WALK:
                         section = "randomwalk";
