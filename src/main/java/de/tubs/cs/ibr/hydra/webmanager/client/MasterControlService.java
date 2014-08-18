@@ -125,10 +125,17 @@ public interface MasterControlService extends RemoteService {
     
     /**
      * Get the latest data records
-     * @param The session the data belong to.
+     * @param s The session the data belong to.
+     * @param offset offset of timestamp to get
      * @return An hash-map of the data points indexed by the node-id.
      */
-    public HashMap<Long, DataPoint> getStatsLatest(Session s);
+    public HashMap<Long, DataPoint> getStatsOf(Session s, Date date);
+    
+    /**
+     * get all dates of stored data
+     * @return corresponding list
+     */
+    public ArrayList<Date> getStatDates(Session s);
     
     /**
      * Get a list of trace files owned by the session

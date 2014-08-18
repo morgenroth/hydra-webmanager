@@ -178,12 +178,17 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
         
         if (started != null) {
             // get data since last session start
+            GWT.log("starting get");
             mcs.getStatsData(mSession, mNode, started, null, new AsyncCallback<ArrayList<DataPoint>>() {
                 @Override
                 public void onSuccess(ArrayList<DataPoint> result) {
                     // transform result into data-table
+                    GWT.log("starting transform");
                     transformStatsData(result);
+                    GWT.log("done transform");
+                    GWT.log("starting redraw");
                     redraw(mCurrentView);
+                    GWT.log("done redraw");
                 }
     
                 @Override
@@ -191,6 +196,7 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
                     // failed
                 }
             });
+            GWT.log("done get");
         }
     }
     
@@ -356,6 +362,7 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     }
 
     private void redraw(int i) {
+        GWT.log("redraw start");
         // do not redraw until the chart library has been initialized
         if (!initialized) return;
         
@@ -368,6 +375,7 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     
         // redraw charts
         mChart.draw(mView[i], mOptions[i]);
+        GWT.log("redraw end");
     }
     
     @UiHandler("buttonRemove")
@@ -379,24 +387,28 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     
     @UiHandler("linkIpTraffic")
     public void onNavIpTrafficClick(ClickEvent evt) {
+        GWT.log("click 1");
         mCurrentView = 0;
         redraw(mCurrentView);
     }
     
     @UiHandler("linkDtnTraffic")
     public void onNavDtnTrafficClick(ClickEvent evt) {
+        GWT.log("click 2");
         mCurrentView = 1;
         redraw(mCurrentView);
     }
     
     @UiHandler("linkClockOffset")
     public void onNavClockOffsetClick(ClickEvent evt) {
+        GWT.log("click 3");
         mCurrentView = 2;
         redraw(mCurrentView);
     }
     
     @UiHandler("linkClockRating")
     public void onNavClockRatingClick(ClickEvent evt) {
+        GWT.log("click 4");
         mCurrentView = 3;
         redraw(mCurrentView);
     }
@@ -404,17 +416,20 @@ public class SessionNodeStatsWidget extends Composite implements ResizeHandler {
     @UiHandler("linkUptime")
     public void onNavUptimeClick(ClickEvent evt) {
         mCurrentView = 4;
+        GWT.log("click 5");
         redraw(mCurrentView);
     }
     
     @UiHandler("linkStorageSize")
     public void onNavStorageSizeClick(ClickEvent evt) {
+        GWT.log("click 5");
         mCurrentView = 5;
         redraw(mCurrentView);
     }
     
     @UiHandler("linkDtnClockOffset")
     public void onNavDtnClockOffsetClick(ClickEvent evt) {
+        GWT.log("click 6");
         mCurrentView = 6;
         redraw(mCurrentView);
     }

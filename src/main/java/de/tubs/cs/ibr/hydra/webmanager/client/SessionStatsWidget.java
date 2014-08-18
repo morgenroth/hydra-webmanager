@@ -5,8 +5,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Date;
 
+import com.github.gwtbootstrap.client.ui.Button;
 import com.github.gwtbootstrap.client.ui.Container;
+import com.github.gwtbootstrap.client.ui.Label;
 import com.github.gwtbootstrap.client.ui.ListBox;
 import com.github.gwtbootstrap.client.ui.NavLink;
 import com.google.gwt.core.client.GWT;
@@ -54,6 +57,19 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     @UiField NavLink linkUptime;
     @UiField NavLink linkStorageSize;
     
+    @UiField Button leftBtn5;
+    @UiField Button leftBtn4;
+    @UiField Button leftBtn3;
+    @UiField Button leftBtn2;
+    @UiField Button leftBtn1;
+    @UiField Button timestampBtn;
+    @UiField Button rightBtn1;
+    @UiField Button rightBtn2;
+    @UiField Button rightBtn3;
+    @UiField Button rightBtn4;
+    @UiField Button rightBtn5;
+    @UiField Label numberLabel;
+    
     // chart objects
     ColumnChart mChart = null;
 
@@ -65,6 +81,12 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     
     // currently selected chart
     int mCurrentView = 0;
+    
+    // date of currently select chart
+    ArrayList<Date> mDates = new ArrayList<Date>();
+    
+    //offset of timestamps
+    int mCurrentOffset =  0;
     
     // list of visible node stats
     HashSet<Long> mVisibleNodes = new HashSet<Long>();
@@ -85,7 +107,7 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
 
     public SessionStatsWidget() {
         initWidget(uiBinder.createAndBindUi(this));
-        
+
         // initialize chart options
         updateChartOptions();
         
@@ -119,6 +141,19 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
         // do not redraw until the chart library has been initialized
         if (!initialized) return;
 
+        //redraw timestamp
+        if(!mDates.isEmpty())
+        {
+
+                timestampBtn.setText(mDates.get(mCurrentOffset).toString());
+                numberLabel.setText("("+(mCurrentOffset+1)+"/"+mDates.size()+")");
+        }
+        else
+        {
+            timestampBtn.setText("[none]");
+            numberLabel.setText("0/0");
+        }
+        
         // redraw charts
         mChart.draw(mView[i], mOptions[i]);
     }
@@ -126,6 +161,8 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     public void initialize(final Session session) {
         // store session globally
         mSession = session;
+        
+        updateDateList();
         
         // load chart library
         initializeChart();
@@ -211,6 +248,8 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
                 // set charts to initialized
                 initialized = true;
                 
+                updateDateList();
+                
                 updateStatsData();
             }
         };
@@ -222,24 +261,29 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     
     public void updateStatsData() {
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.getStatsLatest(mSession, new AsyncCallback<HashMap<Long,DataPoint>>() {
-            
-            @Override
-            public void onSuccess(HashMap<Long, DataPoint> result) {
-                transformStatsData(result);
-                redraw(mCurrentView);
-            }
-            
-            @Override
-            public void onFailure(Throwable caught) {
-                // failed
-            }
+        mcs.getStatsOf(mSession, mDates.get(mCurrentOffset), new AsyncCallback<HashMap<Long,DataPoint>>() {
+        
+        @Override
+        public void onSuccess(HashMap<Long, DataPoint> result) {
+            GWT.log("updateStatsData: got " + result.size() + " DataPoints");
+            transformStatsData(result);
+            redraw(mCurrentView);
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            GWT.log("updateStatsData: ERROR: " + caught.getMessage());
+        }
         });
     }
     
     public void refresh() {
         // reload stats data and redraw charts
-        if (initialized) updateStatsData();
+        if (initialized)
+        {
+            updateDateList();
+            updateStatsData();
+        }
         
         // reload stats of nodes
         for (SessionNodeStatsWidget w : mNodeStats) {
@@ -351,6 +395,26 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
         }
     }
     
+    private void updateDateList()
+    {
+        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+        mcs.getStatDates(mSession, new AsyncCallback<ArrayList<Date>>() {
+            
+            @Override
+            public void onSuccess(ArrayList<Date> result) {
+                mDates = result;
+                GWT.log("datelist of session " + mSession.id + " contains "+mDates.size()+" objects");
+            }
+            
+            @Override
+            public void onFailure(Throwable caught) {
+                // failed
+                GWT.log("ERROR while getting datelist");
+            }
+        });
+    
+    }
+    
     @UiHandler("listNodes")
     void onNodeSelected(ChangeEvent e) {
         // create individual node stats
@@ -411,6 +475,78 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     @UiHandler("linkStorageSize")
     public void onNavStorageSizeClick(ClickEvent evt) {
         mCurrentView = 5;
+        redraw(mCurrentView);
+    }
+
+    @UiHandler("leftBtn5")
+    public void onLeftBtn5Click(ClickEvent evt)
+    {
+        moveDateBy(mDates.size());
+    }
+    
+    @UiHandler("leftBtn4")
+    public void onLeftBtn4Click(ClickEvent evt)
+    {
+        moveDateBy(1000);
+    }
+    
+    @UiHandler("leftBtn3")
+    public void onLeftBtn3Click(ClickEvent evt)
+    {
+        moveDateBy(100);
+    }
+    
+    @UiHandler("leftBtn2")
+    public void onLeftBtn2Click(ClickEvent evt)
+    {
+        moveDateBy(10);
+    }
+    
+    @UiHandler("leftBtn1")
+    public void onLeftBtn1Click(ClickEvent evt)
+    {
+        moveDateBy(1);
+    }
+
+    @UiHandler("rightBtn1")
+    public void onRightBtn1Click(ClickEvent evt)
+    {
+        moveDateBy(-1);
+    }
+    
+    @UiHandler("rightBtn2")
+    public void onRightBtn2Click(ClickEvent evt)
+    {
+        moveDateBy(-10);
+    }
+
+    @UiHandler("rightBtn3")
+    public void onRightBtn3Click(ClickEvent evt)
+    {
+        moveDateBy(-100);
+    }
+
+    @UiHandler("rightBtn4")
+    public void onRightBtn4Click(ClickEvent evt)
+    {
+        moveDateBy(-1000);
+    }
+
+    @UiHandler("rightBtn5")
+    public void onRightBtn5Click(ClickEvent evt)
+    {
+        moveDateBy(-mDates.size());
+    }
+    
+    private void moveDateBy(int by)
+    {
+        mCurrentOffset += by;
+        if (mCurrentOffset < 0)
+            mCurrentOffset = 0;
+        if (mCurrentOffset >= mDates.size() ) 
+            mCurrentOffset = mDates.size() - 1;
+            
+        updateStatsData();
         redraw(mCurrentView);
     }
 }

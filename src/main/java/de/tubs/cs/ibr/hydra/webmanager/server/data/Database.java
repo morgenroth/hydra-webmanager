@@ -64,7 +64,8 @@ public class Database {
     
     private final static String QUERY_STATS = "SELECT `timestamp`, `node`, `data` FROM stats WHERE session = ? ORDER BY `timestamp`;";
     private final static String QUERY_STATS_BY_NODE = "SELECT `timestamp`, `data` FROM stats WHERE session = ? AND node = ? AND (`timestamp` > ?) AND (`timestamp` <= ?) ORDER BY timestamp DESC LIMIT 0,60;";
-    private final static String QUERY_STATS_LATEST = "SELECT `id`, `s`.`timestamp`, `s`.`data` FROM `nodes` RIGHT JOIN (SELECT `timestamp`, `node`, `data` FROM `stats` WHERE `session` = ? ORDER BY `timestamp` DESC) as s ON (`s`.`node` = `nodes`.`id`) WHERE `session` = ? GROUP BY `id` ORDER BY `id`;";
+    private final static String QUERY_STATS_OF = "SELECT node,timestamp,data FROM stats WHERE timestamp = ? AND session = ? ORDER BY node;";
+    private final static String QUERY_STATS_TIMESTAMPS = "SELECT DISTINCT timestamp FROM stats WHERE session = ? ORDER BY timestamp DESC;";
     
 
     private final static String QUERY_USERSESSION= "SELECT `username`, `sessionid`, `expires` FROM `usersessions` WHERE sessionid = ? AND  expires > NOW() LIMIT 1";
@@ -1289,11 +1290,13 @@ public class Database {
     }
     
     /**
-     * Get the latest data records
-     * @param The session the data belong to.
+     * Get the data records of a specific date
+     * @param s The session the data belong to.
+     * @param date Date of Dataset
      * @return An hash-map of the JSON encoded data indexed by the node-id.
      */
-    public HashMap<Long, DataPoint> getStatsLatest(Session s) {
+    public HashMap<Long, DataPoint> getStatsOf(Session s, Date date) {
+        System.out.println("DB: getStatsLatest START");
         HashMap<Long, DataPoint> ret = new HashMap<Long, DataPoint>();
         
         // return an empty hash-map if session is not set
@@ -1303,9 +1306,9 @@ public class Database {
         Connection conn = getConnection();
         if (conn == null) return ret;
         
-        try (PreparedStatement st = conn.prepareStatement(QUERY_STATS_LATEST)) {
+        try (PreparedStatement st = conn.prepareStatement(QUERY_STATS_OF)) {
             // set session id
-            st.setLong(1, s.id);
+            st.setDate(1, new java.sql.Date(date.getTime()));
             st.setLong(2, s.id);
             
             // execute query
@@ -1322,6 +1325,40 @@ public class Database {
                 }
             }
         } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            releaseConnection(conn);
+        }
+        
+        System.out.println("DB: getStatsLatest DONE");
+        return ret;
+    }
+    
+    public ArrayList<Date> getStatDates(Session s)
+    {
+        ArrayList<Date> ret = new ArrayList<Date>();
+        Connection conn = getConnection();
+        
+        if ( conn == null) return ret;
+        if ( s == null )
+        {
+            System.out.println("Database.getStatDates(...): WARNING: session is null!");
+            return ret;
+        }
+        
+        try (PreparedStatement st = conn.prepareStatement(QUERY_STATS_TIMESTAMPS)) {
+            // set session id
+            st.setLong(1, s.id);
+            
+            // execute query
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    ret.add(rs.getTimestamp(1));
+                }
+            }
+        } catch (SQLException e) {
+            String a = e.getMessage();
+            System.out.println(a);
             e.printStackTrace();
         } finally {
             releaseConnection(conn);

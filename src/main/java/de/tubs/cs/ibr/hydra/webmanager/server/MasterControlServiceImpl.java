@@ -274,9 +274,17 @@ public class MasterControlServiceImpl extends RemoteServiceServlet implements Ma
     }
 
     @Override
-    public HashMap<Long, DataPoint> getStatsLatest(Session s) {
+    public HashMap<Long, DataPoint> getStatsOf(Session s, Date date) {
         Database db = Database.getInstance();
-        return db.getStatsLatest(s);
+        return db.getStatsOf(s, date);
+    }
+    
+    @Override
+    public ArrayList<Date> getStatDates(Session s)
+    {
+        Database db = Database.getInstance();
+        return db.getStatDates(s);
+        
     }
 
     @Override
