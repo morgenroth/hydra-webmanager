@@ -256,7 +256,6 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     }
     
     public void updateStatsData() {
-        if(mDates.isEmpty())
                 updateDateList(new AsyncCallback<ArrayList<Date>>() {
 
                     @Override
@@ -269,7 +268,6 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
                         
                         @Override
                         public void onSuccess(HashMap<Long, DataPoint> result) {
-                            GWT.log("updateStatsData: got " + result.size() + " DataPoints");
                             transformStatsData(result);
                             redraw(mCurrentView);
                         }
@@ -405,7 +403,6 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     
     private void updateDateList(final AsyncCallback<ArrayList<Date>> acb)
     {
-        GWT.log("trying to update");
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
         mcs.getStatDates(mSession, new AsyncCallback<ArrayList<Date>>() {
 
