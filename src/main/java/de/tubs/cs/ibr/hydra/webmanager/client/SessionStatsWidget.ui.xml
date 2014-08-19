@@ -26,7 +26,7 @@
 			<b:Column size="10">
 				<g:SimplePanel ui:field="panelChart" />
 				<b:ButtonGroup>
-				    <b:Button icon="BACKWARD" ui:field="leftBtn5"></b:Button>
+				    <b:Button icon="BACKWARD" ui:field="leftBtn5">end</b:Button>
 				    <b:Button icon="BACKWARD" ui:field="leftBtn4">1000</b:Button>
 				    <b:Button icon="BACKWARD" ui:field="leftBtn3">100</b:Button>
 				    <b:Button icon="BACKWARD" ui:field="leftBtn2">10</b:Button>
@@ -36,7 +36,7 @@
 				    <b:Button icon="FORWARD" ui:field="rightBtn2">10</b:Button>
 				    <b:Button icon="FORWARD" ui:field="rightBtn3">100</b:Button>
 				    <b:Button icon="FORWARD" ui:field="rightBtn4">1000</b:Button>
-				    <b:Button icon="FORWARD" ui:field="rightBtn5"></b:Button>
+				    <b:Button icon="FORWARD" ui:field="rightBtn5">end</b:Button>
 				</b:ButtonGroup>
 				<g:HTMLPanel><br/></g:HTMLPanel>
 				<b:Label ui:field="numberLabel"></b:Label>

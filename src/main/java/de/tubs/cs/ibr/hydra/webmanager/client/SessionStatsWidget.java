@@ -162,8 +162,6 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
         // store session globally
         mSession = session;
         
-        updateDateList();
-        
         // load chart library
         initializeChart();
         
@@ -248,8 +246,6 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
                 // set charts to initialized
                 initialized = true;
                 
-                updateDateList();
-                
                 updateStatsData();
             }
         };
@@ -260,30 +256,42 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     }
     
     public void updateStatsData() {
-        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
-        mcs.getStatsOf(mSession, mDates.get(mCurrentOffset), new AsyncCallback<HashMap<Long,DataPoint>>() {
-        
-        @Override
-        public void onSuccess(HashMap<Long, DataPoint> result) {
-            GWT.log("updateStatsData: got " + result.size() + " DataPoints");
-            transformStatsData(result);
-            redraw(mCurrentView);
-        }
+        if(mDates.isEmpty())
+                updateDateList(new AsyncCallback<ArrayList<Date>>() {
 
-        @Override
-        public void onFailure(Throwable caught) {
-            GWT.log("updateStatsData: ERROR: " + caught.getMessage());
-        }
-        });
+                    @Override
+                    public void onSuccess(ArrayList<Date> result) {
+                    
+                        mDates = result;
+                        
+                        MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
+                        mcs.getStatsOf(mSession, mDates.get(mCurrentOffset), new AsyncCallback<HashMap<Long,DataPoint>>() {
+                        
+                        @Override
+                        public void onSuccess(HashMap<Long, DataPoint> result) {
+                            GWT.log("updateStatsData: got " + result.size() + " DataPoints");
+                            transformStatsData(result);
+                            redraw(mCurrentView);
+                        }
+
+                        @Override
+                        public void onFailure(Throwable caught) {
+                            GWT.log("updateStatsData: ERROR: " + caught.getMessage());
+                        }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(Throwable caught) {
+                    }
+                });
+        
     }
     
     public void refresh() {
         // reload stats data and redraw charts
         if (initialized)
-        {
-            updateDateList();
             updateStatsData();
-        }
         
         // reload stats of nodes
         for (SessionNodeStatsWidget w : mNodeStats) {
@@ -395,24 +403,22 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
         }
     }
     
-    private void updateDateList()
+    private void updateDateList(final AsyncCallback<ArrayList<Date>> acb)
     {
+        GWT.log("trying to update");
         MasterControlServiceAsync mcs = (MasterControlServiceAsync)GWT.create(MasterControlService.class);
         mcs.getStatDates(mSession, new AsyncCallback<ArrayList<Date>>() {
-            
+
             @Override
             public void onSuccess(ArrayList<Date> result) {
-                mDates = result;
-                GWT.log("datelist of session " + mSession.id + " contains "+mDates.size()+" objects");
+                acb.onSuccess(result);
             }
-            
+
             @Override
             public void onFailure(Throwable caught) {
-                // failed
-                GWT.log("ERROR while getting datelist");
+                acb.onFailure(caught);
             }
         });
-    
     }
     
     @UiHandler("listNodes")
@@ -481,61 +487,61 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     @UiHandler("leftBtn5")
     public void onLeftBtn5Click(ClickEvent evt)
     {
-        moveDateBy(mDates.size());
+        moveDateBy(-mDates.size());
     }
     
     @UiHandler("leftBtn4")
     public void onLeftBtn4Click(ClickEvent evt)
     {
-        moveDateBy(1000);
+        moveDateBy(-1000);
     }
     
     @UiHandler("leftBtn3")
     public void onLeftBtn3Click(ClickEvent evt)
     {
-        moveDateBy(100);
+        moveDateBy(-100);
     }
     
     @UiHandler("leftBtn2")
     public void onLeftBtn2Click(ClickEvent evt)
     {
-        moveDateBy(10);
+        moveDateBy(-10);
     }
     
     @UiHandler("leftBtn1")
     public void onLeftBtn1Click(ClickEvent evt)
     {
-        moveDateBy(1);
+        moveDateBy(-1);
     }
 
     @UiHandler("rightBtn1")
     public void onRightBtn1Click(ClickEvent evt)
     {
-        moveDateBy(-1);
+        moveDateBy(1);
     }
     
     @UiHandler("rightBtn2")
     public void onRightBtn2Click(ClickEvent evt)
     {
-        moveDateBy(-10);
+        moveDateBy(10);
     }
 
     @UiHandler("rightBtn3")
     public void onRightBtn3Click(ClickEvent evt)
     {
-        moveDateBy(-100);
+        moveDateBy(100);
     }
 
     @UiHandler("rightBtn4")
     public void onRightBtn4Click(ClickEvent evt)
     {
-        moveDateBy(-1000);
+        moveDateBy(1000);
     }
 
     @UiHandler("rightBtn5")
     public void onRightBtn5Click(ClickEvent evt)
     {
-        moveDateBy(-mDates.size());
+        moveDateBy(mDates.size());
     }
     
     private void moveDateBy(int by)

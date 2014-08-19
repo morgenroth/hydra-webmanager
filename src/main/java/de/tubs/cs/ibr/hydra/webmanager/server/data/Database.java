@@ -1296,7 +1296,6 @@ public class Database {
      * @return An hash-map of the JSON encoded data indexed by the node-id.
      */
     public HashMap<Long, DataPoint> getStatsOf(Session s, Date date) {
-        System.out.println("DB: getStatsLatest START");
         HashMap<Long, DataPoint> ret = new HashMap<Long, DataPoint>();
         
         // return an empty hash-map if session is not set
@@ -1308,7 +1307,8 @@ public class Database {
         
         try (PreparedStatement st = conn.prepareStatement(QUERY_STATS_OF)) {
             // set session id
-            st.setDate(1, new java.sql.Date(date.getTime()));
+            //st.setDate(1, new java.sql.Date(date.getTime()));
+            st.setTimestamp(1, new Timestamp(date.getTime()));
             st.setLong(2, s.id);
             
             // execute query
@@ -1330,7 +1330,6 @@ public class Database {
             releaseConnection(conn);
         }
         
-        System.out.println("DB: getStatsLatest DONE");
         return ret;
     }
     
@@ -1357,8 +1356,6 @@ public class Database {
                 }
             }
         } catch (SQLException e) {
-            String a = e.getMessage();
-            System.out.println(a);
             e.printStackTrace();
         } finally {
             releaseConnection(conn);
