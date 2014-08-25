@@ -8,6 +8,9 @@
 		margin-left: 6px;
 		margin-right: 6px;
 		}
+		.center {
+		text-align: center;
+		}
 	</ui:style>
 	<b:FluidContainer>
 		<b:FluidRow>
@@ -24,22 +27,29 @@
 				</b:WellNavList>
 			</b:Column>
 			<b:Column size="10">
-				<g:SimplePanel ui:field="panelChart" />
-				<b:ButtonGroup>
-				    <b:Button icon="BACKWARD" ui:field="leftBtn5">end</b:Button>
-				    <b:Button icon="BACKWARD" ui:field="leftBtn4">1000</b:Button>
-				    <b:Button icon="BACKWARD" ui:field="leftBtn3">100</b:Button>
-				    <b:Button icon="BACKWARD" ui:field="leftBtn2">10</b:Button>
-				    <b:Button icon="BACKWARD" ui:field="leftBtn1">1</b:Button>
-				    <b:Button enabled="false" ui:field="timestampBtn">timestamp</b:Button>
-				    <b:Button icon="FORWARD" ui:field="rightBtn1">1</b:Button>
-				    <b:Button icon="FORWARD" ui:field="rightBtn2">10</b:Button>
-				    <b:Button icon="FORWARD" ui:field="rightBtn3">100</b:Button>
-				    <b:Button icon="FORWARD" ui:field="rightBtn4">1000</b:Button>
-				    <b:Button icon="FORWARD" ui:field="rightBtn5">end</b:Button>
-				</b:ButtonGroup>
-				<g:HTMLPanel><br/></g:HTMLPanel>
-				<b:Label ui:field="numberLabel"></b:Label>
+				<b:FluidContainer styleName="{style.center}">
+					<b:FluidRow>
+						<g:SimplePanel ui:field="panelChart" />
+					</b:FluidRow>
+					<b:FluidRow>
+						<b:ButtonGroup>
+							<b:Button icon="BACKWARD" ui:field="leftBtn5">end</b:Button>
+							<b:Button icon="BACKWARD" ui:field="leftBtn4">1000</b:Button>
+							<b:Button icon="BACKWARD" ui:field="leftBtn3">100</b:Button>
+							<b:Button icon="BACKWARD" ui:field="leftBtn2">10</b:Button>
+							<b:Button icon="BACKWARD" ui:field="leftBtn1">1</b:Button>
+							<b:Button enabled="false" ui:field="timestampBtn">timestamp</b:Button>
+							<b:Button icon="FORWARD" ui:field="rightBtn1">1</b:Button>
+							<b:Button icon="FORWARD" ui:field="rightBtn2">10</b:Button>
+							<b:Button icon="FORWARD" ui:field="rightBtn3">100</b:Button>
+							<b:Button icon="FORWARD" ui:field="rightBtn4">1000</b:Button>
+							<b:Button icon="FORWARD" ui:field="rightBtn5">end</b:Button>
+						</b:ButtonGroup>
+					</b:FluidRow>
+					<b:FluidRow>
+						<b:Label ui:field="numberLabel"></b:Label>
+					</b:FluidRow>
+				</b:FluidContainer>
 			</b:Column>
 		</b:FluidRow>
 		<b:FluidRow>
