@@ -33,7 +33,7 @@
 					</b:FluidRow>
 					<b:FluidRow>
 						<b:ButtonGroup>
-							<b:Button icon="BACKWARD" ui:field="leftBtn5">end</b:Button>
+							<b:Button icon="BACKWARD" ui:field="leftBtn5">start</b:Button>
 							<b:Button icon="BACKWARD" ui:field="leftBtn4">1000</b:Button>
 							<b:Button icon="BACKWARD" ui:field="leftBtn3">100</b:Button>
 							<b:Button icon="BACKWARD" ui:field="leftBtn2">10</b:Button>

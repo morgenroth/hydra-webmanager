@@ -146,7 +146,7 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
         {
 
                 timestampBtn.setText(mDates.get(mCurrentOffset).toString());
-                numberLabel.setText("("+(mCurrentOffset+1)+"/"+mDates.size()+")");
+                numberLabel.setText("("+(mDates.size()-mCurrentOffset)+"/"+mDates.size()+")");
         }
         else
         {
@@ -484,61 +484,61 @@ public class SessionStatsWidget extends Composite implements ResizeHandler {
     @UiHandler("leftBtn5")
     public void onLeftBtn5Click(ClickEvent evt)
     {
-        moveDateBy(-mDates.size());
+        moveDateBy(mDates.size());
     }
     
     @UiHandler("leftBtn4")
     public void onLeftBtn4Click(ClickEvent evt)
     {
-        moveDateBy(-1000);
+        moveDateBy(1000);
     }
     
     @UiHandler("leftBtn3")
     public void onLeftBtn3Click(ClickEvent evt)
     {
-        moveDateBy(-100);
+        moveDateBy(100);
     }
     
     @UiHandler("leftBtn2")
     public void onLeftBtn2Click(ClickEvent evt)
     {
-        moveDateBy(-10);
+        moveDateBy(10);
     }
     
     @UiHandler("leftBtn1")
     public void onLeftBtn1Click(ClickEvent evt)
     {
-        moveDateBy(-1);
+        moveDateBy(1);
     }
 
     @UiHandler("rightBtn1")
     public void onRightBtn1Click(ClickEvent evt)
     {
-        moveDateBy(1);
+        moveDateBy(-1);
     }
     
     @UiHandler("rightBtn2")
     public void onRightBtn2Click(ClickEvent evt)
     {
-        moveDateBy(10);
+        moveDateBy(-10);
     }
 
     @UiHandler("rightBtn3")
     public void onRightBtn3Click(ClickEvent evt)
     {
-        moveDateBy(100);
+        moveDateBy(-100);
     }
 
     @UiHandler("rightBtn4")
     public void onRightBtn4Click(ClickEvent evt)
     {
-        moveDateBy(1000);
+        moveDateBy(-1000);
     }
 
     @UiHandler("rightBtn5")
     public void onRightBtn5Click(ClickEvent evt)
     {
-        moveDateBy(mDates.size());
+        moveDateBy(-mDates.size());
     }
     
     private void moveDateBy(int by)
